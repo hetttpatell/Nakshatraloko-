@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import './App.css'
+import Header from './Header/Header'
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
    <> 
-    <h1>Hello Nakshatra</h1>
-    <h2>Het</h2>
-    <h3>Helo</h3>
+    <Header />
   </>
   )
 }
 
-export default App
+export default App  
