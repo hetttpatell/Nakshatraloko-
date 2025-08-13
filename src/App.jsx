@@ -5,7 +5,10 @@ function App() {
   const [count, setCount] = useState(0)
 
   return (
+   <> 
     <h1>Hello Nakshatra</h1>
+    <h2>Het</h2>
+  </>
   )
 }
 
