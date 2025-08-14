@@ -1,11 +1,12 @@
 import React from "react";  
+import Slideshow from "./Slideshow";
+import Featured from "./Featured";
 
 export default function Home() {
-    return(
-     
-     <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
-      <h1 className="bg-color-beige text-4xl font-bold">Hello Home</h1> 
-      </div>
-    
-    )
+  return (
+    <div className="min-h-screen bg-[var(--color-bg)]">
+      <Slideshow />
+      <Featured />
+    </div>
+  );
 }
