@@ -63,7 +63,7 @@ export default function Slideshow() {
 
   return (
     <div className="relative w-full h-[680px] overflow-hidden shadow-2xl 
-    rounded-b-[20px]">
+    rounded-b-[10px]">
       <AnimatePresence>
         <motion.div
           key={slides[current].id}
