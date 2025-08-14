@@ -4,13 +4,15 @@ import './index.css'
 import React from "react";
 import App from './App.jsx'
 import Home from "./Components/Home/Home.jsx";
+import About from "./Components/About/About.jsx";
 
 
 const router = createBrowserRouter(
     createRoutesFromElements(
-        <Route path="/" element={<App />} >
+        <Route path="/" element={<App />} > 
 
-            <Route path="/Home" element={<Home/>} />
+            <Route index element={<Home/>} />
+            <Route path="/About" element={<About />} />
 
         </Route>
     )
