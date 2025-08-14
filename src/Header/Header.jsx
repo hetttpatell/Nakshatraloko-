@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const menuItems = ["Home", "About", "Contact", "Services"];
+  const menuItems = ["Home","GEMSTONES", "CUSTOM", "CATAGORIES", "FAQs","BLOGS"];
 
   return (
     <header className="sticky top-0 z-50 bg-[var(--color-navy)] shadow-md">
@@ -15,24 +15,23 @@ export default function Header() {
     </div>
 
         {/* Desktop Menu - Center */}
-        <ul className="hidden lg:flex absolute  left-1/2 transform -translate-x-1/2 space-x-20 font-medium text-white">
-          {menuItems.map((item) => (
-            <li key={item}>
-  <NavLink
-    to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-    className={({ isActive }) =>
-      `transition-transform duration-200 px-3 py-2 h-10 flex items-center
-      ${isActive
-        ? "text-orange-400"
-        : "hover:text-orange-400 hover:scale-110"}`
-    }
-  >
-    {item}
-  </NavLink>
-</li>
-
-          ))}
-        </ul>
+  <ul className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 space-x-20 font-medium text-white menu-font">
+  {menuItems.map((item) => (
+    <li key={item}>
+      <NavLink
+        to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
+        className={({ isActive }) =>
+          `transition-transform duration-200 px-3 py-2 h-10 flex items-center
+          ${isActive
+            ? "text-orange-400"
+            : "hover:text-orange-400 hover:scale-110"}`
+        }
+      >
+        {item}
+      </NavLink>
+    </li>
+  ))}
+</ul>
 
         {/* Hamburger Menu - Mobile */}
         <button
@@ -65,28 +64,26 @@ export default function Header() {
             isOpen ? "block" : "hidden"
           }`}
         >
-          <ul className="flex flex-col space-y-2 p-4 font-medium text-white">
-            {menuItems.map((item) => (
-              <li key={item} className="text-center">
-                <NavLink
-                  to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-                  className={({ isActive }) =>
-                    `block py-2 px-4 rounded-md transition-colors duration-200 ${
-                      isActive
-                        ? "text-orange-400"
-                        : "hover:text-orange-400 hover:bg-white hover:bg-opacity-10"
-                    }`
-                  }
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
+           <ul className={`lg:hidden absolute top-full left-0 w-full bg-[var(--color-navy)] transition-all duration-300 ${isOpen ? "block" : "hidden"} menu-font text-white`}>
+  {menuItems.map((item) => (
+    <li key={item}>
+      <NavLink
+        to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
+        className={({ isActive }) =>
+          `transition-transform duration-200 px-3 py-2 h-10 flex items-center
+          ${isActive
+            ? "text-orange-400"
+            : "hover:text-orange-400 hover:scale-110"}`
+        }
+      >
+        {item}
+      </NavLink>
+    </li>
+  ))}
+</ul>
+
         </div>
       </nav>
     </header>
   );
 }
-// jjjjjjjjjjjjjjjjjjjjjjj
