@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 export default function Featured() {
   const Heading = {
@@ -10,6 +11,7 @@ export default function Featured() {
 
   const products = [
     {
+      id: 1,
       name: "14KT Yellow Gold Diamond Hoop Earrings",
       category: "Women | Earrings",
       price: "₹ 4,554.00",
@@ -17,6 +19,7 @@ export default function Featured() {
       img: "/testing.jpeg",
     },
     {
+      id: 2,
       name: "14KT Yellow Gold Diamond Hoop Earrings",
       category: "Women | Earrings",
       price: "₹ 4,554.00",
@@ -24,6 +27,7 @@ export default function Featured() {
       img: "/testing.jpeg",
     },
     {
+      id: 3,
       name: "14KT Yellow Gold Diamond Hoop Earrings",
       category: "Women | Earrings",
       price: "₹ 4,554.00",
@@ -31,6 +35,7 @@ export default function Featured() {
       img: "/testing.jpeg",
     },
     {
+      id: 4,
       name: "14KT Yellow Gold Diamond Hoop Earrings",
       category: "Women | Earrings",
       price: "₹ 4,554.00",
@@ -58,10 +63,11 @@ export default function Featured() {
       {/* Product Grid */}
       <div className="bg-[#fdf3e7] py-12">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-6">
-          {products.map((product, index) => (
-            <div
-              key={index}
-              className="bg-white border rounded-md overflow-hidden shadow-sm hover:shadow-lg transition duration-300"
+          {products.map((product) => (
+            <Link
+              to={`/product/${product.id}`}
+              key={product.id}
+              className="bg-white border rounded-md overflow-hidden shadow-sm hover:shadow-lg transition duration-300 block"
             >
               {/* Image + Discount Badge */}
               <div className="relative aspect-square">
@@ -85,7 +91,7 @@ export default function Featured() {
                   {product.price}
                 </p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

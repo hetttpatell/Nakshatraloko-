@@ -57,7 +57,7 @@ export default function Slideshow() {
     setCurrent((prev) => (prev - 1 + length) % length );
 
   useEffect(() => {
-    const interval = setInterval(nextSlide, 2000);
+    const interval = setInterval(nextSlide, 4000);
     return () => clearInterval(interval);
   }, [length, current]);
 
@@ -113,18 +113,19 @@ export default function Slideshow() {
       </AnimatePresence>
 
       {/* Navigation Arrows */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 p-3 rounded-full text-white hover:bg-black/60 transition"
-      >
-        <ChevronLeft size={28} />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 p-3 rounded-full text-white hover:bg-black/60 transition"
-      >
-        <ChevronRight size={28} />
-      </button>
+            <button
+         onClick={prevSlide}
+         className="hidden"
+       >
+         <ChevronLeft size={28} />
+       </button>
+       <button
+         onClick={nextSlide}
+         className="hidden"
+       >
+         <ChevronRight size={28} />
+       </button>
+
 
       {/* Dots Navigation inside pill-shaped container */}
       <div className="absolute bottom-4 w-full flex justify-center">
