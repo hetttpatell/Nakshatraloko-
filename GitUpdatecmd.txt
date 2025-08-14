@@ -3,6 +3,14 @@ git commit -m "Fixed footer layout issue"
 git push origin development
 
 
+installss 
+npm install @heroicons/react
+npm install phosphor-react
+
+
+
+
+
 this code is for conditional rendering of login button 
 
 <div className="flex items-center lg:order-2">

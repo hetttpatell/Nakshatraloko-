@@ -3,12 +3,9 @@ import { createRoot } from 'react-dom/client'
 import './index.css';
 import React from "react";
 import App from './App.jsx'
-import Gemstones from "./Components/Gemstones/Gemstones.jsx";
-import Custom from "./Components/Custom/Custom.jsx";
-import Home from "./Components/Home/Home.jsx";
-import Catagories from "./Components/Catagories/Catagories.jsx";
-import Blogs from "./Components/Blogs/Blogs.jsx";
-import FAQs from "./Components/FAQS/FAQs.jsx";
+import  { Blogs, Cart, FAQs, Gemstones, Categories ,Custom, Home } from "./Components/export.js"; 
+import Wishlist from "./Components/Wishlist/Wishlist.jsx";
+import UserAccount from "./Components/UserAccount/UserAccount.jsx";
 
 
 const router = createBrowserRouter(
@@ -18,8 +15,11 @@ const router = createBrowserRouter(
             <Route index element={<Home/>} />
             <Route path="/gemstones" element={<Gemstones />} />
             <Route path="/Custom" element={<Custom />} />
-            <Route path="/Catagories" element={<Catagories />} />
+            <Route path="/Catagories" element={<Categories />} />
             <Route path="/faqs" element={<FAQs />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/account" element={<UserAccount />} />
             <Route path="/blogs" element={<Blogs />} />
 
         </Route>
