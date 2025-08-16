@@ -149,3 +149,68 @@ this code is for conditional rendering of login button
 //     </div>
 //   );
 // }
+
+working theme 
+
+:root {
+  --color-bg: #f5f5dc;
+  --color-aboutbg : #f1eadd;
+  --color-navy: #001f3f;
+  --color-text: #333333;
+}
+
+first attemp 
+
+:root {
+  /* main website background (light gray with slight blue tint) */
+  --color-bg: #f4f6f9; 
+
+  /* about section background (soft silver-gray for contrast) */
+  --color-aboutbg: #e6e9ef; 
+
+  /* secondary / brand color (deep professional navy) */
+  --color-navy: #0a2540;
+
+  /* text color (slate gray, softer than black for modern look) */
+  --color-text: #2e2e3a;
+
+  /* accent highlight (cool aqua-blue for hover/underline/button accents) */
+  --color-accent: #4fb3e8;
+}
+
+pista theem 
+:root {
+  /* main website background: rich smoke gray for distinct mood */
+  --color-bg: #e0e0e0;
+  /* about section background: soft lilac for subtle luxury */
+  --color-aboutbg: #d6cadd;
+  /* secondary color: olive green for headers/nav/footer */
+  --color-navy: #708238;
+  /* accent color: vibrant coral for contrast highlights/buttons */
+  --color-accent: #ff6f61;
+  /* highlight color: sunlight yellow for invitations/callouts */
+  --color-highlight: #ffef96;
+  /* text color: deep cocoa */
+  --color-text: #4d2c19;
+  /* border/line color: muted sand */
+  --color-border: #c4b7a6;
+}
+
+actually good purple
+
+:root {
+  /* main website background (soft pastel peach for warmth) */
+  --color-bg: #fff4e6;
+
+  /* about section background (muted blush for contrast but still light) */
+  --color-aboutbg: #ffe9d6;
+
+  /* secondary / brand color (deep plum-purple for uniqueness) */
+  --color-navy: #3b0a45;
+
+  /* text color (dark warm gray for readability) */
+  --color-text: #2c2c2c;
+
+  /* accent highlight (coral-pink for fresh and modern highlights) */
+  --color-accent: #ff6b6b;
+}

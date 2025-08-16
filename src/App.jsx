@@ -1,4 +1,4 @@
-import React,{ useState } from 'react'
+import React,{ useState,  useEffect} from 'react'
 import './App.css'
 import Header from './Header/Header'
 import Footer from './Footer/Footer'
@@ -6,6 +6,23 @@ import { Outlet } from 'react-router-dom'
 
 function App() {
   const [count, setCount] = useState(0)
+
+
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem("scroll-position");
+    if (savedScroll) {
+      window.scrollTo(0, parseInt(savedScroll, 10));
+    }
+
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem("scroll-position", window.scrollY.toString());
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   return (
    <> 
