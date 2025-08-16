@@ -62,7 +62,7 @@ export default function Featured() {
 
       {/* {Product Grid} */}
       <div className="bg-[var(--color-bg)] py-12">
-  <div className="max-w-7xl mx-auto grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 px-4 sm:px-6">
+  <div className="max-w-7xl mx-auto grid grid-cols-2 gap-7 sm:grid-cols-2 lg:grid-cols-4 px-4 sm:px-6">
     {products.map((product) => (
       <Link
         to={`/product/${product.id}`}
