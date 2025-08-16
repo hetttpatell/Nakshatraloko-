@@ -10,20 +10,22 @@
     return (
     <>
        <div className="mt-10 h-150 bg-[var(--color-aboutbg)] py-10">
-  <div className="flex flex-col md:flex-row items-start px-5 md:px-20">
+  <div className="flex flex-col md:flex-row items-start px-3 md:px-20">
+
     <div className="md:w-1/2">
-      <h1 className="text-6xl md:text-8xl font-playfair">
-        {aboutpara.first}
-      </h1>
-      <h2 className="text-6xl md:text-8xl font-playfair font-bold mt-4">
-        {aboutpara.second}
-      </h2>
-      <p className="mt-6 text-justify tracking-wide text-lg md:text-xl leading-7 md:leading-9 font-playfair text-gray-700 md:w-6/5">
-        {aboutpara.para}
-      </p>
+      <h1 className="text-4xl md:text-6xl lg:text-8xl font-playfair">
+  {aboutpara.first}
+</h1>
+<h2 className="text-4xl md:text-6xl lg:text-8xl font-playfair font-bold mt-4">
+  {aboutpara.second}
+</h2>
+<p className="mt-6 text-justify tracking-wide text-lg md:text-xl leading-7 md:leading-9 font-playfair text-gray-700 w-full md:w-5/6">
+  {aboutpara.para}
+</p>
+
     </div>
 
-    <div className="md:w-1/2 mt-10 md:mt-0 flex justify-end">
+    <div className="md:w-1/2 mt-6 md:mt-0 flex justify-end">
   <img
     src="/abot.jpg"
     alt="akshatraloko Image"
@@ -39,3 +41,4 @@
 
 
     }
+    
