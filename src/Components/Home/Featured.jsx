@@ -45,13 +45,13 @@ export default function Featured() {
   ];
 
   return (
-    <>
-      <div className="bg-gradient-to-r mt-4 from-gray-900 via-gray-800 to-gray-900 py-16">
+    <>  
+      <div className="bg-gradient-to-r  from-gray-900 via-gray-800 to-gray-900 py-16">
         {/* Heading */}
         <div className="max-w-7xl mx-auto px-6 text-center text-white">
           <h2 className="text-4xl md:text-5xl font-serif font-bold relative inline-block hover:scale-105 transition-transform duration-300">
-            {Heading.first}{" "}
-            <span className="text-yellow-400">{Heading.second}</span>
+            {Heading.first}
+            <span className="text-yellow-400 ml-3">{Heading.second}</span>
             <span className="absolute left-1/2 -translate-x-1/2 bottom-[-10px] w-24 h-1 bg-yellow-400 rounded-full"></span>
           </h2>
           <p className="mt-6 text-gray-300 text-lg max-w-2xl mx-auto">
@@ -60,23 +60,24 @@ export default function Featured() {
         </div>
       </div>
 
-      {/* Product Grid */}
-      <div className="bg-[#fdf3e7] py-12">
+      {/* {Product Grid} */}
+      <div className="bg-[var(--color-bg)] py-12">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-6">
           {products.map((product) => (
             <Link
               to={`/product/${product.id}`}
               key={product.id}
-              className="bg-white border rounded-md overflow-hidden shadow-sm hover:shadow-lg transition duration-300 block"
+              className="bg-white border rounded-md overflow-hidden shadow-sm hover:shadow-lg hover:scale-104 transition duration-400 block"
             >
-              {/* Image + Discount Badge */}
+              {/*Image + Discount Badge*/}
+
               <div className="relative aspect-square">
                 <img
                   src={product.img}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
-                <span className="absolute top-2 left-2 bg-blue-900 text-white text-xs font-semibold px-2 py-1 rounded">
+                <span className="absolute top-2 left-2 bg-blue-900 text-white text-xs font-semibold px-2 py-1 rounded-lg">
                   {product.discount}
                 </span>
               </div>

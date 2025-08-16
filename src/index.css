@@ -5,9 +5,11 @@
   font-family: 'IBM Plex Sans', sans-serif;
 }
 
+
 :root {
   --color-bg: #f5f5dc;
-  --color-hover: #f5f5dc;
+  --color-aboutbg : ##fffaf0;
   --color-navy: #001f3f;
   --color-text: #333333;
+
 }

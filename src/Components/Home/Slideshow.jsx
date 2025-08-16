@@ -62,7 +62,7 @@ export default function Slideshow() {
   }, [length, current]);
 
   return (
-    <div className="relative w-full h-[680px] overflow-hidden shadow-2xl 
+    <div className="relative w-full h-[880px] overflow-hidden shadow-2xl 
     rounded-b-[10px]">
       <AnimatePresence>
         <motion.div
