@@ -53,8 +53,7 @@ export default function Slideshow() {
   const [current, setCurrent] = useState(0);
   const length = slides.length;
   const nextSlide = () => setCurrent((prev) => (prev + 1) % length);
-  const prevSlide = () =>
-    setCurrent((prev) => (prev - 1 + length) % length );
+  const prevSlide = () => setCurrent((prev) => (prev - 1 + length) % length);
 
   useEffect(() => {
     const interval = setInterval(nextSlide, 4000);
@@ -62,8 +61,7 @@ export default function Slideshow() {
   }, [length, current]);
 
   return (
-    <div className="relative w-full h-[880px] overflow-hidden shadow-2xl 
-    rounded-b-[10px]">
+    <div className="relative w-full h-[500px] sm:h-[600px] md:h-[880px] overflow-hidden shadow-2xl rounded-b-[10px]">
       <AnimatePresence>
         <motion.div
           key={slides[current].id}
@@ -83,58 +81,47 @@ export default function Slideshow() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
 
           {/* Bottom Fade Finish */}
-          <div className="absolute bottom-0 w-full h-32 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-0 w-full h-20 sm:h-28 md:h-32 bg-gradient-to-t from-black/60 to-transparent" />
 
           {/* Text Content */}
-          <div className="absolute top-1/3 left-12 text-white max-w-lg">
-            <h1 className="text-5xl font-bold mb-4 drop-shadow-xl">
+          <div className="absolute top-1/4 sm:top-1/3 left-4 sm:left-8 md:left-12 text-white max-w-xs sm:max-w-md md:max-w-lg">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-2 sm:mb-4 drop-shadow-xl">
               {slides[current].title}
             </h1>
-            <p className="text-lg mb-6 text-gray-200 drop-shadow-md">
+            <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 text-gray-200 drop-shadow-md">
               {slides[current].description}
             </p>
             <div className="flex gap-4">
-              {slides[current].buttons.map((btn, index) => (
-                <a
-                  key={index}
-                  href={btn.link}
-                  className={`px-6 py-3 rounded-lg font-semibold shadow-lg transition ${
-                    btn.primary
-                      ? "bg-yellow-500 text-black hover:bg-yellow-400"
-                      : "bg-transparent border border-white hover:bg-white hover:text-black"
-                  }`}
-                >
-                  {btn.text}
-                </a>
-              ))}
-            </div>
+  {slides[current].buttons.map((btn, index) => (
+    <a
+      key={index}
+      href={btn.link}
+      className={`
+        px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base 
+        rounded-lg font-semibold shadow-lg transition 
+        ${btn.primary
+          ? "bg-yellow-500 text-black hover:bg-yellow-400"
+          : "bg-transparent border border-white hover:bg-white hover:text-black"
+        }
+      `}
+    >
+      {btn.text}
+    </a>
+  ))}
+</div>
+
           </div>
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Arrows */}
-            <button
-         onClick={prevSlide}
-         className="hidden"
-       >
-         <ChevronLeft size={28} />
-       </button>
-       <button
-         onClick={nextSlide}
-         className="hidden"
-       >
-         <ChevronRight size={28} />
-       </button>
-
-
       {/* Dots Navigation inside pill-shaped container */}
-      <div className="absolute bottom-4 w-full flex justify-center">
-        <div className="flex gap-3 bg-black/30 px-6 py-3 rounded-full backdrop-blur-sm shadow-md">
+      <div className="absolute bottom-2 sm:bottom-4 w-full flex justify-center">
+        <div className="flex gap-2 sm:gap-3 bg-black/30 px-4 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-sm shadow-md">
           {slides.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrent(index)}
-              className={`w-3 h-3 rounded-full transition ${
+              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition ${
                 current === index
                   ? "bg-yellow-500"
                   : "bg-white/50 hover:bg-white"
