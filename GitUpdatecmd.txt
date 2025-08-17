@@ -150,6 +150,9 @@ this code is for conditional rendering of login button
 //   );
 // }
 
+get back from git hub -
+git checkout f268667784c30e58a41978ef3414bd4618c9d71c -- src/Components/Home/HelpingForm.jsx
+
 working theme 
 
 :root {
