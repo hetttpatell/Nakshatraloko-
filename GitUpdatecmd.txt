@@ -217,3 +217,9 @@ actually good purple
   /* accent highlight (coral-pink for fresh and modern highlights) */
   --color-accent: #ff6b6b;
 }
+
+
+
+<h3 className="font-montserrat py-4 text-center text-xs sm:text-sm lg:text-base max-w-3xl mx-auto px-4">
+          By signing up, you agree to receive call from our expert astrologers at the phone number provided. View our privacy policy and terms of service for more info.
+        </h3> 

@@ -35,8 +35,8 @@ function HelpingForm() {
         <form
           onSubmit={handleSubmit}
           className="
-    w-full max-w-3xl 
-    h-auto lg:h-90 mt-6 lg:mt-20 mx-4 lg:ml-142
+     max-w-3xl 
+    h-auto lg:h-70 mt-6 lg:mt-20 mx-4 lg:ml-142
     bg-gradient-to-tr from-[#e6d9c3] to-[#f5f5dc] 
     p-6 rounded-xl shadow-[0_8px_30px_rgba(90,77,65,0.50)] border border-[#e5e5c0] 
     grid grid-cols-1 md:grid-cols-2 gap-6
@@ -68,20 +68,23 @@ function HelpingForm() {
 
           {/* Date */}
           <div className="relative w-full">
-
-            {!usedate && (
-              <span className="absolute left-3 mt-5 -translate-y-1/2 text-gray-500 pointer-events-none text-sm">
-                Select your preferred date
-              </span>
-            )}
+            <label
+              htmlFor="dateInput"
+              className={`absolute left-3 top-2 text-gray-500 lg:text-transparent md:text-transparent text-sm pointer-events-none
+              ${usedate ? "hidden" : "block"}`}
+            >
+              Select your preferred date
+            </label>
 
             <Input
+              id="date"
               type="date"
               value={usedate}
               onChange={(e) => setdate(e.target.value)}
               className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-gray-800 relative z-10"
             />
           </div>
+
 
           {/* Time */}
           <div>
@@ -107,7 +110,7 @@ function HelpingForm() {
             </button>
           </div>
         </form>
-        <h3 className="font-montserrat  py-4 justify-center text-center gap-5 text-xs ">
+        <h3 className="font-montserrat py-4 text-center text-xs sm:text-sm lg:text-base max-w-3xl mx-auto px-4">
           By signing up, you agree to receive call from our expert astrologers at the phone number provided. View our privacy policy and terms of service for more info.
         </h3>
       </div>
