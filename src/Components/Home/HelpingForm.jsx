@@ -26,85 +26,90 @@ function HelpingForm() {
         <div className="bg-[var(--color-aboutbg)] ml-auto mt-70 lg:mt-100 h-35 lg:h-80 w-65 lg:w-290">
         </div>
 
-        <h1 className="font-montserrat font-bold text-center mt-6 text-[10px] sm:text-3xl lg:text-2xl
+        <h1 className="font-montserrat  text-center mt-6 text-[10px] sm:text-3xl lg:text-2xl
                        text-gray-700 tracking-wide leading-relaxed max-w-4xl mx-auto px-4">
           Drop your number and our experts will reach out to you soon !
         </h1>
 
+
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-md 
-             bg-gradient-to-br from-[#faf5e4] via-[#f5f5dc] to-[#e5e5c0] 
-             p-6 rounded-xl shadow-[0_8px_30px_rgba(90,77,65,0.25)] border border-[#e5e5c0]"
+          className="
+    w-full max-w-3xl 
+    h-auto lg:h-90 mt-6 lg:mt-20 mx-4 lg:ml-142
+    bg-gradient-to-tr from-[#e6d9c3] to-[#f5f5dc] 
+    p-6 rounded-xl shadow-[0_8px_30px_rgba(90,77,65,0.50)] border border-[#e5e5c0] 
+    grid grid-cols-1 md:grid-cols-2 gap-6
+  "
         >
-
-
           {/* First Name */}
-          <div className="mb-6 jstifyceter2300
-        
-        ">
-            <label className="block mb-1 font-montserrat text-[#2c2c2c]">
-              First Name
-            </label>
+          <div>
+
             <Input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter your first name"
-              className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-[#2c2c2c] placeholder-gray-600"
+              className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-gray-800 placeholder-gray-500"
             />
           </div>
 
           {/* Phone Number */}
-          <div className="mb-6">
-            <label className="block mb-1 font-montserrat text-[#2c2c2c]">
-              Phone Number
-            </label>
+          <div>
+
             <Input
               type="tel"
               value={usernumber}
               onChange={(e) => setnumber(e.target.value)}
               placeholder="Enter your phone number"
-              className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-[#2c2c2c] placeholder-gray-600"
+              className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-gray-800 placeholder-gray-500"
             />
-            <label className="block mb-1 font-montserrat text-[#2c2c2c]">
-              Date
-            </label>
+          </div>
+
+          {/* Date */}
+          <div className="relative w-full">
+
+            {!usedate && (
+              <span className="absolute left-3 mt-5 -translate-y-1/2 text-gray-500 pointer-events-none text-sm">
+                Select your preferred date
+              </span>
+            )}
+
             <Input
               type="date"
-              value={usedate}   // <-- you need a state for this, e.g. const [usertime, setUsertime] = useState("09:00");
+              value={usedate}
               onChange={(e) => setdate(e.target.value)}
-              className="w-full border-b-2 border-[#5a4d41] bg-transparent 
-             focus:outline-none focus:border-[#4a3f35] py-2 
-             text-[#2c2c2c]"
+              className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-gray-800 relative z-10"
             />
-            <label className="block mb-1 font-montserrat text-[#2c2c2c]">
-              Time
-            </label>
+          </div>
+
+          {/* Time */}
+          <div>
+
             <Input
               type="time"
-              value={usetime}   // <-- you need a state for this, e.g. const [usertime, setUsertime] = useState("09:00");
+              value={usetime}
               onChange={(e) => setusertime(e.target.value)}
               min="09:00"
               max="17:00"
               step="60"
-              className="w-full border-b-2 border-[#5a4d41] bg-transparent 
-             focus:outline-none focus:border-[#4a3f35] py-2 
-             text-[#2c2c2c]"
+              className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-gray-800"
             />
-  
-
           </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full mt-4 bg-[#5a4d41] hover:bg-[#4a3f35] text-white font-semibold py-3 px-4 rounded transition"
-          >
-            Submit
-          </button>
+          {/* Submit Button spanning full width */}
+          <div className="md:col-span-2">
+            <button
+              type="submit"
+              className="w-full mt-4 bg-[#5a4d41] hover:bg-[#4a3f35] text-white font-semibold py-3 px-4 rounded transition"
+            >
+              Submit
+            </button>
+          </div>
         </form>
-
+        <h3 className="font-montserrat  py-4 justify-center text-center gap-5 text-xs ">
+          By signing up, you agree to receive call from our expert astrologers at the phone number provided. View our privacy policy and terms of service for more info.
+        </h3>
       </div>
     </>
   )
