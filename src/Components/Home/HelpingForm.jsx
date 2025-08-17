@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import Input from "../Input/Input";
+import { useTime } from "framer-motion";
 
 function HelpingForm() {
-  const [username , setUsername] = useState("");
-  const [usernumber , setnumber] = useState();
+  const [username, setUsername] = useState("");
+  const [usernumber, setnumber] = useState();
+  const [usetime, setusertime] = useState("09:00");
+  const [usedate, setdate] = useState("");
 
-  const handleSubmit = (e) => {}
+  const handleSubmit = (e) => { }
 
   return (
     <>
@@ -28,46 +31,79 @@ function HelpingForm() {
           Drop your number and our experts will reach out to you soon !
         </h1>
 
-        <form 
-        onSubmit={handleSubmit} 
-        className="w-full max-w-md bg-transparent p-6 rounded-xl"
-      >
-        {/* First Name */}
-        <div className="mb-6 jstifyceter">
-          <label className="block mb-1 font-montserrat text-[#2c2c2c]">
-            First Name
-          </label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setFirstName(e.target.value)}
-            placeholder="Enter your first name"
-            className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-[#2c2c2c] placeholder-gray-600"
-          />
-        </div>
-
-        {/* Phone Number */}
-        <div className="mb-6">
-          <label className="block mb-1 font-montserrat text-[#2c2c2c]">
-            Phone Number
-          </label>
-          <input
-            type="tel"
-            value={usernumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="Enter your phone number"
-            className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-[#2c2c2c] placeholder-gray-600"
-          />
-        </div>
-
-        {/* Submit Button */}
-        <button 
-          type="submit" 
-          className="w-full mt-4 bg-[#5a4d41] hover:bg-[#4a3f35] text-white font-semibold py-3 px-4 rounded transition"
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-md 
+             bg-gradient-to-br from-[#faf5e4] via-[#f5f5dc] to-[#e5e5c0] 
+             p-6 rounded-xl shadow-[0_8px_30px_rgba(90,77,65,0.25)] border border-[#e5e5c0]"
         >
-          Submit
-        </button>
-      </form>
+
+
+          {/* First Name */}
+          <div className="mb-6 jstifyceter2300
+        
+        ">
+            <label className="block mb-1 font-montserrat text-[#2c2c2c]">
+              First Name
+            </label>
+            <Input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your first name"
+              className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-[#2c2c2c] placeholder-gray-600"
+            />
+          </div>
+
+          {/* Phone Number */}
+          <div className="mb-6">
+            <label className="block mb-1 font-montserrat text-[#2c2c2c]">
+              Phone Number
+            </label>
+            <Input
+              type="tel"
+              value={usernumber}
+              onChange={(e) => setnumber(e.target.value)}
+              placeholder="Enter your phone number"
+              className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-[#2c2c2c] placeholder-gray-600"
+            />
+            <label className="block mb-1 font-montserrat text-[#2c2c2c]">
+              Date
+            </label>
+            <Input
+              type="date"
+              value={usedate}   // <-- you need a state for this, e.g. const [usertime, setUsertime] = useState("09:00");
+              onChange={(e) => setdate(e.target.value)}
+              className="w-full border-b-2 border-[#5a4d41] bg-transparent 
+             focus:outline-none focus:border-[#4a3f35] py-2 
+             text-[#2c2c2c]"
+            />
+            <label className="block mb-1 font-montserrat text-[#2c2c2c]">
+              Time
+            </label>
+            <Input
+              type="time"
+              value={usetime}   // <-- you need a state for this, e.g. const [usertime, setUsertime] = useState("09:00");
+              onChange={(e) => setusertime(e.target.value)}
+              min="09:00"
+              max="17:00"
+              step="60"
+              className="w-full border-b-2 border-[#5a4d41] bg-transparent 
+             focus:outline-none focus:border-[#4a3f35] py-2 
+             text-[#2c2c2c]"
+            />
+  
+
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full mt-4 bg-[#5a4d41] hover:bg-[#4a3f35] text-white font-semibold py-3 px-4 rounded transition"
+          >
+            Submit
+          </button>
+        </form>
 
       </div>
     </>

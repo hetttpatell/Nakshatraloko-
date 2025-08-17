@@ -10,7 +10,7 @@ export default function Information() {
 
   return (
     <div className="w-full mt-4 bg-[var(--color-navy)] py-6 overflow-x-hidden">
-      <div className="max-w-6xl mx-auto flex flex-wrap justify-center items-center px-4 sm:px-6 gap-4">
+      <div className="max-w-6xl mx-auto flex flex-wrap justify-between items-center px-4 sm:px-6 gap-4">
         {FeaturedInfo.map((item, index) => (
           <React.Fragment key={item.id}>
             <div className="flex flex-col items-center text-center gap-2 w-full sm:w-auto">
@@ -26,7 +26,7 @@ export default function Information() {
 
             {/* Divider (skip after last item) */}
             {index < FeaturedInfo.length - 1 && (
-              <div className="hidden sm:block w-px h-20 bg-white/40"></div>
+              <div className="hidden sm:block w-px h-20 "></div>
             )}
           </React.Fragment>
         ))}
