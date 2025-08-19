@@ -72,7 +72,7 @@ function HelpingForm() {
               htmlFor="dateInput"
               className={`absolute left-3 top-2 text-gray-500 lg:text-transparent md:text-transparent text-sm pointer-events-none
               ${usedate ? "hidden" : "block"}`}
-            >
+              >
               Select your preferred date
             </label>
 

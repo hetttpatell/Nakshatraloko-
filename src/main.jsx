@@ -22,6 +22,10 @@ const router = createBrowserRouter(
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/account" element={<UserAccount />} />
             <Route path="/blogs" element={<Blogs />} />
+            <Route path="/necklace" element={<Cart />} />
+            <Route path="/rudraksh" element={<UserAccount />} />
+            <Route path="/gemstones" element={<Gemstones />} />
+            <Route path="/pandent" element={<Wishlist />} />
 
         </Route>
     )
