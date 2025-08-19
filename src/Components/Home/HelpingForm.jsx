@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Input from "../Input/Input";
 import { useTime } from "framer-motion";
+import Button from "../Button/Button";
 
 function HelpingForm() {
   const [username, setUsername] = useState("");
@@ -72,7 +73,7 @@ function HelpingForm() {
               htmlFor="dateInput"
               className={`absolute left-3 top-2 text-gray-500 lg:text-transparent md:text-transparent text-sm pointer-events-none
               ${usedate ? "hidden" : "block"}`}
-              >
+            >
               Select your preferred date
             </label>
 
@@ -102,12 +103,11 @@ function HelpingForm() {
 
           {/* Submit Button spanning full width */}
           <div className="md:col-span-2">
-            <button
+            <Button
               type="submit"
               className="w-full mt-4 bg-[#5a4d41] hover:bg-[#4a3f35] text-white font-semibold py-3 px-4 rounded transition"
-            >
-              Submit
-            </button>
+              
+            >Submit</Button>
           </div>
         </form>
         <h3 className="font-montserrat py-4 text-center text-xs sm:text-sm lg:text-base max-w-3xl mx-auto px-4">
