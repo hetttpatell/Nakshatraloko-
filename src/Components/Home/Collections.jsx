@@ -42,35 +42,35 @@ function Collection() {
         </div>
 
         <div className="flex justify-center items-center mt-20 px-4">
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-    {collections.map((item, index) => (
-      <Link key={index} to={item.path} className="group block">
-  <div className="relative overflow-hidden rounded-2xl shadow-lg">
-    <img
-      src={item.img}
-      alt={item.name}
-      className="h-80 w-full lg:h-170 object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-    />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {collections.map((item, index) => (
+              <Link key={index} to={item.path} className="group block">
+                <div className="relative overflow-hidden rounded-2xl shadow-lg">
+                  <img
+                    src={item.img}
+                    alt={item.name}
+                    className="h-80 w-full lg:h-170 object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                  />
 
-    {/* Overlay */}
-    <div className="absolute inset-0 z-10 flex items-end">
-      <div
-        className="w-full h-50 lg:h-100 p-4
+                  {/* Overlay */}
+                  <div className="absolute inset-0 z-10 flex items-end">
+                    <div
+                      className="w-full h-50 lg:h-100 p-4
         bg-gradient-to-t from-black/70 via-black/50 to-transparent
         translate-y-6 opacity-0
         transition-all duration-500 ease-out
         group-hover:translate-y-0 group-hover:opacity-100"
-      >
-        <h3 className="text-white text-xl lg:text-4xl mt-25 lg:mt-70 font-semibold font-lora">{item.name}</h3>
-        <p className="text-white/90 font-inter text-sm">Some description about this image.</p>
-      </div>
-    </div>
-  </div>
-</Link>
+                    >
+                      <h3 className="text-white text-xl lg:text-4xl mt-25 lg:mt-70 font-semibold font-lora">{item.name}</h3>
+                      <p className="text-white/90 font-inter text-sm">Some description about this image.</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
 
-    ))}
-  </div>
-</div>
+            ))}
+          </div>
+        </div>
 
 
       </div>
@@ -79,3 +79,4 @@ function Collection() {
 }
 
 export default Collection;
+//sdhbgauisgfeuwife sddhbfwsbfnk  cvjdsvc ndsjv oik o
