@@ -7,6 +7,8 @@ function Input({
     value,
     onChange,
     className = "",
+    options = [],
+    listId,
     ...props
 }) {
     return (
@@ -16,45 +18,45 @@ function Input({
                     {label}
                 </label>
             )}
-            { type === "select" ? (
+
+            {type === "select" ? (
                 <select
                     value={value}
                     onChange={onChange}
-                    className={`border-2 p-2 rounded  ${className}`}
-                    {...props} 
-                >
-                    <option  value="">{placeholder || "Select an option"}</option>
-                        {option.map((opt , index) => {
-                            <option key={index}>{opt}</option>
-                        })}
-                </select>
-            ) : type === "datalist" ? (
-              <>  <input
-                    list={listId}
-                    onChange={onChange} 
-                    value={value}
-                    placeholder={placeholder}
-                    className={`${className}`}
+                    className={`border-2 p-2 rounded ${className}`}
                     {...props}
                 >
+                    <option value="">{placeholder || "Select an option"}</option>
+                    {options.map((opt, index) => (
+                        <option key={index} value={opt}>{opt}</option>
+                    ))}
+                </select>
+            ) : type === "datalist" ? (
+                <>
+                    <input
+                        list={listId}
+                        onChange={onChange}
+                        value={value}
+                        placeholder={placeholder}
+                        className={`border-2 p-2 rounded ${className}`}
+                        {...props}
+                    />
                     <datalist id={listId}>
-                        {option.map((opt, index) => {
-                        <option key={index} value={opt}>
-                        </option>
-                        })}
+                        {options.map((opt, index) => (
+                            <option key={index} value={opt} />
+                        ))}
                     </datalist>
-                </input>
-            </>
-        ) : (
-            <input
-                type={type}
-                placeholder={`${placeholder}`}
-                value={value}
-                onChange={onChange}
-                className={`border-2 p-2 rounded  ${className}`}
-                {...props}
-            />
-   )}
+                </>
+            ) : (
+                <input
+                    type={type}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={onChange}
+                    className={`border-2 p-2 rounded ${className}`}
+                    {...props}
+                />
+            )}
         </div>
     );
 }
