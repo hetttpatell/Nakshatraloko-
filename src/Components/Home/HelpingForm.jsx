@@ -23,7 +23,7 @@ function HelpingForm() {
           What To Buy ?
         </h1>
 
-        <div className="bg-[var(--color-aboutbg)] ml-auto mt-70 lg:mt-100 h-35 lg:h-80 w-65 lg:w-290">
+        <div className="bg-[var(--color-aboutbg)] ml-auto mt-20 lg:mt-50 h-35 lg:h-80 w-65 lg:w-290">
         </div>
 
         <h1 className="font-montserrat  text-center mt-6 text-[10px] sm:text-3xl lg:text-2xl

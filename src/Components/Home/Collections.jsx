@@ -18,7 +18,7 @@ function Collection() {
 
   return (
     <>
-      <div className="mt-100 h-max">
+      <div className="mt-100 ">
         {/* Heading Section */}
         <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 py-16">
           <div className="max-w-7xl mx-auto px-6 text-center text-white">
@@ -42,36 +42,36 @@ function Collection() {
         </div>
 
         <div className="flex justify-center items-center mt-20 px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {collections.map((item, index) => (
-              <Link key={index} to={item.path}>
-                <div className="aspect-square">
-                  <img
-                    key={index}
-                    src={item.img}
-                    alt={item.name}
-                    className="h-80 w-full lg:h-170 object-cover rounded-2xl shadow-lg
-             transform transition duration-500 ease-out
-             hover:scale-105 hover:shadow-2xl hover:-translate-y-2"/>
-                  <div className="absolute bottom-0 left-0 w-full bg-black/60 text-white p-4 
-                  translate-y-full group-hover:translate-y-0 transition duration-500 ease-out">
-                    <div
-                      className="absolute bottom-0 left-0 w-full 
-      bg-gradient-to-t from-black/70 via-black/50 to-transparent 
-      text-white p-4 
-      translate-y-full opacity-0
-      group-hover:translate-y-0 group-hover:opacity-100
-      transition-all duration-500 ease-out rounded-b-2xl"
-                    >
-                      <h3 className="text-lg font-semibold">{item.name}</h3>
-                      <p className="text-sm">Some description about this image.</p>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    {collections.map((item, index) => (
+      <Link key={index} to={item.path} className="group block">
+  <div className="relative overflow-hidden rounded-2xl shadow-lg">
+    <img
+      src={item.img}
+      alt={item.name}
+      className="h-80 w-full lg:h-170 object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+    />
+
+    {/* Overlay */}
+    <div className="absolute inset-0 z-10 flex items-end">
+      <div
+        className="w-full h-50 lg:h-100 p-4
+        bg-gradient-to-t from-black/70 via-black/50 to-transparent
+        translate-y-6 opacity-0
+        transition-all duration-500 ease-out
+        group-hover:translate-y-0 group-hover:opacity-100"
+      >
+        <h3 className="text-white text-xl lg:text-4xl mt-25 lg:mt-70 font-semibold font-lora">{item.name}</h3>
+        <p className="text-white/90 font-inter text-sm">Some description about this image.</p>
+      </div>
+    </div>
+  </div>
+</Link>
+
+    ))}
+  </div>
+</div>
+
 
       </div>
     </>
