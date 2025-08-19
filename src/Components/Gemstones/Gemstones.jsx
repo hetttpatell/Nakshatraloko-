@@ -1,13 +1,23 @@
-import React from "react";  
+import React from "react";
+import Input from "../Input/Input";
 
 export default function Gemstones() {
-    return(
-     
+  return (
+
     <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)]">
-  <h1 className="text-4xl font-bold text-[var(--color-text)]">Hello Gemstome</h1>
-</div>
-
-
+      
+      <Input 
+        list ="choice"
+      />
+      <datalist id="choices">
+  <option value="Option 1" />
+  <option value="Option 2" />
+  <option value="Option 3" />
+</datalist> 
     
-    )
+    </div>
+
+
+
+  )
 }
