@@ -13,8 +13,10 @@ const router = createBrowserRouter(
         <Route path="/" element={<App />} > 
 
             <Route index element={<Home/>} />
-            <Route path="/product/:id" element={<Cart />} /> {"Testing Route"}
-            <Route path="/gemstones" element={<Gemstones />} />
+            <Route path="/product/:id" element={<Cart />} /> 
+             <Route path="/gemstones" element={<Gemstones />}>
+        <Route path="product/:id" element={<Cart />} />  {/* relative child route */}
+      </Route>
             <Route path="/Custom" element={<Custom />} />
             <Route path="/Catagories" element={<Categories />} />
             <Route path="/faqs" element={<FAQs />} />
