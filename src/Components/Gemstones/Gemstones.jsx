@@ -3,6 +3,7 @@ import Input from "../Input/Input";
 import { Link } from "react-router-dom";
 import { Filter } from "lucide-react";
 import { Star, StarHalf, StarOff } from "lucide-react";
+import Imagepreview from "./Imagepreview";
 
 
 export default function Gemstones() {
@@ -20,7 +21,7 @@ export default function Gemstones() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Healing Stone",
-      img: "/testing.jpeg",
+      img: "/s3.jpeg",
       rating: 4.5,
     },
     {
@@ -29,7 +30,7 @@ export default function Gemstones() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Faster Growth",
-      img: "/testing.jpeg",
+      img: "/s2.jpeg",
       rating: 3.8,
     },
     {
@@ -38,7 +39,7 @@ export default function Gemstones() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Positive Vibes",
-      img: "/testing.jpeg",
+      img: "/s4.jpeg",
       rating: 5,
     },
     {
@@ -47,7 +48,7 @@ export default function Gemstones() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Good Fortune",
-      img: "/testing.jpeg",
+      img: "/s1.jpeg",
       rating: 4.2,
     },
     {
@@ -56,7 +57,7 @@ export default function Gemstones() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Attracts Wealth",
-      img: "/testing.jpeg",
+     img: "/s3.jpeg",
       rating: 3.5,
     },
     {
@@ -65,7 +66,7 @@ export default function Gemstones() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Spiritual Balance",
-      img: "/testing.jpeg",
+      img: "/s2.jpeg",
       rating: 4,
     },
     {
@@ -74,7 +75,7 @@ export default function Gemstones() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Emotional Healing",
-      img: "/testing.jpeg",
+      img: "/s1.jpeg",
       rating: 2.5,
     },
     {
@@ -83,7 +84,7 @@ export default function Gemstones() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Energy Booster",
-      img: "/testing.jpeg",
+      img: "/s4.jpeg",
       rating: 4.8,
     },
     {
@@ -92,7 +93,7 @@ export default function Gemstones() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Peace & Harmony",
-      img: "/testing.jpeg",
+      img: "/s2.jpeg",
       rating: 4.1,
     },
     {
@@ -101,7 +102,7 @@ export default function Gemstones() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Inner Strength",
-      img: "/testing.jpeg",
+      img: "/s2.jpeg",
       rating: 3.9,
     },
   ];
@@ -117,6 +118,7 @@ export default function Gemstones() {
 
   return (
     <>
+    <Imagepreview />
       <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--color-bg)]">
         {/* Filters Section */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-10">

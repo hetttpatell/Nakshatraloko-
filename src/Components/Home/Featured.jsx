@@ -16,7 +16,7 @@ export default function Featured() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       discount: "-30%",
-      img: "/testing.jpeg",
+      img: "/s1.jpeg",
     },
     {
       id: 2,
@@ -24,7 +24,7 @@ export default function Featured() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       discount: "-30%",
-      img: "/testing.jpeg",
+      img: "/s2.jpeg",
     },
     {
       id: 3,
@@ -32,7 +32,7 @@ export default function Featured() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       discount: "-30%",
-      img: "/testing.jpeg",
+      img: "/s3.jpeg",
     },
     {
       id: 4,
@@ -40,7 +40,7 @@ export default function Featured() {
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       discount: "-30%",
-      img: "/testing.jpeg",
+      img: "/s4.jpeg",
     },
   ];
 
