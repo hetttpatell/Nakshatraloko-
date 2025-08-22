@@ -209,10 +209,18 @@
 // export default Productdetails;
 
 
+import Input from "../Input/Input"; 
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-
+// import Input from "../Input/Input";
 // Sample products data
+const optionsfilter = {
+    filter1: ["Apple", "Banana", "Orange"],
+    filter2: ["Apple1", "Banana1", "Orange1"],
+    filter3: ["Apple2", "Banana2", "Orange2"],
+    filter4: ["Apple3", "Banana3", "Orange3"],
+  };
+
 const products = [
   {
     id: 1,
@@ -359,7 +367,20 @@ const Productdetails = () => {
                 <div className="text-lg font-bold text-[#222]">₹ {product.price * quantity}</div>
               </div>
             </div>
-
+             <Input
+              key={products.id}
+              type="select"
+              options={optionsfilter[item]}
+              value={filters[item]}
+              className="rounded-xl border border-[#e0dcb8] 
+             bg-gradient-to-r from-[#fafaf0] to-[var(--color-bg)]
+             px-4 py-2 text-sm shadow-sm hover:shadow-md
+             focus:border-[#c5c09c] focus:ring-2 focus:ring-[#e0dcb8]/60
+             transition duration-300 font-medium text-gray-700"
+              
+              
+              placeholder={`Choose a ${item}`}
+            />
             {/* Buttons */}
             <div className="flex gap-3 mb-5">
               <button className="bg-[#222] text-white px-8 py-2 rounded font-semibold text-sm">ADD TO BAG</button>
