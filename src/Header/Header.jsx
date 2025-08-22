@@ -5,7 +5,7 @@ import { ShoppingCart, Heart, User } from "lucide-react";
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const menuItems = ["Home", "GEMSTONES", "CUSTOM", "CATAGORIES", "FAQs", "BLOGS"];
+  const menuItems = ["Home", "GEMSTONES", "CUSTOM", "CATEGORIES", "FAQs", "BLOGS"];
   const UsermenuItems = [
     { to: "/cart", icon: ShoppingCart },
     { to: "/wishlist", icon: Heart },

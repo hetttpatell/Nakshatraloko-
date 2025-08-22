@@ -149,9 +149,8 @@ export default function Gemstones() {
         <div className="bg-[var(--color-bg)] py-12 w-full">
           <div className="max-w-8xl h-max mx-auto grid grid-cols-2  gap-4 lg:gap-12 rounded-2xl sm:grid-cols-2 lg:grid-cols-4 px-4 sm:px-6">
             {products.map((product) => (
-              <Link
-                to={`/product/${product.id}`}
-                key={product.id}
+              <Link to={`/product/${product.id}`} 
+              key={product.id} 
                 className="bg-white border rounded-md overflow-hidden shadow-sm hover:shadow-lg hover:scale-105 transition duration-400 block"
               >
                 {/* Image + Discount Badge */}
