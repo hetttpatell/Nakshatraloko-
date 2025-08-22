@@ -212,14 +212,6 @@
 import Input from "../Input/Input"; 
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-// import Input from "../Input/Input";
-// Sample products data
-const optionsfilter = {
-    filter1: ["Apple", "Banana", "Orange"],
-    filter2: ["Apple1", "Banana1", "Orange1"],
-    filter3: ["Apple2", "Banana2", "Orange2"],
-    filter4: ["Apple3", "Banana3", "Orange3"],
-  };
 
 const products = [
   {
@@ -229,6 +221,8 @@ const products = [
     rating: 4.5,
     reviews: 22,
     price: 900,
+    size: ["5 Ratti","5.25 Ratti","6 Ratti","6.5 Ratti","7 Ratti","7.5 Ratti","8 Ratti","8.5 Ratti"],
+    material: ["Pandent","Necklace","Gemstone"],
     images: [
       { src: "/s1.jpeg", alt: "Product Image 1" },
       { src: "/s2.jpeg", alt: "Product Image 2" },
@@ -247,7 +241,7 @@ const products = [
       "Machine washable",
     ],
     shipping:
-      "We offer Free Standard Shipping for all orders over $75 to the 50 states and the District of Columbia. The minimum order value must be $75 before taxes, shipping and handling. Shipping fees are non-refundable. Please allow up to 2 business days (excluding weekends, holidays, and sale days) to process your order. Processing Time + Shipping Time + Delivery Time",
+      "We offer Free Standard Shipping for all orders over $75 to the 50 states and the District of Columbia...",
   },
   {
     id: 2,
@@ -256,6 +250,8 @@ const products = [
     rating: 3.8,
     reviews: 12,
     price: 1200,
+    size: ["5 Ratti","5.25 Ratti","6 Ratti","6.5 Ratti","7 Ratti","7.5 Ratti","8 Ratti","8.5 Ratti"],
+    material: ["Silver","Gold","Copper"],
     images: [
       { src: "/s2.jpeg", alt: "Product Image 1" },
       { src: "/s3.jpeg", alt: "Product Image 2" },
@@ -264,7 +260,6 @@ const products = [
     advantages: ["Feature 1", "Feature 2", "Feature 3"],
     shipping: "Shipping info for product 2",
   },
-  // Add more products as needed
 ];
 
 const colorOptions = [
@@ -280,6 +275,10 @@ const Productdetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState(colorOptions[0].value);
   const [mainImage, setMainImage] = useState(product?.images[0]?.src || "");
+
+  // NEW STATES for size and material
+  const [selectedSize, setSelectedSize] = useState(product?.size[0] || "");
+  const [selectedMaterial, setSelectedMaterial] = useState(product?.material[0] || "");
 
   if (!product) return <div className="text-center mt-20">Product not found!</div>;
 
@@ -316,8 +315,7 @@ const Productdetails = () => {
           <div className="flex-1 flex flex-col">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="font-bold uppercase text-xs tracking-widest text-[#222]">{product.brand}</span>
-                <span className="text-yellow-500 text-xs flex items-center">
+                <span className="text-yellow-500 text-3xl flex items-center">
                   {"★".repeat(Math.floor(product.rating)) + "☆".repeat(5 - Math.floor(product.rating))}
                 </span>
                 <span className="text-xs text-gray-400">({product.reviews})</span>
@@ -325,19 +323,43 @@ const Productdetails = () => {
               <h1 className="font-serif text-2xl font-bold text-[#222] leading-tight mb-5">{product.name}</h1>
             </div>
 
-            {/* Color Picker */}
+            {/* Size Picker */}
             <div className="mb-4">
-              <label className="block text-xs font-semibold mb-2 text-gray-700">SELECT COLOR</label>
-              <div className="flex gap-3">
-                {colorOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    className={`w-6 h-6 rounded-full border-2 ${
-                      selectedColor === opt.value ? "border-[#222]" : "border-gray-300"
+              <label className="block text-xs font-semibold mb-2 text-gray-700">SELECT SIZE</label>
+              <div className="flex flex-wrap gap-3">
+                {product.size.map((item) => (
+                  <button 
+                    key={item}
+                    className={`px-4 py-2 rounded border text-sm font-medium transition ${
+                      selectedSize === item
+                        ? "bg-[#222] text-white border-[#222]"
+                        : "border-gray-400 text-gray-700"
                     }`}
-                    style={{ backgroundColor: opt.color }}
-                    onClick={() => setSelectedColor(opt.value)}
-                  ></button>
+                    onClick={() => setSelectedSize(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Material Picker */}
+            <div className="mb-4">
+              <label className="block text-xs font-semibold mb-2 text-gray-700">SELECT JWELLERY
+              </label>
+              <div className="flex flex-wrap gap-3">
+                {product.material.map((mat) => (
+                  <button
+                    key={mat}
+                    className={`px-4 py-2 rounded border text-sm font-medium transition ${
+                      selectedMaterial === mat
+                        ? "bg-[#222] text-white border-[#222]"
+                        : "border-gray-400 text-gray-700"
+                    }`}
+                    onClick={() => setSelectedMaterial(mat)}
+                  >
+                    {mat}
+                  </button>
                 ))}
               </div>
             </div>
@@ -367,20 +389,7 @@ const Productdetails = () => {
                 <div className="text-lg font-bold text-[#222]">₹ {product.price * quantity}</div>
               </div>
             </div>
-             <Input
-              key={products.id}
-              type="select"
-              options={optionsfilter[item]}
-              value={filters[item]}
-              className="rounded-xl border border-[#e0dcb8] 
-             bg-gradient-to-r from-[#fafaf0] to-[var(--color-bg)]
-             px-4 py-2 text-sm shadow-sm hover:shadow-md
-             focus:border-[#c5c09c] focus:ring-2 focus:ring-[#e0dcb8]/60
-             transition duration-300 font-medium text-gray-700"
-              
-              
-              placeholder={`Choose a ${item}`}
-            />
+
             {/* Buttons */}
             <div className="flex gap-3 mb-5">
               <button className="bg-[#222] text-white px-8 py-2 rounded font-semibold text-sm">ADD TO BAG</button>
@@ -414,9 +423,7 @@ const Productdetails = () => {
             <button className="text-gray-400 pb-2">REVIEWS</button>
           </div>
 
-          {/* Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            {/* Left: About Product */}
             <div>
               <h3 className="uppercase font-bold text-xs mb-2 text-[#222]">ABOUT PRODUCT</h3>
               <p className="text-sm text-[#333] mb-2">{product.description}</p>
@@ -427,8 +434,6 @@ const Productdetails = () => {
                 ))}
               </ul>
             </div>
-
-            {/* Right: Shipping Info */}
             <div>
               <h3 className="uppercase font-bold text-xs mb-2 text-[#222]">SHIPPING</h3>
               <p className="text-sm text-[#333] mb-2">{product.shipping}</p>
