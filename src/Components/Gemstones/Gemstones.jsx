@@ -17,7 +17,7 @@ export default function Gemstones() {
   const products = [
     {
       id: 1,
-      name: "14KT Yellow Gold Diamond Hoop Earrings",
+      name: "14KT Yellow Gold ffffreDiamond Hoop Earrings",
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Healing Stone",
@@ -26,7 +26,7 @@ export default function Gemstones() {
     },
     {
       id: 2,
-      name: "14KT Yellow Gold Diamond Hoop Earrings",
+      name: "14KT ddwdrdrwdffYellow Gold Diamond Hoop Earrings",
       category: "Women | Earrings",
       price: "₹ 4,554.00",
       feature: "Faster Growth",
