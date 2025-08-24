@@ -124,7 +124,10 @@ const colorOptions = [
 const Productdetails = () => {
   const { id } = useParams();
   const product = products.find((p) => p.id === parseInt(id));
-
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
+  const [title, setTitle] = useState("");
+  const [comment, setComment] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState(colorOptions[0].value);
   const [mainImage, setMainImage] = useState(product?.images[0]?.src || "");
@@ -143,7 +146,7 @@ const Productdetails = () => {
       extra = 1000;
     } else if (selectedMaterial === "Pendant") {
       extra = 1500;
-    } 
+    }
 
     return (product.price + extra) * Number(quantity || 1);
   };
@@ -163,7 +166,7 @@ const Productdetails = () => {
                 <img
                   src={mainImage}
                   alt={product.name}
-                  className="w-90 h-full object-cover rounded-lg"
+                  className="w-90 lg:w-full h-full object-cover rounded-lg"
                 />
               </div>
 
@@ -347,18 +350,18 @@ const Productdetails = () => {
           {activeTab === "description" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <div>
-                <h3 className="uppercase font-bold text-xs mb-2 text-[#222]">ABOUT PRODUCT</h3>
-                <p className="text-sm text-[#333] mb-2">{product.description}</p>
-                <h4 className="uppercase font-semibold text-xs mb-2 text-[#222]">ADVANTAGES</h4>
-                <ul className="list-disc ml-5 text-sm text-[#333] mb-2">
+                <h3 className="uppercase font-bold text-2xl mb-2 text-[#222]">ABOUT PRODUCT</h3>
+                <p className="text-[#333] mb-2">{product.description}</p>
+                <h4 className="uppercase font-semibold text-2xl mb-2 text-[#222]">ADVANTAGES</h4>
+                <ul className="list-disc ml-5  text-[#333] mb-2">
                   {product.advantages.map((adv, idx) => (
                     <li key={idx}>{adv}</li>
                   ))}
                 </ul>
               </div>
               <div>
-                <h3 className="uppercase font-bold text-xs mb-2 text-[#222]">SHIPPING</h3>
-                <p className="text-sm text-[#333] mb-2">{product.shipping}</p>
+                <h3 className="uppercase font-bold text-2xl mb-2 text-[#222]">SHIPPING</h3>
+                <p className=" text-[#333] mb-2">{product.shipping}</p>
               </div>
             </div>
           )}
@@ -426,10 +429,21 @@ const Productdetails = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     What is it like to Product?
                   </label>
-                  <div className="flex text-yellow-500 text-xl cursor-pointer">
-                    {"★".repeat(5)}
+                  <div className="flex text-yellow-500 text-2xl cursor-pointer">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        onClick={() => setRating(star)}
+                        onMouseEnter={() => setHover(star)}
+                        onMouseLeave={() => setHover(0)}
+                        className="transition-colors"
+                      >
+                        {star <= (hover || rating) ? "★" : "☆"}
+                      </span>
+                    ))}
                   </div>
                 </div>
+
 
                 {/* Title */}
                 <div className="mb-4">
@@ -439,6 +453,8 @@ const Productdetails = () => {
                   <input
                     type="text"
                     placeholder="Great Products"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#222]"
                   />
                 </div>
@@ -451,11 +467,28 @@ const Productdetails = () => {
                   <textarea
                     rows={4}
                     placeholder="Write your review here..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#222]"
                   />
                 </div>
 
-                <button className="bg-[#222] text-white px-6 py-2 rounded font-medium text-sm hover:bg-[#333]">
+                <button
+                  onClick={() => {
+                    if (rating === 0 || !comment.trim()) {
+                      alert("Please give a rating and write your review!");
+                      return;
+                    }
+                    const newReview = {
+                      user: "You", // replace with logged-in user
+                      rating,
+                      comment: `${title ? title + " - " : ""}${comment}`,
+                    };
+                    console.log("Submitted Review:", newReview);
+                    // 👉 Here you can push newReview to backend or update product.reviewList
+                  }}
+                  className="bg-[#222] text-white px-6 py-2 rounded font-medium text-sm hover:bg-[#333]"
+                >
                   Submit Review
                 </button>
               </div>
