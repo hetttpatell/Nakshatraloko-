@@ -2,6 +2,7 @@ import Input from "../Input/Input";
 import React, { useState } from "react";
 import AccordionItem from "./AccordionItem"
 import { useParams } from "react-router-dom";
+import { BsHandIndexFill } from "react-icons/bs";
 
 const products = [
   {
@@ -12,7 +13,7 @@ const products = [
     reviews: 22,
     price: 900,
     size: ["5 Ratti", "5.25 Ratti", "6 Ratti", "6.5 Ratti", "7 Ratti", "7.5 Ratti", "8 Ratti", "8.5 Ratti"],
-    material: ["Pandent", "Necklace", "Gemstone"],
+    material: ["Gemstone", "Pendant", "Necklace"],
     images: [
       { src: "/s1.jpeg", alt: "Product Image 1" },
       { src: "/s2.jpeg", alt: "Product Image 2" },
@@ -117,6 +118,9 @@ const colorOptions = [
   { value: "gold", color: "#e9b844" },
 ];
 
+
+
+
 const Productdetails = () => {
   const { id } = useParams();
   const product = products.find((p) => p.id === parseInt(id));
@@ -131,6 +135,19 @@ const Productdetails = () => {
   const [activeTab, setActiveTab] = useState("description");
 
   if (!product) return <div className="text-center mt-20">Product not found!</div>;
+  const getAdjustedPrice = () => {
+    if (!product || typeof product.price !== "number") return 0; // safeguard
+
+    let extra = 0;
+    if (selectedMaterial === "Necklace") {
+      extra = 1000;
+    } else if (selectedMaterial === "Pendant") {
+      extra = 1500;
+    } 
+
+    return (product.price + extra) * Number(quantity || 1);
+  };
+
 
   return (
     <div className="bg-[#f6f1eb] min-h-screen font-serif">
@@ -138,24 +155,34 @@ const Productdetails = () => {
         <nav className="text-xs text-[#404040] mb-4 opacity-80">Home / {product.name}</nav>
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Image Section */}
-          <div className="flex gap-5 lg:w-1/2">
-            <div className="sticky top-20 self-start flex gap-5 items-start">
-              <div className="flex flex-col gap-4">
-                {product.images.map((img, i) => (
+          <div className="flex flex-col lg:flex-row gap-5 lg:w-1/2">
+            <div className="flex flex-col lg:sticky top-20 self-start lg:flex-row gap-4 lg:items-start">
+
+              {/* Main image */}
+              <div className="relative w-full max-w-md aspect-[3/4] bg-white rounded-lg shadow mx-auto order-1 lg:order-2">
+                <img
+                  src={mainImage}
+                  alt={product.name}
+                  className="w-90 h-full object-cover rounded-lg"
+                />
+              </div>
+
+              {/* Thumbnails */}
+              <div className="flex lg:flex-col gap-3 mt-3 lg:mt-0 overflow-x-auto lg:overflow-visible px-2 lg:px-0 order-2 lg:order-1">
+                {product.images.map((img, index) => (
                   <img
-                    key={i}
+                    key={index}
                     src={img.src}
                     alt={img.alt}
-                    className="w-12 h-16 object-cover ring-1 ring-gray-200 rounded-sm cursor-pointer"
+                    className={`w-16 h-20 sm:w-20 sm:h-24 object-cover rounded-md cursor-pointer border transition 
+          ${mainImage === img.src ? "ring ring-black" : "ring-1 ring-gray-200 hover:ring-gray-400"}`}
                     onClick={() => setMainImage(img.src)}
                   />
                 ))}
               </div>
-              <div className="relative w-96 h-[480px] bg-white rounded mt-0 flex-shrink-0 shadow">
-                <img src={mainImage} alt={product.name} className="w-full h-full object-cover rounded" />
-              </div>
             </div>
           </div>
+
 
           {/* Details Section */}
           <div className="flex-1 flex flex-col">
@@ -192,16 +219,16 @@ const Productdetails = () => {
             <div className="mb-4">
               <label className="block text-xs font-semibold mb-2 text-gray-700">SELECT JWELLERY</label>
               <div className="flex flex-wrap gap-3">
-                {product.material.map((mat) => (
+                {product.material.map((item) => (
                   <button
-                    key={mat}
-                    className={`px-4 py-2 rounded border text-sm font-medium transition ${selectedMaterial === mat
+                    key={item}
+                    className={`px-4 py-2 rounded border text-sm font-medium transition ${selectedMaterial === item
                       ? "bg-[#222] text-white border-[#222]"
                       : "border-gray-400 text-gray-700"
                       }`}
-                    onClick={() => setSelectedMaterial(mat)}
+                    onClick={() => setSelectedMaterial(item)}
                   >
-                    {mat}
+                    {item}
                   </button>
                 ))}
               </div>
@@ -229,8 +256,9 @@ const Productdetails = () => {
               </div>
               <div>
                 <span className="text-sm text-gray-700">PRICE TOTAL</span>
-                <div className="text-lg font-bold text-[#222]">₹ {product.price * quantity}</div>
+                <div className="text-lg font-bold text-[#222]">₹ {getAdjustedPrice()}</div>
               </div>
+
             </div>
 
             {/* Buttons */}
@@ -336,103 +364,103 @@ const Productdetails = () => {
           )}
 
           {activeTab === "reviews" && (
-  <div className="reviews-section">
-    <h3 className="uppercase font-bold text-sm mb-6 text-[#222] tracking-wide">
-      CUSTOMER REVIEWS
-    </h3>
+            <div className="reviews-section">
+              <h3 className="uppercase font-bold text-sm mb-6 text-[#222] tracking-wide">
+                CUSTOMER REVIEWS
+              </h3>
 
-    {/* Review List */}
-    {product.reviewList.length > 0 ? (
-      <div className="flex flex-col gap-6">
-        {product.reviewList.map((rev, idx) => (
-          <div key={idx} className="border-b pb-5">
-            {/* User Info */}
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full bg-[#314d62] flex items-center justify-center text-white font-bold">
-                {rev.user.charAt(0)}
+              {/* Review List */}
+              {product.reviewList.length > 0 ? (
+                <div className="flex flex-col gap-6">
+                  {product.reviewList.map((rev, idx) => (
+                    <div key={idx} className="border-b pb-5">
+                      {/* User Info */}
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-full bg-[#314d62] flex items-center justify-center text-white font-bold">
+                          {rev.user.charAt(0)}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-sm text-[#222]">{rev.user}</h4>
+                          <span className="text-xs text-gray-500">3 days ago</span>
+                        </div>
+                      </div>
+
+                      {/* Title + Rating */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-yellow-500 text-sm">
+                          {"★".repeat(rev.rating)}{"☆".repeat(5 - rev.rating)}
+                        </span>
+                        <p className="font-medium text-sm text-[#222]">{rev.comment.split(" ")[0]} Product</p>
+                      </div>
+
+                      {/* Content */}
+                      <p className="text-sm text-gray-700 leading-relaxed">{rev.comment}</p>
+
+                      {/* Actions */}
+                      <div className="flex gap-4 text-xs text-gray-500 mt-2">
+                        <button className="hover:underline">👍 Like</button>
+                        <button className="hover:underline">↩️ Reply</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 italic">No reviews yet. Be the first to review this product!</p>
+              )}
+
+              {/* View All Reviews */}
+              {product.reviewList.length > 2 && (
+                <div className="text-center mt-5">
+                  <button className="text-sm font-medium underline text-[#222] hover:text-gray-700">
+                    View All Reviews
+                  </button>
+                </div>
+              )}
+
+              {/* Write Review Form */}
+              <div className="mt-10 p-5 border rounded bg-[#fcf8f4]">
+                <h4 className="font-bold text-base text-[#222] mb-3">Write a Review</h4>
+
+                {/* Rating */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    What is it like to Product?
+                  </label>
+                  <div className="flex text-yellow-500 text-xl cursor-pointer">
+                    {"★".repeat(5)}
+                  </div>
+                </div>
+
+                {/* Title */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Review Title
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Great Products"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#222]"
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Review Content
+                  </label>
+                  <textarea
+                    rows={4}
+                    placeholder="Write your review here..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#222]"
+                  />
+                </div>
+
+                <button className="bg-[#222] text-white px-6 py-2 rounded font-medium text-sm hover:bg-[#333]">
+                  Submit Review
+                </button>
               </div>
-              <div>
-                <h4 className="font-semibold text-sm text-[#222]">{rev.user}</h4>
-                <span className="text-xs text-gray-500">3 days ago</span>
-              </div>
             </div>
-
-            {/* Title + Rating */}
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-yellow-500 text-sm">
-                {"★".repeat(rev.rating)}{"☆".repeat(5 - rev.rating)}
-              </span>
-              <p className="font-medium text-sm text-[#222]">{rev.comment.split(" ")[0]} Product</p>
-            </div>
-
-            {/* Content */}
-            <p className="text-sm text-gray-700 leading-relaxed">{rev.comment}</p>
-
-            {/* Actions */}
-            <div className="flex gap-4 text-xs text-gray-500 mt-2">
-              <button className="hover:underline">👍 Like</button>
-              <button className="hover:underline">↩️ Reply</button>
-            </div>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <p className="text-sm text-gray-500 italic">No reviews yet. Be the first to review this product!</p>
-    )}
-
-    {/* View All Reviews */}
-    {product.reviewList.length > 2 && (
-      <div className="text-center mt-5">
-        <button className="text-sm font-medium underline text-[#222] hover:text-gray-700">
-          View All Reviews
-        </button>
-      </div>
-    )}
-
-    {/* Write Review Form */}
-    <div className="mt-10 p-5 border rounded bg-[#fcf8f4]">
-      <h4 className="font-bold text-base text-[#222] mb-3">Write a Review</h4>
-
-      {/* Rating */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          What is it like to Product?
-        </label>
-        <div className="flex text-yellow-500 text-xl cursor-pointer">
-          {"★".repeat(5)}
-        </div>
-      </div>
-
-      {/* Title */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Review Title
-        </label>
-        <input
-          type="text"
-          placeholder="Great Products"
-          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#222]"
-        />
-      </div>
-
-      {/* Content */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Review Content
-        </label>
-        <textarea
-          rows={4}
-          placeholder="Write your review here..."
-          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#222]"
-        />
-      </div>
-
-      <button className="bg-[#222] text-white px-6 py-2 rounded font-medium text-sm hover:bg-[#333]">
-        Submit Review
-      </button>
-    </div>
-  </div>
-)}
+          )}
 
         </div>
       </div>
