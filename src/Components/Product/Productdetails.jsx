@@ -1,8 +1,8 @@
-import Input from "../Input/Input";
 import React, { useState } from "react";
 import AccordionItem from "./AccordionItem"
 import { useParams } from "react-router-dom";
-import { BsHandIndexFill } from "react-icons/bs";
+import { AiOutlineLike, AiFillLike } from "react-icons/ai";
+import Recommendation from "./Recommendation";
 
 const products = [
   {
@@ -133,6 +133,14 @@ const Productdetails = () => {
   const [mainImage, setMainImage] = useState(product?.images[0]?.src || "");
   const [selectedSize, setSelectedSize] = useState(product?.size[0] || "");
   const [selectedMaterial, setSelectedMaterial] = useState(product?.material[0] || "");
+  const [likedReviews, setLikedReviews] = useState([]); // keep track of liked reviews
+
+  const toggleLike = (idx) => {
+    setLikedReviews((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+    );
+  };
+
 
   // New state for tabs
   const [activeTab, setActiveTab] = useState("description");
@@ -401,9 +409,23 @@ const Productdetails = () => {
 
                       {/* Actions */}
                       <div className="flex gap-4 text-xs text-gray-500 mt-2">
-                        <button className="hover:underline">👍 Like</button>
-                        <button className="hover:underline">↩️ Reply</button>
+                        <button
+                          className="flex items-center gap-1"
+                          onClick={() => toggleLike(idx)}
+                        >
+                          {likedReviews.includes(idx) ? (
+                            <AiFillLike className="text-yellow-500 text-lg" />
+                          ) : (
+                            <AiOutlineLike className="text-gray-500 text-lg hover:text-gray-700" />
+                          )}
+                          <span>{likedReviews.includes(idx) ? "Liked" : "Like"}</span>
+                        </button>
+
+                        <button className="hover:underline flex items-center gap-1">
+                          ↩️ Reply
+                        </button>
                       </div>
+
                     </div>
                   ))}
                 </div>
@@ -497,6 +519,7 @@ const Productdetails = () => {
 
         </div>
       </div>
+      <Recommendation products={products.filter((p) => p.id !== product.id)} />
     </div >
   );
 };
