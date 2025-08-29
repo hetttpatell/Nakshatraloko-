@@ -2,6 +2,21 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&display=swap');
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&family=Playfair+Display:wght@400;600;700&display=swap");
 
+@keyframes ring {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-10deg); }
+  30% { transform: rotate(7deg); }
+  40% { transform: rotate(-5deg); }
+  50% { transform: rotate(3deg); }
+  60% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.ring-animation {
+  animation: ring 1.2s infinite;
+  transform-origin: center;
+}
 
 @theme {
   --font-inter: "Inter", sans-serif;
@@ -18,8 +33,10 @@
 }
 
 :root {
+  --color-productcontainerbg: #fcf8f4;
+  --color-productbg: #f6f1eb;
   --color-bg: #f5f5dc;
-  --color-aboutbg : #e6d9c3;
+  --color-aboutbg: #e6d9c3;
   --color-navy: #001f3f;
   --color-text: #333333;
 }

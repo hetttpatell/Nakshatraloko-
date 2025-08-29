@@ -7,6 +7,7 @@ import  { Blogs, Cart, FAQs, Gemstones, Categories ,Custom, Home } from "./Compo
 import Wishlist from "./Components/Wishlist/Wishlist.jsx";
 import UserAccount from "./Components/UserAccount/UserAccount.jsx";
 import Productdetails from "./Components/Product/Productdetails.jsx"
+import ExpertCall from "./Components/Home/ExpertCall.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -18,6 +19,7 @@ const router = createBrowserRouter(
 
       {/* Gemstones Page */}
       <Route path="gemstones" element={<Gemstones />} />
+      <Route path="expertcall" element={<ExpertCall />} /> 
 
       <Route path="custom" element={<Custom />} />
       <Route path="categories" element={<Categories />} />

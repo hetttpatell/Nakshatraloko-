@@ -5,6 +5,7 @@ import Footer from "./Footer/Footer";
 import { Outlet } from "react-router-dom";
 import { CartProvider } from "./Context/CartContext";
 import { WishlistProvider } from "./Context/WishlistContext"; 
+import ExpertCall from "./Components/Home/ExpertCall";
 
 function App() {
   useEffect(() => {
@@ -30,6 +31,7 @@ function App() {
           <Header />
           <main className="flex-grow">
             <Outlet />
+            
           </main>
           {/* <Footer /> */}
         </div>
