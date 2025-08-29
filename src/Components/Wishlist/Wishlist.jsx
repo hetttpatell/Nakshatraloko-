@@ -3,32 +3,19 @@ import { useCart } from "../../Context/CartContext";
 import { Link } from "react-router-dom";
 
 export default function Wishlist() {
-  const { addToCart } = useCart(); // ✅ get addToCart from context
+  const { addToCart } = useCart(); // ✅ Add to cart from context
 
   const [wishlist, setWishlist] = useState(() => {
     const saved = localStorage.getItem("wishlist");
     return saved ? JSON.parse(saved) : [];
   });
 
-  // ✅ Sync with localStorage whenever wishlist changes
+  // Sync with localStorage whenever wishlist changes
   useEffect(() => {
     localStorage.setItem("wishlist", JSON.stringify(wishlist));
   }, [wishlist]);
 
-  // ✅ Add to wishlist (merge duplicates by quantity)
-  const addToWishlist = (product) => {
-    setWishlist((prev) => {
-      const exists = prev.find((p) => p.id === product.id);
-      if (exists) {
-        return prev.map((p) =>
-          p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
-        );
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-  };
-
-  // ✅ Remove one quantity or full item
+  // Remove one quantity or full item
   const handleRemove = (id) => {
     setWishlist((prev) =>
       prev
@@ -39,17 +26,15 @@ export default function Wishlist() {
     );
   };
 
-  // ✅ Clear all wishlist
+  // Clear all wishlist
   const handleClearAll = () => {
     setWishlist([]);
   };
 
-  // ✅ Move to cart (all quantity)
+  // Move to cart (all quantity)
   const handleMoveToCart = (id) => {
     const item = wishlist.find((p) => p.id === id);
-    if (item) {
-      if (!item.inStock) return; // don’t move out-of-stock
-      // send with quantity to cart
+    if (item && item.inStock) {
       for (let i = 0; i < item.quantity; i++) {
         addToCart(item);
       }
@@ -61,8 +46,8 @@ export default function Wishlist() {
     <div className="bg-[var(--color-productbg)] min-h-screen py-14 px-6">
       <div className="w-full max-w-5xl mx-auto">
         {/* Title + Clear All */}
-        <div className="flex justify-center items-center mb-12">
-          <h2 className="text-3xl font-bold tracking-widest text-gray-900 uppercase underline underline-offset-20">
+        <div className="flex justify-between items-center mb-12">
+          <h2 className="text-3xl ml-100 font-bold tracking-widest text-gray-900 uppercase underline underline-offset-20">
             My Wishlist
           </h2>
           {wishlist.length > 0 && (
@@ -80,29 +65,29 @@ export default function Wishlist() {
             {wishlist.map((item) => (
               <div
                 key={item.id}
-                className="flex flex-col sm:flex-row items-center gap-6 py-8"
+                className="flex flex-col sm:flex-row items-center sm:items-start gap-6 py-8"
               >
                 {/* Product Image */}
                 <img
                   src={item.mainImage}
                   alt={item.name}
-                  className="w-32 h-32 object-cover"
+                  className="w-32 h-32 object-cover rounded-lg shadow-sm"
                 />
 
                 {/* Product Info */}
-                <div className="flex-1 text-center sm:text-left">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <div className="flex-1 text-center sm:text-left space-y-2">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     {item.name}
                   </h3>
-                  <p className="text-xs text-gray-500 tracking-wide uppercase">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">
                     {item.brand} · {item.material}
                   </p>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-gray-500">
                     ⭐ {item.rating} ({item.reviews} reviews)
                   </p>
 
-                  {/* Price Section */}
-                  <div className="mt-3">
+                  {/* Price */}
+                  <div className="mt-2">
                     {item.oldPrice && (
                       <span className="text-sm text-gray-400 line-through mr-2">
                         ₹{item.oldPrice}
@@ -114,15 +99,15 @@ export default function Wishlist() {
                   </div>
 
                   {/* Quantity */}
-                  <p className="text-sm text-gray-700 mt-2">
+                  <p className="text-sm text-gray-700 mt-1">
                     Quantity: <b>{item.quantity}</b>
                   </p>
 
-
                   {/* Stock Status */}
                   <p
-                    className={`text-xs mt-1 ${item.inStock ? "text-green-600" : "text-red-500"
-                      }`}
+                    className={`text-xs mt-1 ${
+                      item.inStock ? "text-green-600" : "text-red-500"
+                    }`}
                   >
                     {item.inStock ? "In Stock" : "Out of Stock"}
                   </p>
@@ -133,10 +118,11 @@ export default function Wishlist() {
                   <button
                     onClick={() => handleMoveToCart(item.id)}
                     disabled={!item.inStock}
-                    className={`px-4 py-2 text-xs uppercase tracking-wide transition ${item.inStock
-                      ? "bg-black text-white hover:bg-gray-900"
-                      : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                      }`}
+                    className={`px-4 py-2 text-xs uppercase tracking-wide transition rounded-lg ${
+                      item.inStock
+                        ? "bg-black text-white hover:bg-gray-900"
+                        : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                    }`}
                   >
                     Move to Cart
                   </button>
@@ -151,6 +137,7 @@ export default function Wishlist() {
             ))}
           </div>
         ) : (
+          // Empty Wishlist
           <div className="flex flex-col items-center justify-center mt-56">
             <h2 className="text-2xl font-semibold text-gray-700">
               Your Wishlist is Empty
@@ -160,13 +147,11 @@ export default function Wishlist() {
             </p>
             <Link
               to="/gemstones"
-              className="mt-6 px-6 py-3 bg-[var(--color-navy)] 
-              text-white font-medium rounded-lg shadow-md hover:bg-[var(--color-text)] transition"
+              className="mt-6 px-6 py-3 bg-[var(--color-navy)] text-white font-medium rounded-lg shadow-md hover:bg-[var(--color-text)] transition"
             >
               Browse Products
             </Link>
           </div>
-
         )}
       </div>
     </div>
