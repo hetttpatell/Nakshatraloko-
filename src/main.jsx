@@ -8,7 +8,7 @@ import Wishlist from "./Components/Wishlist/Wishlist.jsx";
 import UserAccount from "./Components/UserAccount/UserAccount.jsx";
 import Productdetails from "./Components/Product/Productdetails.jsx"
 import ExpertCall from "./Components/Home/ExpertCall.jsx";
-
+import DetailBlog from "./Components/Blogs/DetailBlog.jsx"
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />} > 
@@ -16,6 +16,7 @@ const router = createBrowserRouter(
 
       {/* Product Page */}
       <Route path="product/:id" element={<Productdetails />} />
+      <Route path="blog/:id" element={<DetailBlog />} />
 
       {/* Gemstones Page */}
       <Route path="gemstones" element={<Gemstones />} />
