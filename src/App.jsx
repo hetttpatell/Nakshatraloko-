@@ -1,13 +1,12 @@
-import React,{ useState,  useEffect} from 'react'
-import './App.css'
-import Header from './Header/Header'
-import Footer from './Footer/Footer'
-import { Outlet } from 'react-router-dom'
+import React, { useEffect } from "react";
+import "./App.css";
+import Header from "./Header/Header";
+import Footer from "./Footer/Footer";
+import { Outlet } from "react-router-dom";
+import { CartProvider } from "./Context/CartContext";
+import { WishlistProvider } from "./Context/WishlistContext"; 
 
 function App() {
-  const [count, setCount] = useState(0)
-
-
   useEffect(() => {
     const savedScroll = sessionStorage.getItem("scroll-position");
     if (savedScroll) {
@@ -25,17 +24,18 @@ function App() {
   }, []);
 
   return (
-   <> 
-       
-      <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-grow">
-        <Outlet />
-      </main>
-      {/* <Footer /> */}
-    </div>
-  </>
-  )
+    <CartProvider>
+      <WishlistProvider> 
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-grow">
+            <Outlet />
+          </main>
+          {/* <Footer /> */}
+        </div>
+      </WishlistProvider>
+    </CartProvider>
+  );
 }
 
-export default App  
+export default App;

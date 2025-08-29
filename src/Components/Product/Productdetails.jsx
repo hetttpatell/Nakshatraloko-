@@ -1,17 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AccordionItem from "./AccordionItem"
 import { useParams } from "react-router-dom";
 import { AiOutlineLike, AiFillLike } from "react-icons/ai";
 import Recommendation from "./Recommendation";
+import Button from "../Button/Button";
+import { useWishlist } from "../../Context/WishlistContext";
 
 const products = [
   {
     id: 1,
-    name: "Stellar Dainty Diamond Hoop",
+    name: "Stellar Dainty Diamond Hoop id-1",
     brand: "STYLIUM",
     rating: 4.5,
     reviews: 22,
     price: 900,
+    inStock: true,
+    mainImage: "/s3.jpeg",
     size: ["5 Ratti", "5.25 Ratti", "6 Ratti", "6.5 Ratti", "7 Ratti", "7.5 Ratti", "8 Ratti", "8.5 Ratti"],
     material: ["Gemstone", "Pendant", "Necklace"],
     images: [
@@ -40,16 +44,18 @@ const products = [
   },
   {
     id: 2,
-    name: "Another Product Name",
+    name: "Another Product Name id-2",
     brand: "PEARLIX",
     rating: 3.8,
     reviews: 12,
     price: 1200,
+    inStock: true,
+    mainImage: "/s2.jpeg",
     size: ["5 Ratti", "5.25 Ratti", "6 Ratti", "6.5 Ratti", "7 Ratti", "7.5 Ratti", "8 Ratti", "8.5 Ratti"],
     material: ["Silver", "Gold", "Copper"],
     images: [
-      { src: "/s2.jpeg", alt: "Product Image 1" },
-      { src: "/s3.jpeg", alt: "Product Image 2" },
+      { src: "/s3.jpeg", alt: "Product Image 1" },
+      { src: "/s2.jpeg", alt: "Product Image 2" },
     ],
     description: "This is another product description.",
     advantages: ["Feature 1", "Feature 2", "Feature 3"],
@@ -58,7 +64,53 @@ const products = [
       { user: "Rahul Kumar", comment: "Good product overall.", rating: 4 },
     ],
   },
+  {
+    id: 3,
+    name: "Another Product Name id-3",
+    brand: "PEARLIX",
+    rating: 3.8,
+    reviews: 12,
+    price: 1200,
+    inStock: true,
+    mainImage: "/s4.jpeg",
+    size: ["5 Ratti", "5.25 Ratti", "6 Ratti", "6.5 Ratti", "7 Ratti", "7.5 Ratti", "8 Ratti", "8.5 Ratti"],
+    material: ["Silver", "Gold", "Copper"],
+    images: [
+      { src: "/s3.jpeg", alt: "Product Image 1" },
+      { src: "/s2.jpeg", alt: "Product Image 2" },
+    ],
+    description: "This is another product description.",
+    advantages: ["Feature 1", "Feature 2", "Feature 3"],
+    shipping: "Shipping info for product 2",
+    reviewList: [
+      { user: "Rahul Kumar", comment: "Good product overall.", rating: 4 },
+    ],
+  },
+  {
+    id: 4,
+    name: "Another Product Name id-4",
+    brand: "PEARLIX",
+    rating: 3.8,
+    reviews: 12,
+    price: 1200,
+    inStock: true,
+    mainImage: "/s1.jpeg",
+    size: ["5 Ratti", "5.25 Ratti", "6 Ratti", "6.5 Ratti", "7 Ratti", "7.5 Ratti", "8 Ratti", "8.5 Ratti"],
+    material: ["Silver", "Gold", "Copper"],
+    images: [
+      { src: "/s3.jpeg", alt: "Product Image 1" },
+      { src: "/s2.jpeg", alt: "Product Image 2" },
+    ],
+    description: "This is another product description.",
+    advantages: ["Feature 1", "Feature 2", "Feature 3"],
+    shipping: "Shipping info for product 2",
+    reviewList: [
+      { user: "Rahul Kumar", comment: "Good product overall.", rating: 4 },
+    ],
+  },
+
 ];
+
 const productquestions = [
   {
     title: "Benefits",
@@ -134,11 +186,29 @@ const Productdetails = () => {
   const [selectedSize, setSelectedSize] = useState(product?.size[0] || "");
   const [selectedMaterial, setSelectedMaterial] = useState(product?.material[0] || "");
   const [likedReviews, setLikedReviews] = useState([]); // keep track of liked reviews
+  const { addToWishlist } = useWishlist();
 
   const toggleLike = (idx) => {
     setLikedReviews((prev) =>
       prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
     );
+  };
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
+  const handleAddToWishlist = (product) => {
+    const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+
+    // check if already in wishlist
+    const exists = wishlist.find((item) => item.id === product.id);
+    if (!exists) {
+      wishlist.push(product);
+      localStorage.setItem("wishlist", JSON.stringify(wishlist));
+      alert(`${product.name} added to Wishlist ❤️`);
+    } else {
+      alert(`${product.name} is already in Wishlist`);
+    }
   };
 
 
@@ -161,7 +231,7 @@ const Productdetails = () => {
 
 
   return (
-    <div className="bg-[#f6f1eb] min-h-screen font-serif">
+    <div className="bg-[var(--color-productbg)] min-h-screen font-serif">
       <div className="w-full max-w-[1200px] mx-auto px-5 md:px-12 py-8">
         <nav className="text-xs text-[#404040] mb-4 opacity-80">Home / {product.name}</nav>
         <div className="flex flex-col lg:flex-row gap-12">
@@ -172,11 +242,12 @@ const Productdetails = () => {
               {/* Main image */}
               <div className="relative w-full max-w-md aspect-[3/4] bg-white rounded-lg shadow mx-auto order-1 lg:order-2">
                 <img
-                  src={mainImage}
+                  src={product.mainImage}   // ✅ use product.mainImage
                   alt={product.name}
                   className="w-90 lg:w-full h-full object-cover rounded-lg"
                 />
               </div>
+
 
               {/* Thumbnails */}
               <div className="flex lg:flex-col gap-3 mt-3 lg:mt-0 overflow-x-auto lg:overflow-visible px-2 lg:px-0 order-2 lg:order-1">
@@ -273,12 +344,39 @@ const Productdetails = () => {
             </div>
 
             {/* Buttons */}
+
+
             <div className="flex gap-3 mb-5">
-              <button className="bg-[#222] text-white px-8 py-2 rounded font-semibold text-sm">ADD TO BAG</button>
-              <button className="border border-[#222] px-8 py-2 rounded font-semibold text-sm text-[#222]">SAVE</button>
+              {/* Add to Bag Button */}
+              <Button
+                onClick={() => {
+                  console.log("✅ Product added to bag:", {
+                    id: product.id,
+                    name: product.name,
+                    size: selectedSize,
+                    material: selectedMaterial,
+                    quantity,
+                    price: getAdjustedPrice(),
+                  });
+                  // 👉 store in localStorage or update cart state here
+                }}
+                Classname="bg-[#222] text-white px-8 py-2 font-semibold text-sm hover:bg-[#333] transition"
+              >
+                ADD TO BAG
+              </Button>
+
+              {/* Buy Button */}
+              <Button
+                onClick={() =>  addToWishlist(product)}
+                className="border border-[#222] px-8 py-2 font-semibold text-sm text-[#222] hover:bg-[#222] hover:text-white transition"
+              >
+                Wishlist
+              </Button>
+
             </div>
+
             {/* Delivery Section */}
-            <div className="bg-[#fcf8f4] border border-gray-400 rounded p-4 flex flex-col gap-3 text-[15px]">
+            <div className="bg-[var(--color-productcontainerbg)] border border-gray-400 rounded p-4 flex flex-col gap-3 text-[15px]">
               <div className="flex gap-2 items-center">
                 <span className="inline-block w-6 text-center text-lg">🚚</span>
                 <div>
@@ -519,7 +617,16 @@ const Productdetails = () => {
 
         </div>
       </div>
-      <Recommendation products={products.filter((p) => p.id !== product.id)} />
+      <Recommendation
+        products={products
+          .filter((p) => p.id !== product.id)
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 4)
+        }
+      />
+
+      {/* <HelpingForm /> */}
+
     </div >
   );
 };

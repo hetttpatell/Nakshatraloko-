@@ -76,7 +76,9 @@ export default function Gemstones() {
   });
 
   // 🔄 Reset Filters
-
+  const clearFilters = () => {
+    setFilters({ Ratings: "", Categories: "", Price: "", Features: "" });
+  };
 
   return (
     <>
@@ -108,7 +110,13 @@ export default function Gemstones() {
           ))}
         </div>
 
-        
+        {/* Clear Filters Button */}
+        <button
+          onClick={clearFilters}
+          className="mb-8 px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-md transition"
+        >
+          Clear All Filters
+        </button>
 
         {/* Products Section */}
         <div className="bg-[var(--color-bg)] py-12 w-full">
