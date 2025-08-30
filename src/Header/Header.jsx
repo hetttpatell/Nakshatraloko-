@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { ShoppingCart, Heart, User, ChevronDown, ChevronRight } from "lucide-react";
 import { useCart } from "../Context/CartContext";
 import { useWishlist } from "../Context/WishlistContext";
@@ -10,7 +10,7 @@ const menuItems = [
   { label: "Gemstones", to: "/gemstones" },
   {
     label: "Categories",
-    to: "/",
+    to: "/categories",
     subMenu: [
       { label: "Pendant", to: "/categories/pendant" },
       { label: "Necklace", to: "/categories/necklace" },
@@ -40,7 +40,9 @@ const Badge = ({ count }) =>
     </span>
   );
 
-const NavItem = ({ item, dropdownOpen, setDropdownOpen }) => {
+// Nav Item (Desktop)
+const NavItem = ({ item, location }) => {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const closeTimeout = useRef(null);
 
   const handleMouseEnter = () => {
@@ -54,9 +56,14 @@ const NavItem = ({ item, dropdownOpen, setDropdownOpen }) => {
     if (item.subMenu) {
       closeTimeout.current = setTimeout(() => {
         setDropdownOpen(false);
-      }, 200); // delay to prevent accidental close
+      }, 200);
     }
   };
+
+  // Highlight parent ("Categories") if any of its sub routes are active
+  const isParentActive =
+    item.subMenu &&
+    item.subMenu.some((sub) => location.pathname.startsWith(sub.to));
 
   return (
     <li
@@ -68,7 +75,11 @@ const NavItem = ({ item, dropdownOpen, setDropdownOpen }) => {
         to={item.to}
         className={({ isActive }) =>
           `flex items-center gap-1 px-2 py-2 transition-colors duration-300 relative
-          ${isActive ? "text-orange-400" : "text-white group-hover:text-orange-400"}`
+          ${
+            isActive || isParentActive
+              ? "text-orange-400"
+              : "text-white group-hover:text-orange-400"
+          }`
         }
       >
         {item.label}
@@ -86,13 +97,23 @@ const NavItem = ({ item, dropdownOpen, setDropdownOpen }) => {
       {item.subMenu && (
         <ul
           className={`absolute left-0 mt-2 bg-white rounded shadow-lg min-w-[180px] transform transition-all duration-300
-          ${dropdownOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}`}
+          ${
+            dropdownOpen
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 -translate-y-2 pointer-events-none"
+          }`}
         >
           {item.subMenu.map((sub) => (
             <li key={sub.label}>
               <NavLink
                 to={sub.to}
-                className="block px-5 py-2 text-gray-900 hover:bg-orange-100 font-normal"
+                className={({ isActive }) =>
+                  `block px-5 py-2 font-normal ${
+                    isActive
+                      ? "bg-orange-100 text-orange-600"
+                      : "text-gray-900 hover:bg-orange-100"
+                  }`
+                }
               >
                 {sub.label}
               </NavLink>
@@ -104,6 +125,7 @@ const NavItem = ({ item, dropdownOpen, setDropdownOpen }) => {
   );
 };
 
+// User Menu Icons
 const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu }) => (
   <NavLink
     to={to}
@@ -121,11 +143,11 @@ const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu }) => (
 // ---------- MAIN HEADER ----------
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [openSubMenu, setOpenSubMenu] = useState(null);
 
   const { cart } = useCart();
   const { wishlist } = useWishlist();
+  const location = useLocation();
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const wishlistCount = wishlist.length;
@@ -147,12 +169,7 @@ export default function Header() {
         {/* Desktop Menu */}
         <ul className="hidden lg:flex absolute text-xl left-1/2 transform -translate-x-1/2 space-x-12 font-medium text-white menu-font">
           {menuItems.map((item) => (
-            <NavItem
-              key={item.label}
-              item={item}
-              dropdownOpen={dropdownOpen}
-              setDropdownOpen={setDropdownOpen}
-            />
+            <NavItem key={item.label} item={item} location={location} />
           ))}
         </ul>
 
@@ -163,7 +180,13 @@ export default function Header() {
               key={idx}
               to={to}
               Icon={Icon}
-              badgeCount={badgeType === "cart" ? cartCount : badgeType === "wishlist" ? wishlistCount : 0}
+              badgeCount={
+                badgeType === "cart"
+                  ? cartCount
+                  : badgeType === "wishlist"
+                  ? wishlistCount
+                  : 0
+              }
             />
           ))}
         </div>
@@ -174,12 +197,21 @@ export default function Header() {
           className="lg:hidden text-white focus:outline-none z-20"
           onClick={() => setMenuOpen(!menuOpen)}
         >
-          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-7 h-7"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+              d={
+                menuOpen
+                  ? "M6 18L18 6M6 6l12 12"
+                  : "M4 6h16M4 12h16M4 18h16"
+              }
             />
           </svg>
         </button>
@@ -188,7 +220,9 @@ export default function Header() {
         <div
           className={`lg:hidden fixed top-[64px] left-0 w-full bg-[var(--color-navy)]/95 backdrop-blur-md shadow-md 
           transform transition-all duration-300 ease-in-out ${
-            menuOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+            menuOpen
+              ? "translate-y-0 opacity-100"
+              : "-translate-y-full opacity-0"
           }`}
         >
           <ul className="flex flex-col items-center py-6 space-y-6 text-white font-medium text-lg">
@@ -198,7 +232,9 @@ export default function Header() {
                   className="flex items-center justify-center gap-1 w-full"
                   onClick={() =>
                     item.subMenu
-                      ? setOpenSubMenu(openSubMenu === item.label ? null : item.label)
+                      ? setOpenSubMenu(
+                          openSubMenu === item.label ? null : item.label
+                        )
                       : closeMenu()
                   }
                 >
@@ -206,7 +242,9 @@ export default function Header() {
                   {item.subMenu && (
                     <ChevronRight
                       className={`w-4 h-4 transition-transform duration-300 ${
-                        openSubMenu === item.label ? "rotate-90 text-orange-400" : ""
+                        openSubMenu === item.label
+                          ? "rotate-90 text-orange-400"
+                          : ""
                       }`}
                     />
                   )}
@@ -242,7 +280,13 @@ export default function Header() {
                   key={idx}
                   to={to}
                   Icon={Icon}
-                  badgeCount={badgeType === "cart" ? cartCount : badgeType === "wishlist" ? wishlistCount : 0}
+                  badgeCount={
+                    badgeType === "cart"
+                      ? cartCount
+                      : badgeType === "wishlist"
+                      ? wishlistCount
+                      : 0
+                  }
                   closeMenu={closeMenu}
                 />
               ))}
