@@ -23,7 +23,7 @@ function Input({
         <select
           value={value}
           onChange={onChange}
-          className={`border-2 p-2 rounded ${className}`}
+          className={`border-1 p-2 rounded ${className}`}
           {...props}
         >
           <option value="">{placeholder || "Select an option"}</option>
@@ -45,7 +45,7 @@ function Input({
             onChange={onChange}
             value={value}
             placeholder={placeholder}
-            className={`border-2 p-2 rounded ${className}`}
+            className={`border-1 p-2 rounded ${className}`}
             {...props}
           />
           <datalist id={listId}>
@@ -61,7 +61,7 @@ function Input({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className={`border-2 p-2 rounded ${className}`}
+          className={`border-1 p-2 rounded ${className}`}
           {...props}
         />
       )}

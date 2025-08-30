@@ -9,6 +9,8 @@ import UserAccount from "./Components/UserAccount/UserAccount.jsx";
 import Productdetails from "./Components/Product/Productdetails.jsx"
 import ExpertCall from "./Components/Home/ExpertCall.jsx";
 import DetailBlog from "./Components/Blogs/DetailBlog.jsx"
+import LoginSignup from "./Components/Login/Login.jsx";
+import SignupForm from "./Components/Input/SignupForm.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />} > 
@@ -26,6 +28,8 @@ const router = createBrowserRouter(
       <Route path="categories" element={<Categories />} />
       <Route path="faqs" element={<FAQs />} />
       <Route path="cart" element={<Cart />} />
+      <Route path="login" element={<LoginSignup />} />
+      <Route path="signup" element={<SignupForm />} />
       <Route path="wishlist" element={<Wishlist />} />
       <Route path="account" element={<UserAccount />} />
       <Route path="blogs" element={<Blogs />} />
