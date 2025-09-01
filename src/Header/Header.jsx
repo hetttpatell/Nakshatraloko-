@@ -138,7 +138,7 @@ export default function Header() {
 
   const closeMenu = () => setMenuOpen(false);
 
-  const isLoggedIn = false; // toggle login state
+  const isLoggedIn = true; // toggle login state
 
   return (
     <>
