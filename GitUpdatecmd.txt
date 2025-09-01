@@ -1,5 +1,5 @@
 git add .
-git commit -m "Fixed footer layout issue"
+git commit -m "Fixed Header layout issue"
 git push origin development
 
 
