@@ -5,6 +5,7 @@ import { AiOutlineLike, AiFillLike } from "react-icons/ai";
 import Recommendation from "./Recommendation";
 import Button from "../Button/Button";
 import { useWishlist } from "../../Context/WishlistContext";
+import { useCart } from "../../Context/CartContext";
 
 const products = [
   {
@@ -187,6 +188,8 @@ const Productdetails = () => {
   const [selectedMaterial, setSelectedMaterial] = useState(product?.material[0] || "");
   const [likedReviews, setLikedReviews] = useState([]); // keep track of liked reviews
   const { addToWishlist } = useWishlist();
+  const { addToCart } = useCart();
+
 
   const toggleLike = (idx) => {
     setLikedReviews((prev) =>
@@ -348,23 +351,12 @@ const Productdetails = () => {
 
             <div className="flex gap-3 mb-5">
               {/* Add to Bag Button */}
-              <Button
-                onClick={() => {
-                  console.log("✅ Product added to bag:", {
-                    id: product.id,
-                    name: product.name,
-                    size: selectedSize,
-                    material: selectedMaterial,
-                    quantity,
-                    price: getAdjustedPrice(),
-                  });
-                  // 👉 store in localStorage or update cart state here
-                }}
-                Classname="bg-[#222] text-white px-8 py-2 font-semibold text-sm hover:bg-[#333] transition"
-              >
-                ADD TO BAG
-              </Button>
-
+       <Button
+        onClick={() => addToCart(product)}
+        className="bg-[#222] text-white px-8 py-2 font-semibold text-sm hover:bg-[#333] transition"
+  >
+  ADD TO BAG
+</Button>
               {/* Buy Button */}
               <Button
                 onClick={() =>  addToWishlist(product)}

@@ -21,7 +21,8 @@ export function WishlistProvider({ children }) {
     // Add or increase quantity
     const addToWishlist = (product) => {
         setWishlist((prev) => {
-            const exists = prev.find((p) => p.id === product.id);
+            const exists = prev.find(
+                (p) => p.id === product.id);
             if (exists) {
                 return prev.map((p) =>
                     p.id === product.id ? { ...p } : p

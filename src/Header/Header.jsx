@@ -136,7 +136,7 @@ export default function Header() {
 
   const closeMenu = () => setMenuOpen(false);
 
-  const isLoggedIn = false; // toggle for testing login button
+  const isLoggedIn = true; // toggle for testing login button
 
   return (
     <>

@@ -1,8 +1,8 @@
 import React from "react";
 import { useCart } from "../../Context/CartContext";
 import Recommendations from "../Product/Recommendation";
-import { Minus, Plus, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom"; // ✅ Correct Link import
+import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity } = useCart();
@@ -43,9 +43,11 @@ export default function Cart() {
   ];
 
   // Handlers
-  const handleRemove = (id) => removeFromCart(id);
-  const handleQuantityChange = (id, value) =>
-    updateQuantity(id, Math.max(1, Number(value)));
+  const handleRemove = (id, size, material) =>
+    removeFromCart(id, size, material);
+
+  const handleQuantityChange = (id, size, material, value) =>
+    updateQuantity(id, size, material, Math.max(1, Number(value)));
 
   // Calculations
   const subtotal = cart.reduce(
@@ -69,8 +71,8 @@ export default function Cart() {
             <div className="lg:col-span-2 space-y-6">
               {cart.map((product) => (
                 <div
-                  key={product.id}
-                  className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-5 border rounded-2xl bg-white shadow-sm hover:shadow-md transition"
+                  key={`${product.id}-${product.size}-${product.material}`}
+                  className="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-5 border rounded-2xl bg-white shadow-md hover:shadow-lg transition"
                 >
                   {/* Product Image */}
                   <img
@@ -81,23 +83,27 @@ export default function Cart() {
 
                   {/* Product Info */}
                   <div className="flex-1 text-center sm:text-left space-y-2">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
                       {product.name}
                     </h3>
                     <p className="text-xs text-gray-500 uppercase tracking-wide">
-                      {product.material}
+                      {product.material} • {product.size}
                     </p>
                     <p className="text-sm text-gray-500">
                       ⭐ {product.rating} ({product.reviews} reviews)
                     </p>
 
                     {product.inStock ? (
-                      <p className="text-green-600 text-sm">In Stock</p>
+                      <p className="text-green-600 text-sm font-medium">
+                        In Stock
+                      </p>
                     ) : (
-                      <p className="text-red-600 text-sm">Out of Stock</p>
+                      <p className="text-red-600 text-sm font-medium">
+                        Out of Stock
+                      </p>
                     )}
 
-                    <div className="text-gray-800 font-semibold text-lg">
+                    <div className="text-gray-800 font-bold text-lg">
                       ₹{product.price * product.quantity}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -108,22 +114,32 @@ export default function Cart() {
                   {/* Actions */}
                   <div className="flex flex-col items-center sm:items-end gap-4">
                     {/* Quantity Selector */}
-                    <div className="flex items-center border rounded-lg overflow-hidden shadow-sm">
+                    <div className="flex items-center border rounded-full overflow-hidden shadow-sm">
                       <button
                         onClick={() =>
-                          handleQuantityChange(product.id, product.quantity - 1)
+                          handleQuantityChange(
+                            product.id,
+                            product.size,
+                            product.material,
+                            product.quantity - 1
+                          )
                         }
                         disabled={product.quantity <= 1 || !product.inStock}
                         className="px-3 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-40"
                       >
                         <Minus size={16} />
                       </button>
-                      <span className="px-4 py-2 text-gray-900 font-medium">
+                      <span className="px-4 py-2 text-gray-900 font-semibold">
                         {product.quantity}
                       </span>
                       <button
                         onClick={() =>
-                          handleQuantityChange(product.id, product.quantity + 1)
+                          handleQuantityChange(
+                            product.id,
+                            product.size,
+                            product.material,
+                            product.quantity + 1
+                          )
                         }
                         disabled={!product.inStock}
                         className="px-3 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-40"
@@ -134,7 +150,9 @@ export default function Cart() {
 
                     {/* Remove */}
                     <button
-                      onClick={() => handleRemove(product.id)}
+                      onClick={() =>
+                        handleRemove(product.id, product.size, product.material)
+                      }
                       className="flex items-center gap-1 text-xs text-gray-600 hover:text-red-600 transition"
                     >
                       <Trash2 size={14} /> Remove
@@ -145,15 +163,21 @@ export default function Cart() {
             </div>
 
             {/* Summary */}
-            <div className="bg-white rounded-2xl shadow-md p-6 h-fit">
+            <div className="bg-white rounded-2xl shadow-md p-6 h-fit lg:sticky lg:top-24">
               <h3 className="text-xl font-semibold mb-6">Order Summary</h3>
               <div className="flex justify-between text-gray-800 mb-3">
                 <span>Subtotal</span>
                 <span>₹{subtotal}</span>
               </div>
-              <div className="flex justify-between text-gray-600 mb-3">
-                <span>Shipping</span>
-                <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
+              <div className="flex justify-between mb-3">
+                <span className="text-gray-600">Shipping</span>
+                <span
+                  className={`${
+                    shipping === 0 ? "text-green-600 font-medium" : "text-gray-600"
+                  }`}
+                >
+                  {shipping === 0 ? "Free" : `₹${shipping}`}
+                </span>
               </div>
               <div className="flex justify-between font-bold text-xl border-t pt-4 mt-4">
                 <span>Total</span>
@@ -167,22 +191,29 @@ export default function Cart() {
                 >
                   Continue Shopping
                 </Link>
-                <button
-                  disabled={subtotal === 0}
-                  className="w-full py-3 bg-black text-white tracking-wide font-medium uppercase rounded-lg hover:bg-gray-900 transition disabled:opacity-50"
+                <Link
+                  to="/payment"
+                  className={`w-full py-3 rounded-lg tracking-wide font-medium uppercase transition text-center ${
+                    subtotal === 0
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-black text-white hover:bg-gray-900"
+                  }`}
                 >
                   Proceed to Checkout
-                </button>
+                </Link>
               </div>
             </div>
           </div>
         ) : (
           // Empty Cart
           <div className="text-center py-20">
+            <ShoppingBag className="w-16 h-16 mx-auto text-gray-400 mb-4" />
             <p className="text-2xl font-semibold text-gray-800">
               Your bag is empty 🛒
             </p>
-            <p className="text-gray-500 mt-2">Add some products to continue</p>
+            <p className="text-gray-500 mt-2">
+              Looks like you haven’t added anything yet
+            </p>
             <Link
               to="/gemstones"
               className="mt-6 inline-block px-6 py-3 bg-black text-white uppercase rounded-lg hover:bg-gray-900 transition"

@@ -11,6 +11,7 @@ import ExpertCall from "./Components/Home/ExpertCall.jsx";
 import DetailBlog from "./Components/Blogs/DetailBlog.jsx"
 import LoginSignup from "./Components/Login/Login.jsx";
 import SignupForm from "./Components/Login/SignupForm.jsx";
+import PaymentForm from "./Components/Payment/PaymentForm .jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />} > 
@@ -36,6 +37,7 @@ const router = createBrowserRouter(
       <Route path="necklace" element={<Cart />} />
       <Route path="rudraksh" element={<UserAccount />} />
       <Route path="pandent" element={<Wishlist />} />
+      <Route path="payment" element={<PaymentForm />} />
     </Route>
   )
 );
