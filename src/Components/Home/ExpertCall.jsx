@@ -42,12 +42,15 @@ function ExpertCall({ className = "" }) {
             {open && (
                 <div className="fixed inset-0 flex items-center justify-center
                          bg-black/30 backdrop-blur-xs z-50 px-4">
-                    <div className="bg-[var(--color-productcontainerbg)] p-8 rounded-2xl shadow-2xl w-full max-w-2xl relative border border-[var(--color-aboutbg)]">
+<div className="bg-[var(--color-productcontainerbg)] 
+    p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-2xl relative 
+    border border-[var(--color-aboutbg)]
+    max-h-[90vh] overflow-y-auto">
 
                         {/* Close Button */}
                         <button
                             onClick={() => setOpen(false)}
-                            className="absolute top-4 right-4 p-2 rounded-full 
+                            className="absolute  top-4 right-4 p-2 rounded-full 
              bg-[var(--color-aboutbg)] hover:bg-[var(--color-navy)] 
              text-[var(--color-navy)] hover:text-[var(--color-productcontainerbg)] 
              transition shadow-md"
