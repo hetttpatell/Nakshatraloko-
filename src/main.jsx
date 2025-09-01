@@ -10,7 +10,7 @@ import Productdetails from "./Components/Product/Productdetails.jsx"
 import ExpertCall from "./Components/Home/ExpertCall.jsx";
 import DetailBlog from "./Components/Blogs/DetailBlog.jsx"
 import LoginSignup from "./Components/Login/Login.jsx";
-import SignupForm from "./Components/Input/SignupForm.jsx";
+import SignupForm from "./Components/Login/SignupForm.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />} > 
