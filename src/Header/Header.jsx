@@ -206,42 +206,51 @@ export default function Header() {
             <ul className="flex flex-col items-center py-6 space-y-6 text-white font-medium text-lg">
               {menuItems.map((item) => (
                 <li key={item.label} className="w-full text-center">
-                  <button
-                    className="flex items-center justify-center gap-1 w-full"
-                    onClick={() =>
-                      item.subMenu ? setOpenSubMenu(openSubMenu === item.label ? null : item.label) : closeMenu()
-                    }
-                  >
-                    {item.label}
-                    {item.subMenu && (
-                      <ChevronRight
-                        className={`w-4 h-4 transition-transform duration-300 ${
-                          openSubMenu === item.label ? "rotate-90 text-orange-400" : ""
-                        }`}
-                      />
-                    )}
-                  </button>
+  {item.subMenu ? (
+    <button
+      className="flex items-center justify-center gap-1 w-full"
+      onClick={() =>
+        setOpenSubMenu(openSubMenu === item.label ? null : item.label)
+      }
+    >
+      {item.label}
+      <ChevronRight
+        className={`w-4 h-4 transition-transform duration-300 ${
+          openSubMenu === item.label ? "rotate-90 text-orange-400" : ""
+        }`}
+      />
+    </button>
+  ) : (
+    <NavLink
+      to={item.to}
+      className="flex items-center justify-center gap-1 w-full"
+      onClick={closeMenu}
+    >
+      {item.label}
+    </NavLink>
+  )}
 
-                  {item.subMenu && (
-                    <ul
-                      className={`overflow-hidden transition-all duration-300 ${
-                        openSubMenu === item.label ? "max-h-40 mt-2" : "max-h-0"
-                      }`}
-                    >
-                      {item.subMenu.map((sub) => (
-                        <li key={sub.label}>
-                          <NavLink
-                            to={sub.to}
-                            className="block py-2 text-sm text-orange-200 hover:text-orange-400"
-                            onClick={closeMenu}
-                          >
-                            {sub.label}
-                          </NavLink>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
+  {item.subMenu && (
+    <ul
+      className={`overflow-hidden transition-all duration-300 ${
+        openSubMenu === item.label ? "max-h-40 mt-2" : "max-h-0"
+      }`}
+    >
+      {item.subMenu.map((sub) => (
+        <li key={sub.label}>
+          <NavLink
+            to={sub.to}
+            className="block py-2 text-sm text-orange-200 hover:text-orange-400"
+            onClick={closeMenu}
+          >
+            {sub.label}
+          </NavLink>
+        </li>
+      ))}
+    </ul>
+  )}
+</li>
+
               ))}
 
               {/* Mobile User Icons / Login */}
