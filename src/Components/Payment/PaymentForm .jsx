@@ -78,46 +78,58 @@ const PaymentPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+ const handleSubmit = (e) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    if (formData.paymentMethod === "card") {
-      if (
-        !/^\d{16}$/.test(formData.cardNumber) ||
-        !/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.cardExpiry) ||
-        !/^\d{3}$/.test(formData.cardCVC)
-      ) {
-        setError("Please enter valid card details.");
-        setLoading(false);
-        return;
-      }
-      setTimeout(() => {
-        setLoading(false);
-        navigate("/thankyou");
-      }, 1000);
-    }
+  const orderId = "ORD" + Math.floor(Math.random() * 1000000); // generate orderId
 
-    if (formData.paymentMethod === "upi") {
-      if (!/^[\w.-]+@[a-zA-Z]+$/.test(formData.upiId)) {
-        setError("Please enter a valid UPI ID.");
-        setLoading(false);
-        return;
-      }
-      setTimeout(() => {
-        setLoading(false);
-        navigate("/thankyou");
-      }, 500);
-    }
+  const proceedToThankYou = () => {
+    // Save cart & orderId to localStorage if needed
+    localStorage.setItem("lastOrder", JSON.stringify({ cart: cartItems, orderId }));
 
-    if (formData.paymentMethod === "cod") {
-      setTimeout(() => {
-        setLoading(false);
-        navigate("/thankyou");
-      }, 700);
-    }
+    // Navigate to ThankYouPage and pass cart & orderId via state
+    navigate("/thankyou", { state: { cart: cartItems, orderId } });
+
+    // Clear cart after order
+    localStorage.removeItem("cart");
+    setCartItems([]);
+    setTotalAmount(0);
   };
+
+  if (formData.paymentMethod === "card") {
+    if (
+      !/^\d{16}$/.test(formData.cardNumber) ||
+      !/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.cardExpiry) ||
+      !/^\d{3}$/.test(formData.cardCVC)
+    ) {
+      setError("Please enter valid card details.");
+      setLoading(false);
+      return;
+    }
+    setTimeout(() => {
+      setLoading(false);
+      proceedToThankYou();
+    }, 1000);
+  } else if (formData.paymentMethod === "upi") {
+    if (!/^[\w.-]+@[a-zA-Z]+$/.test(formData.upiId)) {
+      setError("Please enter a valid UPI ID.");
+      setLoading(false);
+      return;
+    }
+    setTimeout(() => {
+      setLoading(false);
+      proceedToThankYou();
+    }, 500);
+  } else if (formData.paymentMethod === "cod") {
+    setTimeout(() => {
+      setLoading(false);
+      proceedToThankYou();
+    }, 700);
+  }
+};
+
 
   return (
     <main
