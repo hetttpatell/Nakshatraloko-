@@ -38,7 +38,7 @@ function App() {
           </main>
 
           {/* Optional Footer */}
-          {/* <Footer /> */}
+          <Footer />
 
           {/* Login Modal */}
           {showLogin && <LoginSignup onClose={() => setShowLogin(false)} />}

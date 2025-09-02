@@ -4,6 +4,7 @@ import { ShoppingCart, Heart, User, ChevronDown, ChevronRight } from "lucide-rea
 import { useCart } from "../Context/CartContext";
 import { useWishlist } from "../Context/WishlistContext";
 import LoginSignup from "../Components/Login/Login";
+ import logo from "/Logo.png"
 
 // ---------- MENU DATA ----------
 const menuItems = [
@@ -145,13 +146,18 @@ export default function Header() {
       <header className="sticky top-0 z-50 bg-[var(--color-navy)]/95 backdrop-blur-md shadow-md border-b border-white/10">
         <nav className="relative w-full py-4 px-6 lg:px-12 flex items-center">
           {/* Logo */}
-          <NavLink
-            to="/"
-            className="text-white font-bold text-2xl tracking-wide cursor-pointer flex-shrink-0"
-            onClick={closeMenu}
-          >
-            Nakshatraloko
-          </NavLink>
+         <NavLink
+  to="/"
+  className="flex-shrink-0 cursor-pointer"
+  onClick={closeMenu}
+>
+  <img
+    src={logo}
+    alt="Nakshatraloko Logo"
+    className="w-20 sm:w-25" 
+  />
+</NavLink>
+
 
           {/* Desktop Menu */}
           <ul className="hidden lg:flex flex-grow justify-center space-x-12 font-medium text-white menu-font text-xl">
