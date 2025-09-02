@@ -68,7 +68,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation   */}
         <div className="md:col-span-2">
           <h2 className="text-white font-semibold mb-4 text-lg">Navigation</h2>
           <ul className="space-y-2">
