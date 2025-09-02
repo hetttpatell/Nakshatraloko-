@@ -341,7 +341,7 @@ const Productdetails = () => {
               </div>
               <div>
                 <span className="text-sm text-gray-700">PRICE TOTAL</span>
-                <div className="text-lg font-bold text-[#222]">₹ {getAdjustedPrice()}</div>
+                <div className="text-lg font-bold text-[#222]">₹  {getAdjustedPrice()}</div>
               </div>
 
             </div>

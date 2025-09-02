@@ -185,7 +185,7 @@ const PaymentPage = () => {
 
           <div className="flex justify-between items-center border-t pt-4">
             <p className="text-lg font-medium text-gray-700">Total:</p>
-            <p className="text-xl font-bold text-gray-900">${totalAmount}</p>
+            <p className="text-xl font-bold text-gray-900">₹{totalAmount}</p>
           </div>
         </section>
 
@@ -389,7 +389,7 @@ const PaymentPage = () => {
                 ) : formData.paymentMethod === "cod" ? (
                   "Confirm Order"
                 ) : (
-                  `Pay $${totalAmount}`
+                  `Pay ₹${totalAmount}`
                 )}
               </button>
             </div>
