@@ -1,5 +1,6 @@
 // Footer.jsx
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   FaInstagram,
   FaFacebookF,
@@ -11,13 +12,37 @@ import {
 } from "react-icons/fa";
 
 import logo from "/Logo.png";
+import upiLogo from "/UPI.png";
+import gpayLogo from "/google-pay-icon.png";
+import netbankingLogo from "/net-banking-icon.png";
 
-const zodiacSigns = [
-  "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
+
+const navigationLinks = [ 
+  { label: "Home", to: "/" },
+  { label: "Gemstone", to: "/gemstones" },
+  { label: "Pendant", to: "/categories/pendant" },
+  { label: "Necklace", to: "/categories/necklace" },
+  { label: "Jewellery", to: "/categories/jewellery" },
+  { label: "Rudraksh", to: "/categories/rudraksh" },
 ];
 
-const navigationLinks = ["Home", "Shop", "Zodiac Signs", "Blog", "About Us", "Contact Us", "FAQ"];
+const expertLinks = [
+  { label: "Expert Call", to: "/expertcall" },
+  { label: "FAQs", to: "/faqs" },
+  { label: "Blogs", to: "/blogs" },
+  { label: "Reviews", to: "/reviews" },
+];
+
+const zodiacTopics = [
+  "Love & Relationships",
+  "Career & Finance",
+  "Health & Wellness",
+  "Lucky Stones",
+  "Birthstone Guide",
+  "Astrology Insights",
+  "Monthly Horoscopes",
+  "Energy Cleansing Tips",
+];
 
 const Footer = () => {
   return (
@@ -47,52 +72,70 @@ const Footer = () => {
         <div className="md:col-span-2">
           <h2 className="text-white font-semibold mb-4 text-lg">Navigation</h2>
           <ul className="space-y-2">
-            {navigationLinks.map((link) => (
-              <li key={link}>
-                <a
-                  href="#"
+            {navigationLinks.map((item) => (
+              <li key={item.label}>
+                <Link
+                  to={item.to}
                   className="hover:text-red-500 transition-colors duration-300"
                 >
-                  {link}
-                </a>
+                  {item.label}
+                </Link>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Zodiac Quick Links */}
+        {/* Categories Section */}
         <div className="md:col-span-3">
-          <h2 className="text-white font-semibold mb-4 text-lg">Zodiac Signs</h2>
-          <ul className="grid grid-cols-2 gap-2">
-            {zodiacSigns.map((sign) => (
-              <li key={sign}>
-                <a
-                  href="#"
+          <h2 className="text-white font-semibold mb-4 text-lg">Categories</h2>
+          <ul className="space-y-2">
+            {navigationLinks
+              .filter(item => ["Pendant", "Necklace", "Jewellery", "Rudraksh"].includes(item.label))
+              .map((cat) => (
+                <li key={cat.label}>
+                  <Link
+                    to={cat.to}
+                    className="hover:text-red-500 transition-colors duration-300"
+                  >
+                    {cat.label}
+                  </Link>
+                </li>
+              ))}
+          </ul>
+        </div>
+
+        {/* Expert Insights Section */}
+        <div className="md:col-span-3">
+          <h2 className="text-white font-semibold mb-4 text-lg">Expert Insights</h2>
+          <ul className="space-y-2">
+            {expertLinks.map((item) => (
+              <li key={item.label}>
+                <Link
+                  to={item.to}
                   className="hover:text-red-500 transition-colors duration-300"
                 >
-                  {sign}
-                </a>
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+            <hr className="my-2 border-gray-700" />
+            {zodiacTopics.map((topic) => (
+              <li key={topic} className="text-gray-400 text-sm">
+                {topic}
               </li>
             ))}
           </ul>
         </div>
+      </div>
 
-        {/* Newsletter Section */}
-        <div className="md:col-span-3">
-          <h2 className="text-white font-semibold mb-4 text-lg">Newsletter</h2>
-          <p className="text-gray-400 mb-4">Get cosmic updates and exclusive offers.</p>
-          <input
-            type="email"
-            placeholder="Enter your email"
-            className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-900"
-          />
-          <div className="flex items-center space-x-4 mt-6">
-            {[FaCcVisa, FaCcMastercard, FaCcPaypal].map((Icon, idx) => (
-              <Icon key={idx} size={36} className="hover:text-red-500 transition-colors" />
-            ))}
-          </div>
-          <p className="text-gray-500 text-sm mt-2">Secure payments guaranteed</p>
-        </div>
+      {/* Payment Icons */}
+      <div className="flex flex-wrap justify-center items-center space-x-6 mt-6">
+        <FaCcVisa size={36} className="hover:text-red-500 transition-colors" />
+        <FaCcMastercard size={36} className="hover:text-red-500 transition-colors" />
+        <FaCcPaypal size={36} className="hover:text-red-500 transition-colors" />
+        <img src={upiLogo} alt="UPI" className="h-9 w-auto hover:opacity-80 transition-opacity" />
+        <img src={gpayLogo} alt="GPay" className="h-9 w-auto hover:opacity-80 transition-opacity" />
+        <img src={netbankingLogo} alt="Netbanking" className="h-9 w-auto hover:opacity-80 transition-opacity" />
       </div>
 
       {/* Bottom Section */}

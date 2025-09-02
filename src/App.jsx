@@ -6,6 +6,7 @@ import { Outlet } from "react-router-dom";
 import { CartProvider } from "./Context/CartContext";
 import { WishlistProvider } from "./Context/WishlistContext"; 
 import LoginSignup from "./Components/Login/Login"; // import your login modal
+import ScrollToTop from "./Scrollingfix";
 
 function App() {
   const [showLogin, setShowLogin] = useState(false); // state to control login modal
@@ -31,6 +32,7 @@ function App() {
       <WishlistProvider> 
         <div className={`flex flex-col min-h-screen ${showLogin ? "filter blur-sm" : ""}`}>
           {/* Pass function to Header to open login modal */}
+          <ScrollToTop />
           <Header onLoginClick={() => setShowLogin(true)} />
 
           <main className="flex-grow">
