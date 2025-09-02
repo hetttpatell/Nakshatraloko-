@@ -16,24 +16,24 @@ import upiLogo from "/UPI.png";
 import gpayLogo from "/google-pay-icon.png";
 import netbankingLogo from "/net-banking-icon.png";
 
-
-const navigationLinks = [ 
+// Navigation and Categories
+export const navigationLinks = [
   { label: "Home", to: "/" },
   { label: "Gemstone", to: "/gemstones" },
+  { label: "FAQs", to: "/faqs" },
+  { label: "Blogs", to: "/blogs" },
+  { label: "Expert Guidance", to: "/expertcall" },
+];
+
+export const categoriesLinks = [
   { label: "Pendant", to: "/categories/pendant" },
   { label: "Necklace", to: "/categories/necklace" },
   { label: "Jewellery", to: "/categories/jewellery" },
   { label: "Rudraksh", to: "/categories/rudraksh" },
+  { label: "Gemstone", to: "/gemstones" },
 ];
 
-const expertLinks = [
-  { label: "Expert Call", to: "/expertcall" },
-  { label: "FAQs", to: "/faqs" },
-  { label: "Blogs", to: "/blogs" },
-  { label: "Reviews", to: "/reviews" },
-];
-
-const zodiacTopics = [
+export const zodiacTopics = [
   "Love & Relationships",
   "Career & Finance",
   "Health & Wellness",
@@ -49,7 +49,7 @@ const Footer = () => {
     <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-gray-300">
       <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-12 gap-8">
         
-        {/* Logo & About Section */}
+        {/* Logo & About */}
         <div className="md:col-span-4 flex flex-col space-y-4">
           <img src={logo} alt="Zodiac Store Logo" className="w-36 sm:w-44" />
           <p className="text-gray-400 leading-relaxed">
@@ -68,7 +68,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Navigation Links */}
+        {/* Navigation */}
         <div className="md:col-span-2">
           <h2 className="text-white font-semibold mb-4 text-lg">Navigation</h2>
           <ul className="space-y-2">
@@ -85,40 +85,27 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Categories Section */}
+        {/* Categories */}
         <div className="md:col-span-3">
           <h2 className="text-white font-semibold mb-4 text-lg">Categories</h2>
           <ul className="space-y-2">
-            {navigationLinks
-              .filter(item => ["Pendant", "Necklace", "Jewellery", "Rudraksh"].includes(item.label))
-              .map((cat) => (
-                <li key={cat.label}>
-                  <Link
-                    to={cat.to}
-                    className="hover:text-red-500 transition-colors duration-300"
-                  >
-                    {cat.label}
-                  </Link>
-                </li>
-              ))}
-          </ul>
-        </div>
-
-        {/* Expert Insights Section */}
-        <div className="md:col-span-3">
-          <h2 className="text-white font-semibold mb-4 text-lg">Expert Insights</h2>
-          <ul className="space-y-2">
-            {expertLinks.map((item) => (
-              <li key={item.label}>
+            {categoriesLinks.map((cat) => (
+              <li key={cat.label}>
                 <Link
-                  to={item.to}
+                  to={cat.to}
                   className="hover:text-red-500 transition-colors duration-300"
                 >
-                  {item.label}
+                  {cat.label}
                 </Link>
               </li>
             ))}
-            <hr className="my-2 border-gray-700" />
+          </ul>
+        </div>
+
+        {/* Zodiac Topics */}
+        <div className="md:col-span-3">
+          <h2 className="text-white font-semibold mb-4 text-lg">Zodiac Topics</h2>
+          <ul className="space-y-2">
             {zodiacTopics.map((topic) => (
               <li key={topic} className="text-gray-400 text-sm">
                 {topic}
@@ -128,7 +115,7 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Payment Icons */}
+      {/* Payment Methods */}
       <div className="flex flex-wrap justify-center items-center space-x-6 mt-6">
         <FaCcVisa size={36} className="hover:text-red-500 transition-colors" />
         <FaCcMastercard size={36} className="hover:text-red-500 transition-colors" />
@@ -138,7 +125,7 @@ const Footer = () => {
         <img src={netbankingLogo} alt="Netbanking" className="h-9 w-auto hover:opacity-80 transition-opacity" />
       </div>
 
-      {/* Bottom Section */}
+      {/* Footer Bottom */}
       <div className="border-t border-gray-700 mt-10 py-4 text-center text-gray-500 text-sm">
         © {new Date().getFullYear()} Zodiac Store. All rights reserved.
       </div>
