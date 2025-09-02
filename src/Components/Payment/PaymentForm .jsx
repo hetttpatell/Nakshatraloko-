@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCreditCard, FaMoneyBillWave, FaMobileAlt } from "react-icons/fa";
-
-const mockCart = [
-  { id: 1, name: "Product 1", price: 500, quantity: 2 },
-  { id: 2, name: "Product 2", price: 300, quantity: 1 },
-];
+import { useNavigate } from "react-router-dom";
 
 const PAYMENT_OPTIONS = [
   { key: "card", label: "Credit/Debit Card", icon: <FaCreditCard /> },
@@ -13,9 +9,20 @@ const PAYMENT_OPTIONS = [
   { key: "cod", label: "Cash on Delivery", icon: <FaMoneyBillWave /> },
 ];
 
-const UnderlineInput = ({ label, name, type = "text", value, onChange, required, maxLength }) => (
+const UnderlineInput = ({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  required,
+  maxLength,
+}) => (
   <div className="flex flex-col w-full" style={{ minWidth: 0 }}>
-    <label htmlFor={name} className="mb-1 text-xs font-semibold text-gray-600 tracking-wide">
+    <label
+      htmlFor={name}
+      className="mb-1 text-xs font-semibold text-gray-600 tracking-wide"
+    >
       {label}
     </label>
     <input
@@ -52,9 +59,17 @@ const PaymentPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
+
+  // ✅ Load cart from localStorage
   useEffect(() => {
-    setCartItems(mockCart);
-    const total = mockCart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const savedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    setCartItems(savedCart);
+
+    const total = savedCart.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
     setTotalAmount(total);
   }, []);
 
@@ -79,8 +94,8 @@ const PaymentPage = () => {
         return;
       }
       setTimeout(() => {
-        alert("Card payment successful!");
         setLoading(false);
+        navigate("/thankyou");
       }, 1000);
     }
 
@@ -91,15 +106,15 @@ const PaymentPage = () => {
         return;
       }
       setTimeout(() => {
-        alert(`Redirecting to UPI app for ${formData.upiId}`);
         setLoading(false);
+        navigate("/thankyou");
       }, 500);
     }
 
     if (formData.paymentMethod === "cod") {
       setTimeout(() => {
-        alert("Order confirmed with Cash on Delivery!");
         setLoading(false);
+        navigate("/thankyou");
       }, 700);
     }
   };
@@ -109,32 +124,75 @@ const PaymentPage = () => {
       className="bg-[var(--color-productbg)] flex justify-center items-center p-8"
       style={{ height: "100vh", overflow: "hidden" }}
     >
-      <div className="bg-white rounded-2xl shadow-xl flex w-full max-w-7xl max-h-full" style={{ minHeight: "80vh" }}>
+      <div
+        className="bg-white rounded-2xl shadow-xl flex w-full max-w-7xl max-h-full"
+        style={{ minHeight: "80vh" }}
+      >
         {/* Left summary panel */}
         <section
           className="w-1/3 p-8 flex flex-col justify-between border-r border-gray-200 overflow-y-auto"
           style={{ minWidth: 320, maxHeight: "80vh" }}
         >
-          <h2 className="text-2xl font-semibold mb-8 text-gray-900 tracking-tight">Order Summary</h2>
-          <ul className="divide-y divide-gray-200 flex-grow overflow-y-auto space-y-4 mb-6" style={{ maxHeight: "calc(80vh - 160px)" }}>
-            {cartItems.map(({ id, name, price, quantity }) => (
-              <li key={id} className="flex justify-between text-gray-700 font-medium text-sm">
-                <span>
-                  {name} <span className="text-gray-400 font-normal">x{quantity}</span>
-                </span>
-                <span>${price * quantity}</span>
-              </li>
-            ))}
+          <h2 className="text-2xl font-semibold mb-8 text-gray-900 tracking-tight">
+            Order Summary
+          </h2>
+          <ul
+            className="divide-y divide-gray-200 flex-grow overflow-y-auto space-y-4 mb-6"
+            style={{ maxHeight: "calc(80vh - 160px)" }}
+          >
+            {cartItems.length > 0 ? (
+              cartItems.map(({ id, name, price, quantity, image }) => (
+                <li
+                  key={id}
+                  className="flex items-center justify-between gap-4 text-gray-700 font-medium text-sm"
+                >
+                  {/* Left side - image + name */}
+                  <div className="flex items-center gap-3">
+                    {image && (
+                      <img
+                        src={image}
+                        alt={name}
+                        className="w-12 h-12 object-cover rounded-md border border-gray-200"
+                      />
+                    )}
+                    <span>
+                      {name}{" "}
+                      <span className="text-gray-400 font-normal">
+                        x{quantity}
+                      </span>
+                    </span>
+                  </div>
+
+                  {/* Right side - price */}
+                  <span>${price * quantity}</span>
+                </li>
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm text-center w-full">
+                Your cart is empty.
+              </p>
+            )}
           </ul>
-          <p className="text-right text-lg font-semibold text-gray-900">Total: ${totalAmount}</p>
+          <p className="text-right text-lg font-semibold text-gray-900">
+            Total: ${totalAmount}
+          </p>
         </section>
 
         {/* Right form panel */}
-        <section className="flex-1 p-8 overflow-y-auto" style={{ maxHeight: "80vh" }}>
-          <form onSubmit={handleSubmit} noValidate className="flex flex-col justify-between h-full">
+        <section
+          className="flex-1 p-8 overflow-y-auto"
+          style={{ maxHeight: "80vh" }}
+        >
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="flex flex-col justify-between h-full"
+          >
             <div>
               {/* Shipping Details */}
-              <h3 className="text-xl font-medium mb-6 text-gray-800 tracking-wide">Shipping Details</h3>
+              <h3 className="text-xl font-medium mb-6 text-gray-800 tracking-wide">
+                Shipping Details
+              </h3>
               <div className="grid grid-cols-2 gap-6 mb-8">
                 <UnderlineInput
                   label="Full Name"
@@ -160,19 +218,41 @@ const PaymentPage = () => {
                     required
                   />
                 </div>
-                <UnderlineInput label="City" name="city" value={formData.city} onChange={handleChange} required />
-                <UnderlineInput label="ZIP Code" name="zip" value={formData.zip} onChange={handleChange} required />
-                <UnderlineInput label="Country" name="country" value={formData.country} onChange={handleChange} required />
+                <UnderlineInput
+                  label="City"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  required
+                />
+                <UnderlineInput
+                  label="ZIP Code"
+                  name="zip"
+                  value={formData.zip}
+                  onChange={handleChange}
+                  required
+                />
+                <UnderlineInput
+                  label="Country"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleChange}
+                  required
+                />
               </div>
 
               {/* Payment Method Selection */}
-              <h3 className="text-xl font-medium mb-5 text-gray-800 tracking-wide">Payment Method</h3>
+              <h3 className="text-xl font-medium mb-5 text-gray-800 tracking-wide">
+                Payment Method
+              </h3>
               <div className="flex gap-6 mb-8">
                 {PAYMENT_OPTIONS.map(({ key, label, icon }) => (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, paymentMethod: key }))}
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, paymentMethod: key }))
+                    }
                     aria-pressed={formData.paymentMethod === key}
                     className={`flex items-center gap-2 rounded-lg px-6 py-2 font-semibold text-sm transition-colors duration-200 ${
                       formData.paymentMethod === key
@@ -186,6 +266,7 @@ const PaymentPage = () => {
                 ))}
               </div>
 
+              {/* Payment Fields */}
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={formData.paymentMethod}
@@ -194,6 +275,7 @@ const PaymentPage = () => {
                   exit={{ opacity: 0, y: 18 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                   className="space-y-6 max-w-xl"
+                  layout
                 >
                   {formData.paymentMethod === "card" && (
                     <>
@@ -238,7 +320,8 @@ const PaymentPage = () => {
                         required
                       />
                       <p className="text-xs text-center text-gray-500">
-                        You’ll be redirected to your UPI app to complete payment.
+                        You’ll be redirected to your UPI app to complete
+                        payment.
                       </p>
                     </>
                   )}
@@ -252,21 +335,52 @@ const PaymentPage = () => {
             </div>
 
             {/* Error & Submit */}
-            <div className="mt-6">
-              {error && <p className="mb-4 text-center text-red-600 font-semibold">{error}</p>}
+            <div className="mt-auto pt-6">
+              {error && (
+                <p className="mb-4 text-center text-red-600 font-semibold">
+                  {error}
+                </p>
+              )}
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full rounded-lg py-3 font-semibold text-white text-sm transition-colors duration-300 ${
-                  loading ? "bg-gray-500 cursor-not-allowed" : "bg-gray-900 hover:bg-black"
-                }`}
-                aria-busy={loading}
+                className={`w-full py-3 px-6 font-semibold text-sm rounded-lg border border-gray-800 text-gray-800 
+                  transition-all duration-300 ease-in-out
+                  ${
+                    loading
+                      ? "opacity-60 cursor-wait bg-gray-100"
+                      : "hover:bg-gradient-to-r hover:from-gray-800 hover:to-black hover:text-white hover:scale-[1.02] shadow-md"
+                  }`}
               >
-                {loading
-                  ? "Processing..."
-                  : formData.paymentMethod === "cod"
-                  ? "Confirm Order"
-                  : `Pay $${totalAmount}`}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg
+                      className="animate-spin h-4 w-4 text-gray-800"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : formData.paymentMethod === "cod" ? (
+                  "Confirm Order"
+                ) : (
+                  `Pay $${totalAmount}`
+                )}
               </button>
             </div>
           </form>
@@ -277,4 +391,3 @@ const PaymentPage = () => {
 };
 
 export default PaymentPage;
-

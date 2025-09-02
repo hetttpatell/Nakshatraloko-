@@ -19,39 +19,43 @@ export function CartProvider({ children }) {
   }, [cart]);
 
   // Add or increase quantity
-  const addToCart = (product) => {
-    setCart((prev) => {
-      const exists = prev.find(
-        (p) =>
-          p.id === product.id &&
-          p.size === product.size &&
-          p.material === product.material
+  // Add or increase quantity
+const addToCart = (product) => {
+  setCart((prev) => {
+    const exists = prev.find(
+      (p) =>
+        p.id === product.id &&
+        p.size === product.size &&
+        p.material === product.material
+    );
+
+    if (exists) {
+      return prev.map((p) =>
+        p.id === product.id &&
+        p.size === product.size &&
+        p.material === product.material
+          ? {
+              ...p,
+              quantity: Number(p.quantity) + Number(product.quantity || 1),
+              price: Number(product.price) || 0,
+              image: product.image || p.image || "", // ✅ ensure image stays
+            }
+          : p
       );
+    }
 
-      if (exists) {
-        return prev.map((p) =>
-          p.id === product.id &&
-          p.size === product.size &&
-          p.material === product.material
-            ? {
-                ...p,
-                quantity: Number(p.quantity) + Number(product.quantity || 1),
-                price: Number(product.price) || 0,
-              }
-            : p
-        );
-      }
+    return [
+      ...prev,
+      {
+        ...product,
+        quantity: Number(product.quantity) || 1,
+        price: Number(product.price) || 0,
+        image: product.image || "", // ✅ ensure image is saved
+      },
+    ];
+  });
+};
 
-      return [
-        ...prev,
-        {
-          ...product,
-          quantity: Number(product.quantity) || 1,
-          price: Number(product.price) || 0,
-        },
-      ];
-    });
-  };
 
   // ✅ Update quantity directly
   const updateQuantity = (id, size, material, quantity) => {
