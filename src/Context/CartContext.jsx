@@ -18,44 +18,49 @@ export function CartProvider({ children }) {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
 
-  // Add or increase quantity
-  // Add or increase quantity
-const addToCart = (product) => {
-  setCart((prev) => {
-    const exists = prev.find(
-      (p) =>
-        p.id === product.id &&
-        p.size === product.size &&
-        p.material === product.material
-    );
-
-    if (exists) {
-      return prev.map((p) =>
-        p.id === product.id &&
-        p.size === product.size &&
-        p.material === product.material
-          ? {
-              ...p,
-              quantity: Number(p.quantity) + Number(product.quantity || 1),
-              price: Number(product.price) || 0,
-              image: product.image || p.image || "", // ✅ ensure image stays
-            }
-          : p
+  // ✅ Add or increase quantity
+  const addToCart = (product) => {
+    setCart((prev) => {
+      const exists = prev.find(
+        (p) =>
+          p.id === product.id &&
+          p.size === product.size &&
+          p.material === product.material
       );
-    }
 
-    return [
-      ...prev,
-      {
-        ...product,
-        quantity: Number(product.quantity) || 1,
-        price: Number(product.price) || 0,
-        image: product.image || "", // ✅ ensure image is saved
-      },
-    ];
-  });
-};
+      // ✅ Always choose a valid image
+      const productImage =
+        product.image ||
+        product.mainImage ||
+        product.images?.[0]?.src ||
+        "";
 
+      if (exists) {
+        return prev.map((p) =>
+          p.id === product.id &&
+          p.size === product.size &&
+          p.material === product.material
+            ? {
+                ...p,
+                quantity: Number(p.quantity) + Number(product.quantity || 1),
+                price: Number(product.price) || 0,
+                image: productImage || p.image, // ✅ keep old if missing
+              }
+            : p
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          ...product,
+          quantity: Number(product.quantity) || 1,
+          price: Number(product.price) || 0,
+          image: productImage, // ✅ save correct image
+        },
+      ];
+    });
+  };
 
   // ✅ Update quantity directly
   const updateQuantity = (id, size, material, quantity) => {

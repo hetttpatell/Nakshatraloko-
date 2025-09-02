@@ -129,6 +129,7 @@ const PaymentPage = () => {
         style={{ minHeight: "80vh" }}
       >
         {/* Left summary panel */}
+        {/* Left summary panel */}
         <section
           className="w-1/3 p-8 flex flex-col justify-between border-r border-gray-200 overflow-y-auto"
           style={{ minWidth: 320, maxHeight: "80vh" }}
@@ -136,35 +137,43 @@ const PaymentPage = () => {
           <h2 className="text-2xl font-semibold mb-8 text-gray-900 tracking-tight">
             Order Summary
           </h2>
+
           <ul
-            className="divide-y divide-gray-200 flex-grow overflow-y-auto space-y-4 mb-6"
+            className="space-y-6 flex-grow overflow-y-auto mb-6"
             style={{ maxHeight: "calc(80vh - 160px)" }}
           >
             {cartItems.length > 0 ? (
               cartItems.map(({ id, name, price, quantity, image }) => (
                 <li
                   key={id}
-                  className="flex items-center justify-between gap-4 text-gray-700 font-medium text-sm"
+                  className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50 hover:shadow-md transition"
                 >
-                  {/* Left side - image + name */}
-                  <div className="flex items-center gap-3">
-                    {image && (
-                      <img
-                        src={image}
-                        alt={name}
-                        className="w-12 h-12 object-cover rounded-md border border-gray-200"
-                      />
-                    )}
-                    <span>
-                      {name}{" "}
-                      <span className="text-gray-400 font-normal">
-                        x{quantity}
-                      </span>
-                    </span>
-                  </div>
+                  {/* Product Image */}
+                  {image && (
+                    <img
+                      src={image}
+                      alt={name}
+                      className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                    />
+                  )}
 
-                  {/* Right side - price */}
-                  <span>${price * quantity}</span>
+                  {/* Product Details */}
+                  <div className="flex flex-col flex-1">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-semibold text-gray-800 text-sm md:text-base">
+                        {name}
+                      </h4>
+                      <span className="font-bold text-gray-900 text-sm md:text-base">
+                        ${price * quantity}
+                      </span>
+                    </div>
+                    <p className="text-gray-500 text-xs mt-1">
+                      Quantity: <span className="font-medium">x{quantity}</span>
+                    </p>
+                    <p className="text-gray-500 text-xs">
+                      Unit Price: ${price}
+                    </p>
+                  </div>
                 </li>
               ))
             ) : (
@@ -173,10 +182,13 @@ const PaymentPage = () => {
               </p>
             )}
           </ul>
-          <p className="text-right text-lg font-semibold text-gray-900">
-            Total: ${totalAmount}
-          </p>
+
+          <div className="flex justify-between items-center border-t pt-4">
+            <p className="text-lg font-medium text-gray-700">Total:</p>
+            <p className="text-xl font-bold text-gray-900">${totalAmount}</p>
+          </div>
         </section>
+
 
         {/* Right form panel */}
         <section
@@ -254,11 +266,10 @@ const PaymentPage = () => {
                       setFormData((prev) => ({ ...prev, paymentMethod: key }))
                     }
                     aria-pressed={formData.paymentMethod === key}
-                    className={`flex items-center gap-2 rounded-lg px-6 py-2 font-semibold text-sm transition-colors duration-200 ${
-                      formData.paymentMethod === key
+                    className={`flex items-center gap-2 rounded-lg px-6 py-2 font-semibold text-sm transition-colors duration-200 ${formData.paymentMethod === key
                         ? "bg-gray-900 text-white shadow-md border border-gray-900"
                         : "bg-white text-gray-900 border border-gray-300 hover:bg-gray-100"
-                    }`}
+                      }`}
                   >
                     {icon}
                     {label}
@@ -346,10 +357,9 @@ const PaymentPage = () => {
                 disabled={loading}
                 className={`w-full py-3 px-6 font-semibold text-sm rounded-lg border border-gray-800 text-gray-800 
                   transition-all duration-300 ease-in-out
-                  ${
-                    loading
-                      ? "opacity-60 cursor-wait bg-gray-100"
-                      : "hover:bg-gradient-to-r hover:from-gray-800 hover:to-black hover:text-white hover:scale-[1.02] shadow-md"
+                  ${loading
+                    ? "opacity-60 cursor-wait bg-gray-100"
+                    : "hover:bg-gradient-to-r hover:from-gray-800 hover:to-black hover:text-white hover:scale-[1.02] shadow-md"
                   }`}
               >
                 {loading ? (
