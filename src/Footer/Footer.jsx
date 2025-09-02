@@ -10,7 +10,7 @@ import {
   FaCcPaypal,
 } from "react-icons/fa";
 
- import logo from "/Logo.png"
+import logo from "/Logo.png";
 
 const zodiacSigns = [
   "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
@@ -21,36 +21,37 @@ const navigationLinks = ["Home", "Shop", "Zodiac Signs", "Blog", "About Us", "Co
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-t from-[#0D0D1A] to-[#1A1A2E] text-gray-300">
-      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-10">
+    <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-gray-300">
+      <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-12 gap-8">
         
-        {/* Logo & Branding */}
-    <div className="space-y-4">
-<img src={logo} alt="Zodiac Store Logo" className="w-36 sm:w-44" />
-  <p className="text-gray-400">Discover the stones aligned with your stars.</p>
-  <div className="flex space-x-4 mt-4">
-    {[FaInstagram, FaFacebookF, FaTwitter, FaPinterestP].map((Icon, idx) => (
-      <a
-        key={idx}
-        href="#"
-        className="p-2 bg-gray-800 rounded-full hover:bg-[#FF6B6B] hover:text-white transform hover:scale-110 transition-all"
-      >
-        <Icon size={18} />
-      </a>
-    ))}
-  </div>
-</div>
-
+        {/* Logo & About Section */}
+        <div className="md:col-span-4 flex flex-col space-y-4">
+          <img src={logo} alt="Zodiac Store Logo" className="w-36 sm:w-44" />
+          <p className="text-gray-400 leading-relaxed">
+            Discover the stones aligned with your stars. Handpicked for your zodiac to bring balance and harmony.
+          </p>
+          <div className="flex space-x-3 mt-4">
+            {[FaInstagram, FaFacebookF, FaTwitter, FaPinterestP].map((Icon, idx) => (
+              <a
+                key={idx}
+                href="#"
+                className="p-2 bg-gray-800 rounded-full hover:bg-red-600 hover:text-white transform hover:scale-110 transition-all"
+              >
+                <Icon size={18} />
+              </a>
+            ))}
+          </div>
+        </div>
 
         {/* Navigation Links */}
-        <div>
+        <div className="md:col-span-2">
           <h2 className="text-white font-semibold mb-4 text-lg">Navigation</h2>
           <ul className="space-y-2">
             {navigationLinks.map((link) => (
               <li key={link}>
                 <a
                   href="#"
-                  className="hover:text-[#FF6B6B] transition-colors duration-300"
+                  className="hover:text-red-500 transition-colors duration-300"
                 >
                   {link}
                 </a>
@@ -60,14 +61,14 @@ const Footer = () => {
         </div>
 
         {/* Zodiac Quick Links */}
-        <div>
+        <div className="md:col-span-3">
           <h2 className="text-white font-semibold mb-4 text-lg">Zodiac Signs</h2>
           <ul className="grid grid-cols-2 gap-2">
             {zodiacSigns.map((sign) => (
               <li key={sign}>
                 <a
                   href="#"
-                  className="hover:text-[#FF6B6B] transition-colors duration-300"
+                  className="hover:text-red-500 transition-colors duration-300"
                 >
                   {sign}
                 </a>
@@ -76,26 +77,18 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Newsletter Subscription */}
-        <div>
+        {/* Newsletter Section */}
+        <div className="md:col-span-3">
           <h2 className="text-white font-semibold mb-4 text-lg">Newsletter</h2>
           <p className="text-gray-400 mb-4">Get cosmic updates and exclusive offers.</p>
-          <form className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="p-3 rounded-lg flex-1 focus:outline-none focus:ring-2 focus:ring-[#FF6B6B] text-gray-900"
-            />
-            <button
-              type="submit"
-              className="bg-gradient-to-r from-[#FF6B6B] to-[#FF4757] text-white px-6 py-3 rounded-lg font-medium hover:scale-105 transition-transform"
-            >
-              Subscribe
-            </button>
-          </form>
+          <input
+            type="email"
+            placeholder="Enter your email"
+            className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-900"
+          />
           <div className="flex items-center space-x-4 mt-6">
             {[FaCcVisa, FaCcMastercard, FaCcPaypal].map((Icon, idx) => (
-              <Icon key={idx} size={36} className="hover:text-[#FF6B6B] transition-colors" />
+              <Icon key={idx} size={36} className="hover:text-red-500 transition-colors" />
             ))}
           </div>
           <p className="text-gray-500 text-sm mt-2">Secure payments guaranteed</p>
