@@ -11,7 +11,7 @@ import ExpertCall from "./ExpertCall";
 export default function Home() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
-      <Slideshow />
+      <Slideshow autoPlay={true} autoPlayInterval={4000} />
       <ExpertCall/>
       <Featured />
       <Information />
