@@ -6,6 +6,7 @@ import AboutSection from "./AboutSection";
 import HelpingForm from "./HelpingForm";
 import Collection from "./Collections";
 import ExpertCall from "./ExpertCall";
+import Testimonial from "./Testimonals";
 
 
 export default function Home() {
@@ -17,6 +18,7 @@ export default function Home() {
       <Information />
       <AboutSection />
       <Collection />
+      <Testimonial />
       <HelpingForm />
     </div>
   );
