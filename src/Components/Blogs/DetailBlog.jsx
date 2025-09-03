@@ -154,7 +154,7 @@ export default function DetailBlog() {
 
 
         {/* Navigation */}
-        <div className="flex justify-between mt-16 text-[#5a4d41] font-semibold">
+        {/* <div className="flex justify-between mt-16 text-[#5a4d41] font-semibold">
           {blog.id > 1 ? (
             <Link to={`/blogs/${blog.id - 1}`} className="hover:underline">← Previous</Link>
           ) : <span></span>}
@@ -162,7 +162,7 @@ export default function DetailBlog() {
           {blog.id < blogPosts.length ? (
             <Link to={`/blogs/${blog.id + 1}`} className="hover:underline">Next →</Link>
           ) : <span></span>}
-        </div>
+        </div> */}
 
         {/* Back Link */}
         <div className="text-center mt-10">

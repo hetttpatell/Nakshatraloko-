@@ -186,7 +186,7 @@ export default function Cart() {
 
               <div className="mt-8 flex flex-col gap-4">
                 <Link
-                  to="/gemstone"
+                  to="/gemstones"
                   className="w-full py-3 border border-gray-900 text-gray-900 tracking-wide font-medium uppercase rounded-lg hover:bg-gray-100 transition text-center"
                 >
                   Continue Shopping
