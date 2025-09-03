@@ -214,7 +214,7 @@ const Productdetails = () => {
     if (!exists) {
       wishlist.push(product);
       localStorage.setItem("wishlist", JSON.stringify(wishlist));
-      alert(`${product.name} added to Wishlist ❤️`);
+      alert(`${product.name} added to Wishlist `);
     } else {
       alert(`${product.name} is already in Wishlist`);
     }
@@ -360,7 +360,7 @@ const Productdetails = () => {
               <Button
                 onClick={() => {
                   addToCart(product);
-                  showToast(`${product.name} added to Bag 🛒`, "success");
+                  showToast(`${product.name} added to Bag `, "success");
                 }}
                 className="bg-[#222] text-white px-8 py-2 font-semibold text-sm hover:bg-[#333] transition"
               >
@@ -370,7 +370,7 @@ const Productdetails = () => {
               <Button
                 onClick={() => {
                   addToWishlist(product);
-                  showToast(`${product.name} added to Wishlist ❤️`, "success");
+                  showToast(`${product.name} added to Wishlist `, "success");
                 }}
                 className="border border-[#222] px-8 py-2 font-semibold text-sm text-[#222] hover:bg-[#222] hover:text-white transition"
               >
