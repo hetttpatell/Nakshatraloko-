@@ -63,7 +63,7 @@ const ThankYouPage = ({ estimatedDelivery = "3-5 business days" }) => {
   );
 
   return (
-    <main className="bg-[var(--color-productbg)] w-screen min-h-screen flex justify-center items-center p-4">
+    <main className="bg-[var(--color-productbg)] w-screen min-h-screen flex justify-center items-center p-4 sm:p-6">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -71,25 +71,25 @@ const ThankYouPage = ({ estimatedDelivery = "3-5 business days" }) => {
         className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col md:flex-row overflow-hidden"
       >
         {/* Left Panel: Thank You + Order Summary */}
-        <section className="md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center relative">
+        <section className="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center items-center relative">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5 }}
-            className="absolute top-10"
+            className="absolute top-10 md:top-12"
           >
-            <FaCheckCircle className="text-green-500 text-7xl mb-6" />
+            <FaCheckCircle className="text-green-500 text-6xl sm:text-7xl mb-6" />
           </motion.div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-3 mt-24 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 mt-24 text-center">
             Thank You for Your Purchase!
           </h1>
-          <p className="text-gray-600 mb-6 text-center max-w-md">
+          <p className="text-gray-600 mb-6 text-center max-w-xs sm:max-w-md">
             We’re excited to process your order. A confirmation email with details has been sent.
           </p>
 
           {/* Order Details */}
-          <div className="bg-gray-50 rounded-xl p-6 shadow-md w-full border border-gray-100">
+          <div className="bg-gray-50 rounded-xl p-4 sm:p-6 shadow-md w-full border border-gray-100 overflow-y-auto max-h-[60vh]">
             <h2 className="text-lg font-semibold text-gray-800 mb-3">Order Confirmation</h2>
             <p className="text-gray-700 mb-2">
               <span className="font-medium">Order Number:</span> {orderId}
@@ -102,7 +102,7 @@ const ThankYouPage = ({ estimatedDelivery = "3-5 business days" }) => {
             <div className="border-t pt-4">
               <h3 className="text-md font-semibold text-gray-800 mb-3">Ordered Products</h3>
               {cart.length > 0 ? (
-                <ul className="space-y-4">
+                <ul className="space-y-3 sm:space-y-4 max-h-64 sm:max-h-80 overflow-y-auto">
                   {cart.map(item => (
                     <OrderItem key={item.id} item={item} />
                   ))}
@@ -111,7 +111,7 @@ const ThankYouPage = ({ estimatedDelivery = "3-5 business days" }) => {
                 <p className="text-gray-500 text-sm text-center w-full">No products found.</p>
               )}
 
-              <div className="flex justify-between items-center border-t pt-4 mt-2">
+              <div className="flex justify-between items-center border-t pt-3 mt-2">
                 <p className="text-lg font-medium text-gray-700">Total:</p>
                 <p className="text-xl font-bold text-gray-900">₹{total.toLocaleString()}</p>
               </div>
@@ -120,37 +120,40 @@ const ThankYouPage = ({ estimatedDelivery = "3-5 business days" }) => {
         </section>
 
         {/* Right Panel: Actions + Social + CTA */}
-        <aside className="md:w-1/2 p-8 md:p-10 flex flex-col justify-between bg-white">
+        <aside className="w-full md:w-1/2 p-6 md:p-10 flex flex-col justify-between bg-white mt-6 md:mt-0">
           {/* Support & Invoice */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10 flex-shrink-0">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-10">
             <div className="flex flex-col items-center">
-              <FaHeadset className="text-gray-700 text-2xl mb-2" />
-              <button className="text-sm font-medium text-gray-900 hover:underline">Get Support</button>
+              <FaHeadset className="text-gray-700 text-xl sm:text-2xl mb-1 sm:mb-2" />
+              <button className="text-xs sm:text-sm font-medium text-gray-900 hover:underline">Get Support</button>
             </div>
             <div className="flex flex-col items-center">
-              <FaFileInvoice className="text-gray-700 text-2xl mb-2" />
-              <button className="text-sm font-medium text-gray-900 hover:underline">Download Invoice</button>
+              <FaFileInvoice className="text-gray-700 text-xl sm:text-2xl mb-1 sm:mb-2" />
+              <button className="text-xs sm:text-sm font-medium text-gray-900 hover:underline">Download Invoice</button>
             </div>
           </div>
 
           {/* Social & Newsletter */}
-          <div className="bg-gradient-to-r from-gray-100 via-white to-gray-100 rounded-xl p-6 shadow-inner mb-6">
-            <p className="text-lg font-semibold text-gray-800 mb-4 text-center">Stay connected & never miss updates</p>
-            <div className="flex justify-center gap-6 mb-6">
+          <div className="bg-gradient-to-r from-gray-100 via-white to-gray-100 rounded-xl p-4 sm:p-6 shadow-inner mb-6">
+            <p className="text-md sm:text-lg font-semibold text-gray-800 mb-3 text-center">Stay connected & never miss updates</p>
+            <div className="flex justify-center gap-4 sm:gap-6 mb-4">
               {[FaFacebook, FaTwitter, FaInstagram].map((Icon, idx) => (
                 <SocialButton key={idx} Icon={Icon} href="#" />
               ))}
             </div>
-            <form className="flex w-full max-w-md mx-auto">
+            <form className="flex w-full max-w-full sm:max-w-md mx-auto">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 border border-gray-300 rounded-l-xl px-4 py-3 text-sm outline-none focus:border-gray-900"
+                className="w-full sm:flex-1 border border-gray-300 
+             rounded-l-xl px-4 py-3 sm:px-3 sm:py-2 text-sm sm:text-base 
+             outline-none focus:border-gray-900"
                 aria-label="Email address"
               />
               <button
                 type="submit"
-                className="bg-gray-900 text-white px-5 rounded-r-xl text-sm hover:bg-black transition-all"
+                className="bg-gray-900 text-white px-4 sm:px-5 rounded-r-xl text-sm 
+            sm:text-base hover:bg-black transition-all"
               >
                 Subscribe
               </button>
@@ -158,14 +161,14 @@ const ThankYouPage = ({ estimatedDelivery = "3-5 business days" }) => {
           </div>
 
           {/* CTA */}
-          <div className="flex flex-col items-center text-center">
+          <div className="flex flex-col items-center text-center mt-auto">
             <Link
               to="/"
-              className="px-6 py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-black transition-colors shadow-md mb-4 inline-block"
+              className="px-5 sm:px-6 py-2 sm:py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-black transition-colors shadow-md mb-3 sm:mb-4 inline-block w-full sm:w-auto text-sm sm:text-base"
             >
               Continue Shopping
             </Link>
-            <p className="text-sm text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-600">
               Need help? Contact us at{" "}
               <a href="mailto:support@yourbrand.com" className="text-gray-900 font-medium hover:underline">
                 support@yourbrand.com
@@ -176,6 +179,7 @@ const ThankYouPage = ({ estimatedDelivery = "3-5 business days" }) => {
         </aside>
       </motion.div>
     </main>
+
   );
 };
 

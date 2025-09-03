@@ -132,283 +132,130 @@ const PaymentPage = () => {
 
 
   return (
-    <main
-      className="bg-[var(--color-productbg)] flex justify-center items-center p-8"
-      style={{ height: "100vh", overflow: "hidden" }}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-xl flex w-full max-w-7xl max-h-full"
-        style={{ minHeight: "80vh" }}
-      >
-        {/* Left summary panel */}
-        {/* Left summary panel */}
-        <section
-          className="w-1/3 p-8 flex flex-col justify-between border-r border-gray-200 overflow-y-auto"
-          style={{ minWidth: 320, maxHeight: "80vh" }}
-        >
-          <h2 className="text-2xl font-semibold mb-8 text-gray-900 tracking-tight">
-            Order Summary
-          </h2>
+    <main className="bg-[var(--color-productbg)] flex justify-center items-center p-4 sm:p-8 min-h-screen">
+  <div className="bg-white rounded-2xl shadow-xl flex flex-col md:flex-row w-full max-w-7xl overflow-hidden">
+    
+    {/* Left summary panel */}
+    <section className="w-full md:w-1/3 p-6 md:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-gray-200">
+      <h2 className="text-2xl font-semibold mb-6 md:mb-8 text-gray-900 tracking-tight">Order Summary</h2>
 
-          <ul
-            className="space-y-6 flex-grow overflow-y-auto mb-6"
-            style={{ maxHeight: "calc(80vh - 160px)" }}
-          >
-            {cartItems.length > 0 ? (
-              cartItems.map(({ id, name, price, quantity, image }) => (
-                <li
-                  key={id}
-                  className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50 hover:shadow-md transition"
-                >
-                  {/* Product Image */}
-                  {image && (
-                    <img
-                      src={image}
-                      alt={name}
-                      className="w-20 h-20 object-cover rounded-lg border border-gray-200"
-                    />
-                  )}
-
-                  {/* Product Details */}
-                  <div className="flex flex-col flex-1">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-semibold text-gray-800 text-sm md:text-base">
-                        {name}
-                      </h4>
-                      <span className="font-bold text-gray-900 text-sm md:text-base">
-                        ${price * quantity}
-                      </span>
-                    </div>
-                    <p className="text-gray-500 text-xs mt-1">
-                      Quantity: <span className="font-medium">x{quantity}</span>
-                    </p>
-                    <p className="text-gray-500 text-xs">
-                      Unit Price: ${price}
-                    </p>
-                  </div>
-                </li>
-              ))
-            ) : (
-              <p className="text-gray-500 text-sm text-center w-full">
-                Your cart is empty.
-              </p>
-            )}
-          </ul>
-
-          <div className="flex justify-between items-center border-t pt-4">
-            <p className="text-lg font-medium text-gray-700">Total:</p>
-            <p className="text-xl font-bold text-gray-900">₹{totalAmount}</p>
-          </div>
-        </section>
-
-
-        {/* Right form panel */}
-        <section
-          className="flex-1 p-8 overflow-y-auto"
-          style={{ maxHeight: "80vh" }}
-        >
-          <form
-            onSubmit={handleSubmit}
-            noValidate
-            className="flex flex-col justify-between h-full"
-          >
-            <div>
-              {/* Shipping Details */}
-              <h3 className="text-xl font-medium mb-6 text-gray-800 tracking-wide">
-                Shipping Details
-              </h3>
-              <div className="grid grid-cols-2 gap-6 mb-8">
-                <UnderlineInput
-                  label="Full Name"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  required
-                />
-                <UnderlineInput
-                  label="Email"
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-                <div className="col-span-2">
-                  <UnderlineInput
-                    label="Address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    required
-                  />
+      <ul className="space-y-4 md:space-y-6 flex-grow overflow-y-auto">
+        {cartItems.length > 0 ? (
+          cartItems.map(({ id, name, price, quantity, image }) => (
+            <li key={id} className="flex items-center gap-4 p-3 md:p-4 border rounded-lg bg-gray-50 hover:shadow-md transition">
+              {image && <img src={image} alt={name} className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border border-gray-200" />}
+              <div className="flex flex-col flex-1">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-semibold text-gray-800 text-sm md:text-base">{name}</h4>
+                  <span className="font-bold text-gray-900 text-sm md:text-base">${price * quantity}</span>
                 </div>
-                <UnderlineInput
-                  label="City"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  required
-                />
-                <UnderlineInput
-                  label="ZIP Code"
-                  name="zip"
-                  value={formData.zip}
-                  onChange={handleChange}
-                  required
-                />
-                <UnderlineInput
-                  label="Country"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  required
-                />
+                <p className="text-gray-500 text-xs mt-1">Quantity: <span className="font-medium">x{quantity}</span></p>
+                <p className="text-gray-500 text-xs">Unit Price: ${price}</p>
               </div>
+            </li>
+          ))
+        ) : (
+          <p className="text-gray-500 text-sm text-center w-full">Your cart is empty.</p>
+        )}
+      </ul>
 
-              {/* Payment Method Selection */}
-              <h3 className="text-xl font-medium mb-5 text-gray-800 tracking-wide">
-                Payment Method
-              </h3>
-              <div className="flex gap-6 mb-8">
-                {PAYMENT_OPTIONS.map(({ key, label, icon }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() =>
-                      setFormData((prev) => ({ ...prev, paymentMethod: key }))
-                    }
-                    aria-pressed={formData.paymentMethod === key}
-                    className={`flex items-center gap-2 rounded-lg px-6 py-2 font-semibold text-sm transition-colors duration-200 ${formData.paymentMethod === key
-                        ? "bg-gray-900 text-white shadow-md border border-gray-900"
-                        : "bg-white text-gray-900 border border-gray-300 hover:bg-gray-100"
-                      }`}
-                  >
-                    {icon}
-                    {label}
-                  </button>
-                ))}
-              </div>
+      <div className="flex justify-between items-center border-t pt-4 mt-4 md:mt-0">
+        <p className="text-lg font-medium text-gray-700">Total:</p>
+        <p className="text-xl font-bold text-gray-900">₹{totalAmount}</p>
+      </div>
+    </section>
 
-              {/* Payment Fields */}
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={formData.paymentMethod}
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 18 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="space-y-6 max-w-xl"
-                  layout
-                >
-                  {formData.paymentMethod === "card" && (
-                    <>
-                      <UnderlineInput
-                        label="Card Number"
-                        name="cardNumber"
-                        value={formData.cardNumber}
-                        onChange={handleChange}
-                        maxLength={16}
-                        required
-                        autoComplete="cc-number"
-                      />
-                      <div className="flex gap-6">
-                        <UnderlineInput
-                          label="Expiry (MM/YY)"
-                          name="cardExpiry"
-                          value={formData.cardExpiry}
-                          onChange={handleChange}
-                          maxLength={5}
-                          required
-                          autoComplete="cc-exp"
-                        />
-                        <UnderlineInput
-                          label="CVC"
-                          name="cardCVC"
-                          value={formData.cardCVC}
-                          onChange={handleChange}
-                          maxLength={3}
-                          required
-                          autoComplete="cc-csc"
-                        />
-                      </div>
-                    </>
-                  )}
-                  {formData.paymentMethod === "upi" && (
-                    <>
-                      <UnderlineInput
-                        label="UPI ID (e.g. username@upi)"
-                        name="upiId"
-                        value={formData.upiId}
-                        onChange={handleChange}
-                        required
-                      />
-                      <p className="text-xs text-center text-gray-500">
-                        You’ll be redirected to your UPI app to complete
-                        payment.
-                      </p>
-                    </>
-                  )}
-                  {formData.paymentMethod === "cod" && (
-                    <p className="text-center text-gray-700 bg-gray-100 rounded-md p-4 border border-gray-300">
-                      You can pay with cash when your order is delivered 🚚
-                    </p>
-                  )}
-                </motion.div>
-              </AnimatePresence>
+    {/* Right form panel */}
+    <section className="flex-1 p-6 md:p-8 overflow-y-auto">
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col justify-between h-full">
+        <div>
+          {/* Shipping Details */}
+          <h3 className="text-xl font-medium mb-6 text-gray-800 tracking-wide">Shipping Details</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
+            <UnderlineInput label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} required />
+            <UnderlineInput label="Email" type="email" name="email" value={formData.email} onChange={handleChange} required />
+            <div className="col-span-1 sm:col-span-2">
+              <UnderlineInput label="Address" name="address" value={formData.address} onChange={handleChange} required />
             </div>
+            <UnderlineInput label="City" name="city" value={formData.city} onChange={handleChange} required />
+            <UnderlineInput label="ZIP Code" name="zip" value={formData.zip} onChange={handleChange} required />
+            <UnderlineInput label="Country" name="country" value={formData.country} onChange={handleChange} required />
+          </div>
 
-            {/* Error & Submit */}
-            <div className="mt-auto pt-6">
-              {error && (
-                <p className="mb-4 text-center text-red-600 font-semibold">
-                  {error}
+          {/* Payment Method */}
+          <h3 className="text-xl font-medium mb-5 text-gray-800 tracking-wide">Payment Method</h3>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-6">
+            {PAYMENT_OPTIONS.map(({ key, label, icon }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, paymentMethod: key }))}
+                aria-pressed={formData.paymentMethod === key}
+                className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold text-sm transition-colors duration-200 ${formData.paymentMethod === key
+                    ? "bg-gray-900 text-white shadow-md border border-gray-900"
+                    : "bg-white text-gray-900 border border-gray-300 hover:bg-gray-100"
+                  } w-full sm:w-auto`}
+              >
+                {icon}
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Payment Fields */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={formData.paymentMethod}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 18 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="space-y-4 max-w-xl"
+              layout
+            >
+              {formData.paymentMethod === "card" && (
+                <>
+                  <UnderlineInput label="Card Number" name="cardNumber" value={formData.cardNumber} onChange={handleChange} maxLength={16} required autoComplete="cc-number" />
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <UnderlineInput label="Expiry (MM/YY)" name="cardExpiry" value={formData.cardExpiry} onChange={handleChange} maxLength={5} required autoComplete="cc-exp" />
+                    <UnderlineInput label="CVC" name="cardCVC" value={formData.cardCVC} onChange={handleChange} maxLength={3} required autoComplete="cc-csc" />
+                  </div>
+                </>
+              )}
+              {formData.paymentMethod === "upi" && (
+                <>
+                  <UnderlineInput label="UPI ID (e.g. username@upi)" name="upiId" value={formData.upiId} onChange={handleChange} required />
+                  <p className="text-xs text-center text-gray-500">You’ll be redirected to your UPI app to complete payment.</p>
+                </>
+              )}
+              {formData.paymentMethod === "cod" && (
+                <p className="text-center text-gray-700 bg-gray-100 rounded-md p-4 border border-gray-300">
+                  You can pay with cash when your order is delivered 🚚
                 </p>
               )}
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full py-3 px-6 font-semibold text-sm rounded-lg border border-gray-800 text-gray-800 
-                  transition-all duration-300 ease-in-out
-                  ${loading
-                    ? "opacity-60 cursor-wait bg-gray-100"
-                    : "hover:bg-gradient-to-r hover:from-gray-800 hover:to-black hover:text-white hover:scale-[1.02] shadow-md"
-                  }`}
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg
-                      className="animate-spin h-4 w-4 text-gray-800"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                      ></path>
-                    </svg>
-                    Processing...
-                  </span>
-                ) : formData.paymentMethod === "cod" ? (
-                  "Confirm Order"
-                ) : (
-                  `Pay ₹${totalAmount}`
-                )}
-              </button>
-            </div>
-          </form>
-        </section>
-      </div>
-    </main>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Error & Submit */}
+        <div className="mt-6">
+          {error && <p className="mb-4 text-center text-red-600 font-semibold">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 px-6 font-semibold text-sm rounded-lg border border-gray-800 text-gray-800 transition-all duration-300 ease-in-out ${loading
+                ? "opacity-60 cursor-wait bg-gray-100"
+                : "hover:bg-gradient-to-r hover:from-gray-800 hover:to-black hover:text-white hover:scale-[1.02] shadow-md"
+              }`}
+          >
+            {loading ? "Processing..." : formData.paymentMethod === "cod" ? "Confirm Order" : `Pay ₹${totalAmount}`}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+</main>
+
   );
 };
 
