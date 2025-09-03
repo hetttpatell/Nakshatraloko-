@@ -199,13 +199,13 @@ export default function Header() {
     </button>
   )}
 
-  {/* Conditionally show cart/wishlist icons only if they have items */}
+  {/* Conditionally show cart/wishlist icons only if they have items*/}
   {isLoggedIn && (cartCount > 0 || wishlistCount > 0) && (
   <div className="flex items-center space-x-3">
     {cartCount > 0 && (
       <NavLink
         to="/cart"
-        className="relative p-2 rounded-full text-white" // force icon to white
+        className="relative p-2 rounded-full text-white" 
       >
         <ShoppingCart className="h-6 w-6 stroke-[1.5]" />
         {cartCount > 0 && <Badge count={cartCount} />}
@@ -214,7 +214,7 @@ export default function Header() {
     {wishlistCount > 0 && (
       <NavLink
         to="/wishlist"
-        className="relative p-2 rounded-full text-white" // force icon to white
+        className="relative p-2 rounded-full text-white" 
       >
         <Heart className="h-6 w-6 stroke-[1.5]" />
         {wishlistCount > 0 && <Badge count={wishlistCount} />}

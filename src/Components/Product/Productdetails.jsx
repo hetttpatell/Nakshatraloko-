@@ -6,6 +6,7 @@ import Recommendation from "./Recommendation";
 import Button from "../Button/Button";
 import { useWishlist } from "../../Context/WishlistContext";
 import { useCart } from "../../Context/CartContext";
+import Toast from "./Toast";
 
 const products = [
   {
@@ -189,6 +190,11 @@ const Productdetails = () => {
   const [likedReviews, setLikedReviews] = useState([]); // keep track of liked reviews
   const { addToWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const [toast, setToast] = useState({ message: "", type: "success", visible: false });
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type, visible: true });
+  };
 
 
   const toggleLike = (idx) => {
@@ -351,15 +357,21 @@ const Productdetails = () => {
 
             <div className="flex gap-3 mb-5">
               {/* Add to Bag Button */}
-       <Button
-        onClick={() => addToCart(product)}
-        className="bg-[#222] text-white px-8 py-2 font-semibold text-sm hover:bg-[#333] transition"
-  >
-  ADD TO BAG
-</Button>
-              {/* Buy Button */}
               <Button
-                onClick={() =>  addToWishlist(product)}
+                onClick={() => {
+                  addToCart(product);
+                  showToast(`${product.name} added to Bag 🛒`, "success");
+                }}
+                className="bg-[#222] text-white px-8 py-2 font-semibold text-sm hover:bg-[#333] transition"
+              >
+                ADD TO BAG
+              </Button>
+
+              <Button
+                onClick={() => {
+                  addToWishlist(product);
+                  showToast(`${product.name} added to Wishlist ❤️`, "success");
+                }}
                 className="border border-[#222] px-8 py-2 font-semibold text-sm text-[#222] hover:bg-[#222] hover:text-white transition"
               >
                 Wishlist
@@ -618,7 +630,14 @@ const Productdetails = () => {
       />
 
       {/* <HelpingForm /> */}
-
+       {/* Render Toast here */}
+    {toast.visible && (
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, visible: false })}
+      />
+    )}
     </div >
   );
 };
