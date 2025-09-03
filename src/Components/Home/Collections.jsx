@@ -18,7 +18,7 @@ function Collection() {
 
   return (
     <>
-      <div className="mt-100 ">
+      <div className="mt-60 lg:mt-90">
         {/* Heading Section */}
         <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 py-16">
           <div className="max-w-7xl mx-auto px-6 text-center text-white">

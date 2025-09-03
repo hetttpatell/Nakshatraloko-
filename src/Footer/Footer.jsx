@@ -1,4 +1,3 @@
-// Footer.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 import {
@@ -16,8 +15,7 @@ import upiLogo from "/UPI.png";
 import gpayLogo from "/google-pay-icon.png";
 import netbankingLogo from "/net-banking-icon.png";
 
-// Navigation and Categories
-export const navigationLinks = [
+const navigationLinks = [
   { label: "Home", to: "/" },
   { label: "Gemstone", to: "/gemstones" },
   { label: "FAQs", to: "/faqs" },
@@ -25,7 +23,7 @@ export const navigationLinks = [
   { label: "Expert Guidance", to: "/expertcall" },
 ];
 
-export const categoriesLinks = [
+const categoriesLinks = [
   { label: "Pendant", to: "/categories/pendant" },
   { label: "Necklace", to: "/categories/necklace" },
   { label: "Jewellery", to: "/categories/jewellery" },
@@ -33,7 +31,7 @@ export const categoriesLinks = [
   { label: "Gemstone", to: "/gemstones" },
 ];
 
-export const zodiacTopics = [
+const zodiacTopics = [
   "Love & Relationships",
   "Career & Finance",
   "Health & Wellness",
@@ -46,16 +44,16 @@ export const zodiacTopics = [
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-gray-300">
-      <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-12 gap-8">
-        
+    <footer className="bg-gray-900 text-gray-300">
+      <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row md:justify-between gap-10">
+
         {/* Logo & About */}
-        <div className="md:col-span-4 flex flex-col space-y-4">
-          <img src={logo} alt="Zodiac Store Logo" className="w-36 sm:w-44" />
-          <p className="text-gray-400 leading-relaxed">
+        <div className="flex flex-col space-y-4 md:w-1/4 text-center md:text-left">
+          <img src={logo} alt="Zodiac Store Logo" className="w-32 sm:w-40 md:w-44 mx-auto md:mx-0" />
+          <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
             Discover the stones aligned with your stars. Handpicked for your zodiac to bring balance and harmony.
           </p>
-          <div className="flex space-x-3 mt-4">
+          <div className="flex justify-center md:justify-start space-x-3 mt-2">
             {[FaInstagram, FaFacebookF, FaTwitter, FaPinterestP].map((Icon, idx) => (
               <a
                 key={idx}
@@ -68,15 +66,15 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Navigation   */}
-        <div className="md:col-span-2">
-          <h2 className="text-white font-semibold mb-4 text-lg">Navigation</h2>
+        {/* Navigation */}
+        <div className="flex flex-col md:w-1/6 text-center md:text-left">
+          <h3 className="text-white font-semibold mb-4 text-lg">Navigation</h3>
           <ul className="space-y-2">
             {navigationLinks.map((item) => (
               <li key={item.label}>
                 <Link
                   to={item.to}
-                  className="hover:text-red-500 transition-colors duration-300"
+                  className="hover:text-red-500 transition-colors text-sm sm:text-base"
                 >
                   {item.label}
                 </Link>
@@ -86,14 +84,14 @@ const Footer = () => {
         </div>
 
         {/* Categories */}
-        <div className="md:col-span-3">
-          <h2 className="text-white font-semibold mb-4 text-lg">Categories</h2>
+        <div className="flex flex-col md:w-1/5 text-center md:text-left">
+          <h3 className="text-white font-semibold mb-4 text-lg">Categories</h3>
           <ul className="space-y-2">
             {categoriesLinks.map((cat) => (
               <li key={cat.label}>
                 <Link
                   to={cat.to}
-                  className="hover:text-red-500 transition-colors duration-300"
+                  className="hover:text-red-500 transition-colors text-sm sm:text-base"
                 >
                   {cat.label}
                 </Link>
@@ -103,30 +101,28 @@ const Footer = () => {
         </div>
 
         {/* Zodiac Topics */}
-        <div className="md:col-span-3">
-          <h2 className="text-white font-semibold mb-4 text-lg">Zodiac Topics</h2>
-          <ul className="space-y-2">
+        <div className="flex flex-col md:w-1/3 text-center md:text-left">
+            <h3 className="text-white font-bold  mb-4  text-lg">Zodiac Topics</h3>
+          <ul className="space-y-1 text-gray-400 text-sm sm:text-base">
             {zodiacTopics.map((topic) => (
-              <li key={topic} className="text-gray-400 text-sm">
-                {topic}
-              </li>
+              <li key={topic}>{topic}</li>
             ))}
           </ul>
         </div>
       </div>
 
       {/* Payment Methods */}
-      <div className="flex flex-wrap justify-center items-center space-x-6 mt-6">
-        <FaCcVisa size={36} className="hover:text-red-500 transition-colors" />
-        <FaCcMastercard size={36} className="hover:text-red-500 transition-colors" />
-        <FaCcPaypal size={36} className="hover:text-red-500 transition-colors" />
-        <img src={upiLogo} alt="UPI" className="h-9 w-auto hover:opacity-80 transition-opacity" />
-        <img src={gpayLogo} alt="GPay" className="h-9 w-auto hover:opacity-80 transition-opacity" />
-        <img src={netbankingLogo} alt="Netbanking" className="h-9 w-auto hover:opacity-80 transition-opacity" />
+      <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 px-6 mt-6">
+        <FaCcVisa size={28} className="hover:text-red-500 transition-colors" />
+        <FaCcMastercard size={28} className="hover:text-red-500 transition-colors" />
+        <FaCcPaypal size={28} className="hover:text-red-500 transition-colors" />
+        <img src={upiLogo} alt="UPI" className="h-8 sm:h-9 w-auto hover:opacity-80 transition-opacity" />
+        <img src={gpayLogo} alt="GPay" className="h-8 sm:h-9 w-auto hover:opacity-80 transition-opacity" />
+        <img src={netbankingLogo} alt="Netbanking" className="h-8 sm:h-9 w-auto hover:opacity-80 transition-opacity" />
       </div>
 
       {/* Footer Bottom */}
-      <div className="border-t border-gray-700 mt-10 py-4 text-center text-gray-500 text-sm">
+      <div className="border-t border-gray-700 mt-10 py-4 text-center text-gray-500 text-xs sm:text-sm px-6">
         © {new Date().getFullYear()} Zodiac Store. All rights reserved.
       </div>
     </footer>
@@ -134,4 +130,3 @@ const Footer = () => {
 };
 
 export default Footer;
-// sbhf hi tsting
