@@ -188,32 +188,57 @@ export default function Header() {
             )}
           </div>
 
-          {/* Mobile Hamburger and Login */}
-          <div className="lg:hidden flex items-center space-x-4 relative z-20 ml-auto">
-            {!isLoggedIn && (
-              <button
-                onClick={() => setShowLogin(true)}
-                className="px-4 py-2 rounded bg-orange-400 text-white font-semibold hover:bg-orange-500 transition"
-              >
-                Login
-              </button>
-            )}
+{/* Mobile Hamburger and Conditional User Icons */}
+<div className="lg:hidden flex items-center space-x-4 relative z-20 ml-auto">
+  {!isLoggedIn && (
+    <button
+      onClick={() => setShowLogin(true)}
+      className="px-4 py-2 rounded bg-orange-400 text-white font-semibold hover:bg-orange-500 transition"
+    >
+      Login
+    </button>
+  )}
 
-            <button
-              aria-label="Toggle Menu"
-              className="text-white focus:outline-none ml-2"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-                />
-              </svg>
-            </button>
-          </div>
+  {/* Conditionally show cart/wishlist icons only if they have items */}
+  {isLoggedIn && (cartCount > 0 || wishlistCount > 0) && (
+  <div className="flex items-center space-x-3">
+    {cartCount > 0 && (
+      <NavLink
+        to="/cart"
+        className="relative p-2 rounded-full text-white" // force icon to white
+      >
+        <ShoppingCart className="h-6 w-6 stroke-[1.5]" />
+        {cartCount > 0 && <Badge count={cartCount} />}
+      </NavLink>
+    )}
+    {wishlistCount > 0 && (
+      <NavLink
+        to="/wishlist"
+        className="relative p-2 rounded-full text-white" // force icon to white
+      >
+        <Heart className="h-6 w-6 stroke-[1.5]" />
+        {wishlistCount > 0 && <Badge count={wishlistCount} />}
+      </NavLink>
+    )}
+  </div>
+)}
+
+  {/* Hamburger button */}
+  <button
+    aria-label="Toggle Menu"
+    className="text-white focus:outline-none ml-2"
+    onClick={() => setMenuOpen(!menuOpen)}
+  >
+    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+      />
+    </svg>
+  </button>
+</div>
 
           {/* Mobile Menu */}
           <div
