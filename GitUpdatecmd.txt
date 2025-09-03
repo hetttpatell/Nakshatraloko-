@@ -3,6 +3,7 @@ git commit -m "Money sign"
 git push origin development
 
 
+
 installss 
 npm install @heroicons/react
 npm install phosphor-react
