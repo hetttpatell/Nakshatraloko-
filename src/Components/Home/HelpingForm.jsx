@@ -24,8 +24,14 @@ function HelpingForm() {
           What To Buy ?
         </h1>
 
-        <div className="bg-[var(--color-aboutbg)] ml-auto mt-20 lg:mt-50 h-35 lg:h-80 w-65 lg:w-290">
-        </div>
+        <div
+  className="bg-[var(--color-aboutbg)] 
+             ml-auto 
+             mt-20 lg:mt-50 
+             h-35 md:h-60 lg:h-80 
+             w-65 md:w-150 lg:w-290">
+</div>
+
 
         <h1 className="font-montserrat  text-center mt-6 text-[10px] sm:text-3xl lg:text-2xl
                        text-gray-700 tracking-wide leading-relaxed max-w-4xl mx-auto px-4">
@@ -34,15 +40,17 @@ function HelpingForm() {
 
 
         <form
-          onSubmit={handleSubmit}
-          className="
-     max-w-3xl 
-    h-auto lg:h-70 mt-6 lg:mt-20 mx-4 lg:ml-142
+  onSubmit={handleSubmit}
+  className="
+    max-w-3xl 
+    h-auto lg:h-70 mt-6 lg:mt-20 
+    mx-auto          /* ✅ this centers it */
     bg-gradient-to-tr from-[#e6d9c3] to-[#f5f5dc] 
     p-6 rounded-xl shadow-[0_8px_30px_rgba(90,77,65,0.50)] border border-[#e5e5c0] 
     grid grid-cols-1 md:grid-cols-2 gap-6
   "
-        >
+>
+
           {/* First Name */}
           <div>
 
@@ -99,7 +107,7 @@ function HelpingForm() {
               step="60"
               className="w-full border-b-2 border-[#5a4d41] bg-transparent focus:outline-none focus:border-[#4a3f35] py-2 text-gray-800"
             />
-          </div>
+          </div> 
 
           {/* Submit Button spanning full width */}
           <div className="md:col-span-2">

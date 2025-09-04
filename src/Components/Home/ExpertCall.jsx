@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Phone, X } from "lucide-react";
 import Input from "../Input/Input";
 import Button from "../Button/Button";
+import { FaWhatsapp } from "react-icons/fa";
+
+<FaWhatsapp size={24} color="green" />
 
 
 function ExpertCall({ className = "" }) {
@@ -10,12 +13,22 @@ function ExpertCall({ className = "" }) {
     const [usernumber, setnumber] = useState("");
     const [usetime, setusertime] = useState("09:00");
     const [usedate, setdate] = useState("");
+    const [gender, setgender] = useState("");
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log({ username, usernumber, usedate, usetime });
+        const clientWhatsapp = "919974212669"; //919601394272
+        const message = `Name: ${username}
+Number: ${usernumber}
+Birth Date: ${usedate}
+Birth Time: ${usetime}
+Gender: ${gender}`;
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappURL = `https://wa.me/${clientWhatsapp}?text=${encodedMessage}`;
+        window.open(whatsappURL, "_blank");
         setOpen(false);
     };
+
 
     return (
         <>
@@ -34,7 +47,7 @@ function ExpertCall({ className = "" }) {
 
 
                 {/* Button Icon */}
-                <Phone size={24} className="relative z-10 text-[var(--color-productcontainerbg)]" />
+                <FaWhatsapp size={24} className="relative z-10 text-[var(--color-productcontainerbg)]" />
             </div>
 
 
@@ -42,7 +55,7 @@ function ExpertCall({ className = "" }) {
             {open && (
                 <div className="fixed inset-0 flex items-center justify-center
                          bg-black/30 backdrop-blur-xs z-50 px-4">
-<div className="bg-[var(--color-productcontainerbg)] 
+                    <div className="bg-[var(--color-productcontainerbg)] 
     p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-2xl relative 
     border border-[var(--color-aboutbg)]
     max-h-[90vh] overflow-y-auto">
@@ -124,6 +137,12 @@ function ExpertCall({ className = "" }) {
 
                             {/* Birth Place */}
                             <div>
+                                <label
+                                    htmlFor="actualName"
+                                    className="block text-sm font-medium text-gray-600 mb-1"
+                                >
+                                    Enter Birth Place
+                                </label>
                                 <Input
                                     type="text"
                                     placeholder="Enter your birth place"
@@ -136,6 +155,12 @@ function ExpertCall({ className = "" }) {
 
                             {/* Birth Time */}
                             <div>
+                                <label
+                                    htmlFor="actualName"
+                                    className="block text-sm font-medium text-gray-600 mb-1"
+                                >
+                                    Enter  Birth Time
+                                </label>
                                 <Input
                                     type="time"
                                     value={usetime}
@@ -163,20 +188,30 @@ function ExpertCall({ className = "" }) {
                   <option value="other">Other</option>
                 </select>
               </div> */}
-                            <Input
-                                type="select"
-                                placeholder="Enter your gender"
-                                options={[
-                                    { value: "male", label: "Male" },
-                                    { value: "female", label: "Female" },
-                                    { value: "other", label: "Other" },
-                                ]}
+                            <div className="w-full flex flex-col justify-center">
+                                <label
+                                    htmlFor="gender"
+                                    className="block text-sm font-medium text-gray-600 mb-1"
+                                >
+                                    Select your Gender
+                                </label>
+                                <Input
+                                    id="gender"
+                                    type="select"
+                                    value={gender}
+                                    onChange={(e) => setgender(e.target.value)}
+                                    options={[
+                                        { value: "male", label: "Male" },
+                                        { value: "female", label: "Female" },
+                                        { value: "other", label: "Other" },
+                                    ]}
+                                    className="w-full border-b-2 border-[#5a4d41] bg-transparent
+      focus:outline-none focus:border-[#4a3f35] py-2 px-1
+      text-gray-800 placeholder-gray-500 cursor-pointer"
+                                    required
+                                />
+                            </div>
 
-                                className="w-full border-b-2 border-[#5a4d41] bg-transparent 
-                focus:outline-none focus:border-[#4a3f35] py-2 px-1 
-                text-gray-800 placeholder-gray-500 cursor-pointer"
-                                required
-                            />
 
                             {/* Submit Button */}
                             <div className="md:col-span-2">
