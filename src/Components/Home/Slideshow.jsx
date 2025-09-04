@@ -1,7 +1,12 @@
 // Slideshow.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { UsersAPI } from "../../APIs/User.api"; // Example API call (not used in this UI yet)
 
+// -------------------------
+// Example Slide Data
+// In production, this could come from an API instead of hardcoding.
+// -------------------------
 const slides = [
   {
     id: 1,
@@ -50,39 +55,67 @@ const slides = [
 ];
 
 export default function Slideshow() {
-  const [current, setCurrent] = useState(0);
-  const [direction, setDirection] = useState(0);
+  // -------------------------
+  // State Management
+  // -------------------------
+  const [current, setCurrent] = useState(0); // Current slide index
+  const [direction, setDirection] = useState(0); // Direction of slide animation
+  const [users, setUsers] = useState([]); // Example API data
+  const [error, setError] = useState(""); // API error
+
   const length = slides.length;
 
-  // Autoplay every 4s
+  // -------------------------
+  // API Call (example usage)
+  // -------------------------
+  useEffect(() => {
+    UsersAPI.list()
+      .then(setUsers) // Save users to state (not displayed in slideshow UI yet)
+      .catch((err) => setError(err.message));
+  }, []);
+
+  // -------------------------
+  // Autoplay every 4 seconds
+  // -------------------------
   useEffect(() => {
     const interval = setInterval(nextSlide, 4000);
     return () => clearInterval(interval);
   }, []);
 
-  // Preload next image
+  // -------------------------
+  // Preload Next Image (for smoother transitions)
+  // -------------------------
   useEffect(() => {
     const nextIndex = (current + 1) % length;
     const img = new Image();
     img.src = slides[nextIndex].image;
   }, [current]);
 
+  // -------------------------
+  // Navigation Functions
+  // -------------------------
   const nextSlide = useCallback(() => {
     setDirection(1);
     setCurrent((prev) => (prev + 1) % length);
-  }, []);
+  }, [length]);
 
   const prevSlide = useCallback(() => {
     setDirection(-1);
     setCurrent((prev) => (prev - 1 + length) % length);
-  }, []);
+  }, [length]);
 
-  const swipeThreshold = 50; // lower threshold for mobile
+  // -------------------------
+  // Swipe Support (Mobile)
+  // -------------------------
+  const swipeThreshold = 50; // minimum drag distance
   const handleDragEnd = (event, info) => {
     if (info.offset.x > swipeThreshold) prevSlide();
     else if (info.offset.x < -swipeThreshold) nextSlide();
   };
 
+  // -------------------------
+  // Framer Motion Variants
+  // -------------------------
   const variants = {
     enter: (dir) => ({
       x: dir > 0 ? 300 : -300,
@@ -103,8 +136,12 @@ export default function Slideshow() {
     }),
   };
 
+  // -------------------------
+  // JSX UI
+  // -------------------------
   return (
     <div className="relative w-full h-[500px] sm:h-[500px] md:h-[880px] overflow-hidden rounded-b-[10px] shadow-2xl">
+      {/* Animate between slides */}
       <AnimatePresence custom={direction}>
         <motion.div
           key={slides[current].id}
@@ -118,7 +155,7 @@ export default function Slideshow() {
           dragConstraints={{ left: 0, right: 0 }}
           onDragEnd={handleDragEnd}
         >
-          {/* Main Image */}
+          {/* Background Image */}
           <img
             src={slides[current].image}
             alt={slides[current].title}
@@ -130,9 +167,8 @@ export default function Slideshow() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
           <div className="absolute bottom-0 w-full h-20 sm:h-28 md:h-32 bg-gradient-to-t from-black/60 to-transparent" />
 
-          {/* Text content */}
-          <div className="absolute bottom-15 sm:bottom-12 md:bottom-16 left-4 sm:left-8 md:left-12 text-white
-          max-w-xs sm:max-w-md md:max-w-lg">
+          {/* Text & Buttons */}
+          <div className="absolute bottom-15 sm:bottom-12 md:bottom-16 left-4 sm:left-8 md:left-12 text-white max-w-xs sm:max-w-md md:max-w-lg">
             <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-2 sm:mb-4 drop-shadow-xl">
               {slides[current].title}
             </h1>
@@ -144,10 +180,11 @@ export default function Slideshow() {
                 <a
                   key={idx}
                   href={btn.link}
-                  className={`px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-lg font-semibold shadow-lg transition ${btn.primary
+                  className={`px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-lg font-semibold shadow-lg transition ${
+                    btn.primary
                       ? "bg-yellow-500 text-black hover:bg-yellow-400"
                       : "bg-transparent border border-white hover:bg-white hover:text-black"
-                    }`}
+                  }`}
                 >
                   {btn.text}
                 </a>
@@ -157,7 +194,7 @@ export default function Slideshow() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Dots navigation */}
+      {/* Dots Navigation */}
       <div className="absolute bottom-2 sm:bottom-4 w-full flex justify-center">
         <div className="flex gap-2 sm:gap-3 bg-black/30 px-4 sm:px-6 py-2 sm:py-3 rounded-full backdrop-blur-sm shadow-md">
           {slides.map((_, idx) => (
@@ -167,12 +204,23 @@ export default function Slideshow() {
                 setDirection(idx > current ? 1 : -1);
                 setCurrent(idx);
               }}
-              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition ${current === idx ? "bg-yellow-500" : "bg-white/50 hover:bg-white"
-                }`}
+              className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition ${
+                current === idx
+                  ? "bg-yellow-500"
+                  : "bg-white/50 hover:bg-white"
+              }`}
             />
           ))}
         </div>
       </div>
+
+      {/* Debug: Show API Data (optional) */}
+      {error && <p className="absolute top-2 left-2 text-red-500">{error}</p>}
+      {users.length > 0 && (
+        <p className="absolute top-2 right-2 text-green-400">
+          Users Loaded: {users.length}
+        </p>
+      )}
     </div>
   );
 }
