@@ -1,17 +1,68 @@
 import React, { useState } from "react";
-import { FaFacebookF, FaGooglePlusG } from "react-icons/fa";
+import { FaGooglePlusG } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 import Input from "../Input/Input";
+
+// ✅ Import env variable (make sure your .env has VITE_API_URL=http://localhost:8001)
+const API_URL = import.meta.env.VITE_API_URL;
 
 const LoginSignup = ({ onClose }) => {
   const [isSignup, setIsSignup] = useState(false);
 
-  const handleFacebookLogin = () => console.log("Facebook login clicked");
-  const handleGoogleLogin = () => console.log("Google login clicked");
-  const handleContinue = (e) => {
+  // form states
+  const [fullname, setFullname] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // ✅ Google Auth redirect
+  const handleGoogleLogin = () => {
+    window.location.href = `${API_URL}/auth/google`;
+  };
+
+  // ✅ Normal login/signup
+  const handleContinue = async (e) => {
     e.preventDefault();
-    console.log(isSignup ? "Signup form submitted" : "Login form submitted");
-    onClose();
+    setError("");
+    setLoading(true);
+
+    try {
+      if (isSignup) {
+        if (password !== confirmPassword) {
+          setError("Passwords do not match");
+          setLoading(false);
+          return;
+        }
+
+        // 🔹 Signup API
+        const res = await axios.post(`${API_URL}/auth/signup`, {
+          name: fullname,
+          email,
+          password,
+        });
+        console.log("✅ Signup success:", res.data);
+        alert("Signup successful!");
+      } else {
+        // 🔹 Login API
+        const res = await axios.post(`${API_URL}/auth/login`, {
+          email,
+          password,
+        });
+        console.log("✅ Login success:", res.data);
+        alert("Login successful!");
+      }
+
+      onClose(); // close modal after success
+    } catch (err) {
+      console.error("❌ Full error:", err);
+      setError(err.response?.data?.message || "Something went wrong!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,7 +95,6 @@ const LoginSignup = ({ onClose }) => {
 
         {/* Tabs */}
         <div className="flex justify-center mb-6 border-b border-gray-300 relative">
-          {/* Login */}
           <div className="relative">
             <button
               onClick={() => setIsSignup(false)}
@@ -65,7 +115,6 @@ const LoginSignup = ({ onClose }) => {
             )}
           </div>
 
-          {/* Signup */}
           <div className="relative">
             <button
               onClick={() => setIsSignup(true)}
@@ -87,15 +136,7 @@ const LoginSignup = ({ onClose }) => {
           </div>
         </div>
 
-        {/* Social Buttons */}
-        <button
-          onClick={handleFacebookLogin}
-          className="w-full flex items-center justify-center border border-[#3b5998] text-[#3b5998] font-medium py-3 mb-4 rounded-lg hover:bg-[#3b5998] hover:text-white transition"
-        >
-          <FaFacebookF className="mr-2" />
-          {isSignup ? "Sign Up With Facebook" : "Sign In With Facebook"}
-        </button>
-
+        {/* Google Button */}
         <button
           onClick={handleGoogleLogin}
           className="w-full flex items-center justify-center border border-red-500 text-red-500 font-medium py-3 mb-4 rounded-lg hover:bg-red-500 hover:text-white transition"
@@ -111,76 +152,93 @@ const LoginSignup = ({ onClose }) => {
           <div className="flex-1 h-px bg-gray-300"></div>
         </div>
 
-        {/* Animated Form */}
-       <AnimatePresence mode="wait">
-  <motion.div
-    key={isSignup ? "signup" : "login"}
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.3, ease: "easeInOut" }}
-    layout   // ✅ makes parent smoothly adjust height
-  >
-    {isSignup && (
-      <Input
-        type="text"
-        placeholder="Full Name"
-        className="w-full py-3 px-4 mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-      />
-    )}
+        {/* Form */}
+        <AnimatePresence mode="wait">
+          <motion.form
+            key={isSignup ? "signup" : "login"}
+            onSubmit={handleContinue}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            layout
+          >
+            {isSignup && (
+              <Input
+                type="text"
+                placeholder="Full Name"
+                value={fullname}
+                onChange={(e) => setFullname(e.target.value)}
+                className="w-full py-3 px-4 mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            )}
 
-    <Input
-      type="text"
-      placeholder="Enter Mobile Number / Email*"
-      className="w-full py-3 px-4 mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-    />
+            <Input
+              type="text"
+              placeholder="Enter Mobile Number / Email*"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full py-3 px-4 mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
 
-    <Input
-      type="password"
-      placeholder="Enter Password*"
-      className="w-full py-3 px-4 mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-    />
+            <Input
+              type="password"
+              placeholder="Enter Password*"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full py-3 px-4 mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
 
-    {isSignup && (
-      <Input
-        type="password"
-        placeholder="Confirm Password*"
-        className="w-full py-3 px-4 mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-      />
-    )}
+            {isSignup && (
+              <Input
+                type="password"
+                placeholder="Confirm Password*"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full py-3 px-4 mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            )}
 
-    {/* Terms */}
-    <p className="text-xs text-gray-600 mb-4">
-      By Continuing, I agree to the{" "}
-      <a href="#" className="text-blue-600 underline">
-        Terms of Use
-      </a>{" "}
-      &{" "}
-      <a href="#" className="text-blue-600 underline">
-        Privacy Policy
-      </a>
-    </p>
+            {/* Error message */}
+            {error && (
+              <p className="text-red-500 text-sm mb-3 text-center">{error}</p>
+            )}
 
-    {/* Continue Button */}
-    <button
-      onClick={handleContinue}
-      className="w-full bg-[#0b1c47] text-white py-3 font-semibold rounded-lg hover:bg-[#1a2b65] transition"
-    >
-      {isSignup ? "SIGN UP" : "CONTINUE"}
-    </button>
+            {/* Terms */}
+            <p className="text-xs text-gray-600 mb-4">
+              By Continuing, I agree to the{" "}
+              <a href="#" className="text-blue-600 underline">
+                Terms of Use
+              </a>{" "}
+              &{" "}
+              <a href="#" className="text-blue-600 underline">
+                Privacy Policy
+              </a>
+            </p>
 
-    {/* Help link */}
-    {!isSignup && (
-      <p className="text-xs text-gray-600 mt-5 text-center">
-        Having trouble logging in?{" "}
-        <a href="#" className="text-blue-600 font-medium">
-          Get help
-        </a>
-      </p>
-    )}
-  </motion.div>
-</AnimatePresence>
+            {/* Continue Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#0b1c47] text-white py-3 font-semibold rounded-lg hover:bg-[#1a2b65] transition disabled:opacity-50"
+            >
+              {loading
+                ? "Please wait..."
+                : isSignup
+                ? "SIGN UP"
+                : "CONTINUE"}
+            </button>
 
+            {!isSignup && (
+              <p className="text-xs text-gray-600 mt-5 text-center">
+                Having trouble logging in?{" "}
+                <a href="#" className="text-blue-600 font-medium">
+                  Get help
+                </a>
+              </p>
+            )}
+          </motion.form>
+        </AnimatePresence>
       </motion.div>
     </div>
   );
