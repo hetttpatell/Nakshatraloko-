@@ -52,7 +52,9 @@ const OrdersManagement = () => {
       status: "Pending",
       amount: 1200,
       items: [
-        { productId: 4, name: "Another Product Name id-4", quantity: 1, price: 1200 }
+        { productId: 4, name: "Another Product Name id-4", quantity: 2, price: 1200 },
+        { productId: 2, name: "Another Product Name id-4", quantity: 1, price: 1200 },
+        { productId: 1, name: "Another Product Name id-4", quantity: 1, price: 1200 }
       ],
       shippingAddress: "321 Elm St, Houston, TX 77001"
     }
@@ -136,7 +138,6 @@ const OrdersManagement = () => {
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-800">Orders Management</h2>
-        
       </div>
 
       {/* Search and Filter Bar */}

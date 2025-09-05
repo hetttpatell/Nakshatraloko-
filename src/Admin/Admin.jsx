@@ -39,6 +39,7 @@ import StatsOverview from "./StatsOverview";
 import ChartsSection from "./ChartsSection";
 import RecentOrders from "./RecentOrders";
 import OrdersManagement from "./OrdersManagement";
+import ProductAdmin from "./ProductSection/ProductsAdmin";
 
 const Admin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -82,10 +83,7 @@ const Admin = () => {
           )}
           
           {activePage === "Products" && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Products Management</h2>
-              <p>Products management content goes here...</p>
-            </div>
+            <ProductAdmin />
           )}
           
           {activePage === "Users" && (
