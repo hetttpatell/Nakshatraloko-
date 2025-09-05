@@ -21,7 +21,7 @@ const LoginSignup = ({ onClose }) => {
 
   // ✅ Google Auth redirect
   const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/google`;
+    window.location.href = `${API_URL}/api/google`;
   };
 
   // ✅ Normal login/signup
@@ -48,12 +48,14 @@ const LoginSignup = ({ onClose }) => {
         alert("Signup successful!");
       } else {
         // 🔹 Login API
-        const res = await axios.post(`${API_URL}/auth/login`, {
+        
+        const res = await axios.post(`${API_URL}/api/login`, {
           email,
           password,
         });
         console.log("✅ Login success:", res.data);
         alert("Login successful!");
+
       }
 
       onClose(); // close modal after success
@@ -98,11 +100,10 @@ const LoginSignup = ({ onClose }) => {
           <div className="relative">
             <button
               onClick={() => setIsSignup(false)}
-              className={`px-6 py-2 font-semibold transition-colors duration-300 ${
-                !isSignup
+              className={`px-6 py-2 font-semibold transition-colors duration-300 ${!isSignup
                   ? "text-[var(--color-navy)]"
                   : "text-gray-500 hover:text-[var(--color-navy)]"
-              }`}
+                }`}
             >
               Login
             </button>
@@ -118,11 +119,10 @@ const LoginSignup = ({ onClose }) => {
           <div className="relative">
             <button
               onClick={() => setIsSignup(true)}
-              className={`px-6 py-2 font-semibold transition-colors duration-300 ${
-                isSignup
+              className={`px-6 py-2 font-semibold transition-colors duration-300 ${isSignup
                   ? "text-[var(--color-navy)]"
                   : "text-gray-500 hover:text-[var(--color-navy)]"
-              }`}
+                }`}
             >
               Signup
             </button>
@@ -225,8 +225,8 @@ const LoginSignup = ({ onClose }) => {
               {loading
                 ? "Please wait..."
                 : isSignup
-                ? "SIGN UP"
-                : "CONTINUE"}
+                  ? "SIGN UP"
+                  : "CONTINUE"}
             </button>
 
             {!isSignup && (

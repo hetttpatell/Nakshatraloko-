@@ -16,6 +16,7 @@ import ThankYouPage from "./Components/Payment/ThankYou.jsx";
 import Pendant from "./Components/Catagories/Pendant.jsx";
 import CategoryPage from "./Components/Catagories/Catagories.jsx";
 import AuthSuccess from "./Components/Login/AuthSucess.jsx";
+import Admin from "./Admin/Admin.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />} >
@@ -35,13 +36,13 @@ const router = createBrowserRouter(
       </Route>
       <Route path="faqs" element={<FAQs />} />
       <Route path="cart" element={<Cart />} />
-      <Route path="login" element={<LoginSignup />} />
+      <Route path="admin" element={<Admin />} />
       <Route path="auth-sucess" element={<AuthSuccess />} />
       <Route path="signup" element={<SignupForm />} />
       <Route path="wishlist" element={<Wishlist />} />
       <Route path="account" element={<UserAccount />} />
       <Route path="blogs" element={<Blogs />} />
-
+ 
       <Route path="payment" element={<PaymentForm />} />
       <Route path="thankyou" element={<ThankYouPage />} />
     </Route>
