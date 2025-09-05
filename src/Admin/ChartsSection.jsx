@@ -54,7 +54,7 @@ const ChartsSection = () => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="sales" stroke="#0088FE" strokeWidth={2} activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey="sales" stroke="#0088FE" strokeWidth={2} activeDot={{ r: 10 }} />
               <Line type="monotone" dataKey="revenue" stroke="#00C49F" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
