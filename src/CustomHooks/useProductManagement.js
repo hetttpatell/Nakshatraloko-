@@ -1,29 +1,90 @@
-import React, { useMemo } from "react";
-import { FaPlus, FaSpinner } from "react-icons/fa";
+import { useState, useEffect } from "react";
 
-import ProductTable from "./ProductTable";
-import ProductModal from "./ProductModal";
-import DeleteConfirmationModal from "./DeleteConfirmationModal";
-import SearchAndFilterBar from "./SearchAndFilterBar";
+export const useProductManagement = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [brandFilter, setBrandFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState({ 
+    isOpen: false, productId: null, productName: "" 
+  });
 
-import { useProductManagement } from "../../CustomHooks/useProductManagement";
-import { filterProducts } from "../Admin/ProductSection/productFilters";
+  // Simulate loading products from an API
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        // In a real app, this would be an API call
+        // For now, we'll use an empty array
+        const sampleProducts = [];
+        setProducts(sampleProducts);
+      } catch (error) {
+        console.error("Failed to load products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-// Constants for dropdown options
-const BRAND_OPTIONS = ["STYLIUM", "PEARLIX", "DIAMONDX", "GOLDEN"];
-const SIZE_OPTIONS = [
-  "5 Ratti", "5.25 Ratti", "6 Ratti", "6.5 Ratti",
-  "7 Ratti", "7.5 Ratti", "8 Ratti", "8.5 Ratti"
-];
-const MATERIAL_OPTIONS = [
-  "Gemstone", "Pendant", "Necklace", "Silver",
-  "Gold", "Copper", "Diamond", "Platinum"
-];
+    loadProducts();
+  }, []);
 
-const ProductAdmin = () => {
-  const {
+  const handleDeleteProduct = () => {
+    if (deleteConfirmModal.productId) {
+      setProducts(prev => prev.filter(product => product.id !== deleteConfirmModal.productId));
+      setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
+    }
+  };
+
+  const handleSaveProduct = (updatedProduct) => {
+    if (editingProduct && editingProduct.id) {
+      // Update existing product
+      setProducts(prev => 
+        prev.map(product => 
+          product.id === editingProduct.id 
+            ? { ...updatedProduct, id: editingProduct.id }
+            : product
+        )
+      );
+    }
+  };
+
+  const handleAddProduct = (productData) => {
+    // Generate a unique ID for the new product
+    const newId = Date.now().toString();
+    const newProduct = {
+      ...productData,
+      id: newId,
+      rating: 0,
+      reviews: 0
+    };
+    
+    setProducts(prev => [...prev, newProduct]);
+  };
+
+  const openDeleteConfirm = (productId, productName) => {
+    setDeleteConfirmModal({
+      isOpen: true,
+      productId,
+      productName
+    });
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setIsEditModalOpen(true);
+  };
+
+  const viewProductDetails = (product) => {
+    setSelectedProduct(product);
+  };
+
+  return {
     products,
-    filteredProducts,
     loading,
     searchTerm,
     brandFilter,
@@ -41,101 +102,11 @@ const ProductAdmin = () => {
     setIsAddModalOpen,
     setEditingProduct,
     setDeleteConfirmModal,
-    handleSaveProduct,
     handleDeleteProduct,
-  } = useProductManagement();
-
-  // Memoized filtered products (can also use filteredProducts from hook)
-  const displayedProducts = useMemo(() => {
-    return filterProducts(products, searchTerm, brandFilter, statusFilter);
-  }, [products, searchTerm, brandFilter, statusFilter]);
-
-  const openAddModal = () => {
-    setEditingProduct(null);
-    setIsAddModalOpen(true);
+    handleSaveProduct,
+    handleAddProduct,
+    openDeleteConfirm,
+    handleEditProduct,
+    viewProductDetails
   };
-
-  const openEditModal = (product) => {
-    setEditingProduct(product);
-    setIsEditModalOpen(true);
-  };
-
-  const openDeleteConfirm = (product) => {
-    setDeleteConfirmModal({ isOpen: true, productId: product.id, productName: product.name });
-  };
-
-  const closeModals = () => {
-    setIsAddModalOpen(false);
-    setIsEditModalOpen(false);
-    setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
-    setEditingProduct(null);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64 text-gray-500">
-        <FaSpinner className="animate-spin mr-2" /> Loading products...
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">Product Management</h2>
-        <button
-          onClick={openAddModal}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center"
-        >
-          <FaPlus className="mr-2" /> Add Product
-        </button>
-      </div>
-
-      <SearchAndFilterBar
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        brandFilter={brandFilter}
-        setBrandFilter={setBrandFilter}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        brandOptions={BRAND_OPTIONS}
-      />
-
-      <ProductTable
-        products={displayedProducts}
-        onEdit={openEditModal}
-        onDelete={openDeleteConfirm}
-        onView={setSelectedProduct}
-      />
-
-      {(isAddModalOpen || isEditModalOpen) && (
-        <ProductModal
-          title={isAddModalOpen ? "Add New Product" : "Edit Product"}
-          initialProduct={editingProduct || {}}
-          onClose={closeModals}
-          onSave={(product) => {
-            handleSaveProduct(product);
-            closeModals();
-          }}
-          brandOptions={BRAND_OPTIONS}
-          sizeOptions={SIZE_OPTIONS}
-          materialOptions={MATERIAL_OPTIONS}
-          isEditing={isEditModalOpen}
-        />
-      )}
-
-      {deleteConfirmModal.isOpen && (
-        <DeleteConfirmationModal
-          productName={deleteConfirmModal.productName}
-          onClose={() => setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" })}
-          onConfirm={() => {
-            handleDeleteProduct();
-            setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
-          }}
-        />
-      )}
-    </div>
-  );
 };
-
-export default ProductAdmin;

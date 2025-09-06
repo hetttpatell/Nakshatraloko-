@@ -22,7 +22,7 @@ const DeleteConfirmationModal = ({
 
   return (
     <div 
-      className="fixed inset-0 backdrop-blur-xs bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all duration-200 scale-95 animate-scaleIn">

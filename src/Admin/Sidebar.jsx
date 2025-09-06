@@ -4,7 +4,7 @@ import {
   FaChartBar,
   FaShoppingCart,
   FaBox,
-  FaUsers,
+  FaList ,
   FaCog,
   FaSignOutAlt
 } from "react-icons/fa";
@@ -13,7 +13,7 @@ const sidebarItems = [
   { name: "Dashboard", icon: <FaChartBar /> },
   { name: "Orders", icon: <FaShoppingCart /> },
   { name: "Products", icon: <FaBox /> },
-  { name: "Users", icon: <FaUsers /> },
+  { name: "Catagories", icon: <FaList /> },
   { name: "Settings", icon: <FaCog /> },
 ];
 

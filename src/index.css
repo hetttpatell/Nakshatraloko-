@@ -40,7 +40,23 @@
   --color-navy: #001f3f;
   --color-text: #333333;
 }
+ 
+:root {
+  --color-primary: #f7f5fa;         /* Soft lavender background */
+  --color-secondary: #eae7f2;       /* Muted pale accent */
+  --color-accent: #7c3aed;          /* Elegant deep violet for actions and highlights */
+  --color-contrast: #fff;           /* Pure white surfaces */
+  --color-nav-bg: #f3f0f6;          /* Navigation background */
+  --color-card-bg: #fbf9ff;         /* Product container background */
+  --color-shadow: rgba(124, 58, 237, 0.08); /* Soft purple shadow */
+  --color-text: #2d2047;            /* Rich navy-gray text */
+  --color-muted: #a1a1aa;           /* Subdued label and hint text */
+  --color-success: #15c39a;         /* Pops for approved/verified info */
+  --color-warning: #fab005;         /* Used for discounts or urgency */
+  --color-error: #ef4444;           /* Alerts and error texts */
+}
 
+  
  @keyframes slideIn {
   0% { opacity: 0; transform: translateX(100%); }
   100% { opacity: 1; transform: translateX(0); }
