@@ -9,7 +9,33 @@ function HelpingForm() {
   const [usetime, setusertime] = useState("09:00");
   const [usedate, setdate] = useState("");
 
-  const handleSubmit = (e) => { }
+  // Add this to your HelpingForm component
+const handleSubmit = (e) => {
+  e.preventDefault();
+  
+  // Store the submission (in a real app, this would be an API call)
+  const submission = {
+    formType: "HelpingForm",
+    username,
+    phone: usernumber,
+    date: usedate,
+    time: usetime,
+    status: "new",
+    createdAt: new Date().toISOString()
+  };
+  
+  // Here you would send this to your backend or context
+  console.log("Form submission:", submission);
+  
+  // Reset form
+  setUsername("");
+  setnumber("");
+  setdate("");
+  setusertime("09:00");
+  
+  // Show success message
+  alert("Thank you! Our experts will reach out to you soon.");
+};
 
   return (
     <>

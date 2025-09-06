@@ -41,6 +41,8 @@ import RecentOrders from "./RecentOrders";
 import OrdersManagement from "./OrdersManagement";
 import ProductAdmin from "./ProductSection/ProductsAdmin";
 import CategoriesAdmin from "./CatagoryAdmin/CategoriesAdmin";
+import Coupons from "./Coupons/Coupons";
+import Consultancy from "./Consultancy/Consultancy";
 
 const Admin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -89,6 +91,14 @@ const Admin = () => {
           
           {activePage === "Catagories" && (
             <CategoriesAdmin/>
+          )}
+
+          {activePage === "Coupons" && (
+            <Coupons />
+          )}
+
+          {activePage === "Consultancy" && (
+            <Consultancy />
           )}
           
           {activePage === "Settings" && (

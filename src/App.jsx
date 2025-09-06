@@ -7,6 +7,7 @@ import { CartProvider } from "./Context/CartContext";
 import { WishlistProvider } from "./Context/WishlistContext"; 
 import LoginSignup from "./Components/Login/Login"; // import your login modal
 import ScrollToTop from "./Scrollingfix";
+import { ConsultancyProvider } from "./Context/ConsultancyContext";
 
 function App() {
   const [showLogin, setShowLogin] = useState(false); // state to control login modal
@@ -32,6 +33,7 @@ function App() {
   }, []);
 
   return (
+    <ConsultancyProvider>
     <CartProvider>
       <WishlistProvider> 
         <div className={`flex flex-col min-h-screen ${showLogin ? "filter blur-sm" : ""}`}>
@@ -51,6 +53,7 @@ function App() {
         </div>
       </WishlistProvider>
     </CartProvider>
+    </ConsultancyProvider>
   );
 }
 

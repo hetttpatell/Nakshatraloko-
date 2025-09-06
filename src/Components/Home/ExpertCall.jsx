@@ -1,77 +1,122 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Phone, X } from "lucide-react";
 import Input from "../Input/Input";
 import Button from "../Button/Button";
 import { FaWhatsapp } from "react-icons/fa";
-
-<FaWhatsapp size={24} color="green" />
-
+import ConsultancyContext from "../../Context/ConsultancyContext";
+import Toast from "../Product/Toast";
 
 function ExpertCall({ className = "" }) {
+    const { addSubmission } = useContext(ConsultancyContext);
     const [open, setOpen] = useState(false);
     const [username, setUsername] = useState("");
-    const [usernumber, setnumber] = useState("");
-    const [usetime, setusertime] = useState("09:00");
-    const [usedate, setdate] = useState("");
-    const [gender, setgender] = useState("");
+    const [usernumber, setNumber] = useState("");
+    const [consultationTime, setConsultationTime] = useState("09:00");
+    const [consultationDate, setConsultationDate] = useState("");
+    const [birthDate, setBirthDate] = useState("");
+    const [birthTime, setBirthTime] = useState("");
+    const [birthPlace, setBirthPlace] = useState("");
+    const [gender, setGender] = useState("");
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("success");
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const clientWhatsapp = "919974212669"; //919601394272
-        const message = `Name: ${username}
-Number: ${usernumber}
-Birth Date: ${usedate}
-Birth Time: ${usetime}
-Gender: ${gender}`;
+
+        // Create submission object
+        const submission = {
+            formType: "ExpertCall",
+            username,
+            phone: usernumber,
+            date: consultationDate,
+            time: consultationTime,
+            birthDate,
+            birthTime,
+            birthPlace,
+            gender,
+            status: "new",
+        };
+
+        addSubmission(submission);
+
+        // Store in localStorage for admin access
+        const existingSubmissions = JSON.parse(localStorage.getItem('consultancySubmissions') || '[]');
+        const updatedSubmissions = [...existingSubmissions, submission];
+        localStorage.setItem('consultancySubmissions', JSON.stringify(updatedSubmissions));
+
+        // Send to WhatsApp
+        const clientWhatsapp = "918866378552";
+        const message = `New Consultation Request:
+Name: ${username}
+Phone: ${usernumber}
+Birth Date: ${birthDate}
+Birth Time: ${birthTime}
+Birth Place: ${birthPlace}
+Gender: ${gender}
+Preferred Consultation Date: ${consultationDate}
+Preferred Consultation Time: ${consultationTime}`;
+
         const encodedMessage = encodeURIComponent(message);
         const whatsappURL = `https://wa.me/${clientWhatsapp}?text=${encodedMessage}`;
         window.open(whatsappURL, "_blank");
+
+        // Show toast instead of alert
+        setToastMessage("Thank you! Our experts will reach out to you soon.");
+        setToastType("success");
+        setShowToast(true);
+
+        // Reset form and close modal
+        setUsername("");
+        setNumber("");
+        setConsultationDate("");
+        setConsultationTime("09:00");
+        setBirthDate("");
+        setBirthTime("");
+        setBirthPlace("");
+        setGender("");
         setOpen(false);
     };
-
-
     return (
         <>
             {/* Floating Button */}
             <div
                 onClick={() => setOpen(true)}
                 className={`fixed bottom-6 right-6 w-14 h-14 rounded-full bg-[var(--color-navy)] 
-    text-[var(--color-productcontainerbg)] flex items-center justify-center shadow-lg 
-    cursor-pointer hover:opacity-90 transition z-50 ${className}`}
+                text-[var(--color-productcontainerbg)] flex items-center justify-center shadow-lg 
+                cursor-pointer hover:opacity-90 transition z-50 ${className}`}
             >
+                {/* Ripple Ring */}
                 {/* Ripple Ring */}
                 <span
                     className="absolute inline-flex h-full w-full rounded-full 
-  bg-[var(--color-productbg)] opacity-75 animate-ping duration-700"
+                    bg-[var(--color-productbg)] opacity-75 animate-ping duration-700"
                 ></span>
-
 
                 {/* Button Icon */}
                 <FaWhatsapp size={24} className="relative z-10 text-[var(--color-productcontainerbg)]" />
             </div>
 
-
             {/* Modal */}
             {open && (
                 <div className="fixed inset-0 flex items-center justify-center
-                         bg-black/30 backdrop-blur-xs z-50 px-4">
+                    bg-black/30 backdrop-blur-xs z-50 px-4">
                     <div className="bg-[var(--color-productcontainerbg)] 
-    p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-2xl relative 
-    border border-[var(--color-aboutbg)]
-    max-h-[90vh] overflow-y-auto">
+                        p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-2xl relative 
+                        border border-[var(--color-aboutbg)]
+                        max-h-[90vh] overflow-y-auto">
 
                         {/* Close Button */}
                         <button
                             onClick={() => setOpen(false)}
-                            className="absolute  top-4 right-4 p-2 rounded-full 
-             bg-[var(--color-aboutbg)] hover:bg-[var(--color-navy)] 
-             text-[var(--color-navy)] hover:text-[var(--color-productcontainerbg)] 
-             transition shadow-md"
+                            className="absolute top-4 right-4 p-2 rounded-full 
+                                bg-[var(--color-aboutbg)] hover:bg-[var(--color-navy)] 
+                                text-[var(--color-navy)] hover:text-[var(--color-productcontainerbg)] 
+                                transition shadow-md"
                             aria-label="Close"
                         >
                             <X size={18} />
                         </button>
-
 
                         {/* Title */}
                         <h1 className="font-playfair font-bold text-3xl sm:text-4xl md:text-5xl text-center text-[var(--color-navy)] mb-2">
@@ -84,22 +129,19 @@ Gender: ${gender}`;
                         {/* Form */}
                         <form
                             onSubmit={handleSubmit}
-                            className="
-                 max-w-3xl 
-                 h-auto 
-                 bg-gradient-to-tr from-[var(--color-productbg)] to-[var(--color-aboutbg)] 
-                 p-6 rounded-xl shadow-[0_8px_30px_rgba(90,77,65,0.35)] 
-                 border border-[var(--color-aboutbg)] 
-                 grid grid-cols-1 md:grid-cols-2 gap-6"
+                            className="max-w-3xl h-auto 
+                                bg-gradient-to-tr from-[var(--color-productbg)] to-[var(--color-aboutbg)] 
+                                p-6 rounded-xl shadow-[0_8px_30px_rgba(90,77,65,0.35)] 
+                                border border-[var(--color-aboutbg)] 
+                                grid grid-cols-1 md:grid-cols-2 gap-6"
                         >
                             {/* Actual Name */}
-
                             <div className="w-full">
                                 <label
                                     htmlFor="actualName"
                                     className="block text-sm font-medium text-gray-600 mb-1"
                                 >
-                                    Actual Name
+                                    Full Name *
                                 </label>
                                 <Input
                                     id="actualName"
@@ -108,8 +150,29 @@ Gender: ${gender}`;
                                     onChange={(e) => setUsername(e.target.value)}
                                     placeholder="Enter your full name"
                                     className="w-full border-b-2 border-[#5a4d41] bg-transparent 
-               focus:outline-none focus:border-[#4a3f35] py-2 
-               text-gray-800 placeholder-gray-500"
+                                        focus:outline-none focus:border-[#4a3f35] py-2 
+                                        text-gray-800 placeholder-gray-500"
+                                    required
+                                />
+                            </div>
+
+                            {/* Phone Number */}
+                            <div className="w-full">
+                                <label
+                                    htmlFor="phoneNumber"
+                                    className="block text-sm font-medium text-gray-600 mb-1"
+                                >
+                                    Phone Number *
+                                </label>
+                                <Input
+                                    id="phoneNumber"
+                                    type="tel"
+                                    value={usernumber}
+                                    onChange={(e) => setNumber(e.target.value)}
+                                    placeholder="Enter your phone number"
+                                    className="w-full border-b-2 border-[#5a4d41] bg-transparent 
+                                        focus:outline-none focus:border-[#4a3f35] py-2 
+                                        text-gray-800 placeholder-gray-500"
                                     required
                                 />
                             </div>
@@ -120,98 +183,124 @@ Gender: ${gender}`;
                                     htmlFor="birthDate"
                                     className="block text-sm font-medium text-gray-600 mb-1"
                                 >
-                                    Birth Date
+                                    Birth Date *
                                 </label>
                                 <Input
                                     id="birthDate"
                                     type="date"
-                                    value={usedate}
-                                    onChange={(e) => setdate(e.target.value)}
-                                    placeholder="Select your birth date"
+                                    value={birthDate}
+                                    onChange={(e) => setBirthDate(e.target.value)}
                                     className="w-full border-b-2 border-[#5a4d41] bg-transparent 
-               focus:outline-none focus:border-[#4a3f35] py-2 
-               text-gray-800 placeholder-gray-500"
-                                    required
-                                />
-                            </div>
-
-                            {/* Birth Place */}
-                            <div>
-                                <label
-                                    htmlFor="actualName"
-                                    className="block text-sm font-medium text-gray-600 mb-1"
-                                >
-                                    Enter Birth Place
-                                </label>
-                                <Input
-                                    type="text"
-                                    placeholder="Enter your birth place"
-                                    className="w-full border-b-2 border-[#5a4d41] bg-transparent 
-               focus:outline-none focus:border-[#4a3f35] py-2 
-               text-gray-800 placeholder-gray-500"
+                                        focus:outline-none focus:border-[#4a3f35] py-2 
+                                        text-gray-800"
                                     required
                                 />
                             </div>
 
                             {/* Birth Time */}
-                            <div>
+                            <div className="w-full">
                                 <label
-                                    htmlFor="actualName"
+                                    htmlFor="birthTime"
                                     className="block text-sm font-medium text-gray-600 mb-1"
                                 >
-                                    Enter  Birth Time
+                                    Birth Time *
                                 </label>
                                 <Input
+                                    id="birthTime"
                                     type="time"
-                                    value={usetime}
-                                    onChange={(e) => setusertime(e.target.value)}
+                                    value={birthTime}
+                                    onChange={(e) => setBirthTime(e.target.value)}
                                     className="w-full border-b-2 border-[#5a4d41] bg-transparent 
-               focus:outline-none focus:border-[#4a3f35] py-2 
-               text-gray-800"
+                                        focus:outline-none focus:border-[#4a3f35] py-2 
+                                        text-gray-800"
+                                    required
+                                />
+                            </div>
+
+                            {/* Birth Place */}
+                            <div className="w-full">
+                                <label
+                                    htmlFor="birthPlace"
+                                    className="block text-sm font-medium text-gray-600 mb-1"
+                                >
+                                    Birth Place *
+                                </label>
+                                <Input
+                                    id="birthPlace"
+                                    type="text"
+                                    value={birthPlace}
+                                    onChange={(e) => setBirthPlace(e.target.value)}
+                                    placeholder="Enter your birth place"
+                                    className="w-full border-b-2 border-[#5a4d41] bg-transparent 
+                                        focus:outline-none focus:border-[#4a3f35] py-2 
+                                        text-gray-800 placeholder-gray-500"
                                     required
                                 />
                             </div>
 
                             {/* Gender */}
-                            {/* <div>
-                <select
-                  className="w-full border-b-2 border-[#5a4d41] bg-transparent 
-               focus:outline-none focus:border-[#4a3f35] py-2 
-               text-gray-800"
-                  required
-                >
-                  <option value="" disabled selected>
-                    Select gender
-                  </option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-              </div> */}
-                            <div className="w-full flex flex-col justify-center">
+                            <div className="w-full">
                                 <label
                                     htmlFor="gender"
                                     className="block text-sm font-medium text-gray-600 mb-1"
                                 >
-                                    Select your Gender
+                                    Gender *
+                                </label>
+                                <select
+                                    id="gender"
+                                    value={gender}
+                                    onChange={(e) => setGender(e.target.value)}
+                                    className="w-full border-b-2 border-[#5a4d41] bg-transparent
+                                        focus:outline-none focus:border-[#4a3f35] py-2 px-1
+                                        text-gray-800 cursor-pointer"
+                                    required
+                                >
+                                    <option value="">Select Gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            {/* Preferred Consultation Date */}
+                            <div className="w-full">
+                                <label
+                                    htmlFor="consultationDate"
+                                    className="block text-sm font-medium text-gray-600 mb-1"
+                                >
+                                    Preferred Consultation Date
                                 </label>
                                 <Input
-                                    id="gender"
-                                    type="select"
-                                    value={gender}
-                                    onChange={(e) => setgender(e.target.value)}
-                                    options={[
-                                        { value: "male", label: "Male" },
-                                        { value: "female", label: "Female" },
-                                        { value: "other", label: "Other" },
-                                    ]}
-                                    className="w-full border-b-2 border-[#5a4d41] bg-transparent
-      focus:outline-none focus:border-[#4a3f35] py-2 px-1
-      text-gray-800 placeholder-gray-500 cursor-pointer"
-                                    required
+                                    id="consultationDate"
+                                    type="date"
+                                    value={consultationDate}
+                                    onChange={(e) => setConsultationDate(e.target.value)}
+                                    className="w-full border-b-2 border-[#5a4d41] bg-transparent 
+                                        focus:outline-none focus:border-[#4a3f35] py-2 
+                                        text-gray-800"
                                 />
                             </div>
 
+                            {/* Preferred Consultation Time */}
+                            <div className="w-full">
+                                <label
+                                    htmlFor="consultationTime"
+                                    className="block text-sm font-medium text-gray-600 mb-1"
+                                >
+                                    Preferred Consultation Time
+                                </label>
+                                <Input
+                                    id="consultationTime"
+                                    type="time"
+                                    value={consultationTime}
+                                    onChange={(e) => setConsultationTime(e.target.value)}
+                                    min="09:00"
+                                    max="17:00"
+                                    className="w-full border-b-2 border-[#5a4d41] bg-transparent 
+                                        focus:outline-none focus:border-[#4a3f35] py-2 
+                                        text-gray-800"
+                                />
+                            </div>
 
                             {/* Submit Button */}
                             <div className="md:col-span-2">
@@ -219,7 +308,7 @@ Gender: ${gender}`;
                                     type="submit"
                                     className="w-full mt-4 bg-[#5a4d41] hover:bg-[#4a3f35] text-white font-semibold py-3 px-4 rounded transition"
                                 >
-                                    Submit
+                                    Submit & Chat on WhatsApp
                                 </Button>
                             </div>
                         </form>
@@ -233,9 +322,15 @@ Gender: ${gender}`;
                     </div>
                 </div>
             )}
+            {showToast && (
+                <Toast
+                    message={toastMessage}
+                    type={toastType}
+                    onClose={() => setShowToast(false)}
+                />
+            )}
         </>
     );
 }
 
 export default ExpertCall;
-

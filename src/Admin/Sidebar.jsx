@@ -6,6 +6,8 @@ import {
   FaBox,
   FaList ,
   FaCog,
+   FaPercent,
+   FaHandshake,
   FaSignOutAlt
 } from "react-icons/fa";
 
@@ -14,6 +16,8 @@ const sidebarItems = [
   { name: "Orders", icon: <FaShoppingCart /> },
   { name: "Products", icon: <FaBox /> },
   { name: "Catagories", icon: <FaList /> },
+  { name: "Coupons", icon: < FaPercent  /> },
+  { name: "Consultancy", icon: <FaHandshake /> },
   { name: "Settings", icon: <FaCog /> },
 ];
 
@@ -57,4 +61,4 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, activePage, setActivePage }) => 
   );
 };
 
-export default Sidebar;
+export default Sidebar; 
