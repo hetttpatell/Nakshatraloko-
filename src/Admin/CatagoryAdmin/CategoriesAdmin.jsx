@@ -411,7 +411,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       
       {/* Edit Category Modal */}
       {editingCategory && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-4">Edit Category</h3>
