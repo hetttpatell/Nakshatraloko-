@@ -246,33 +246,43 @@ const Productdetails = () => {
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Image Section */}
           <div className="flex flex-col lg:flex-row gap-5 lg:w-1/2">
-            <div className="flex flex-col lg:sticky top-20 self-start lg:flex-row gap-4 lg:items-start">
+  <div className="flex flex-col lg:sticky top-24 self-start lg:flex-row gap-4 lg:items-start">
+    {/* Thumbnails - Vertical on desktop, horizontal on mobile */}
+    <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible px-2 lg:px-0 order-2 lg:order-1 hide-scrollbar">
+      {product.images.map((img, index) => (
+        <div 
+          key={index}
+          className={`relative w-16 h-20 sm:w-20 sm:h-24 rounded-md cursor-pointer border-2 transition-all duration-300 ease-in-out
+            ${mainImage === img.src 
+              ? "ring-2 ring-black ring-offset-2 scale-105" 
+              : "border-gray-200 hover:border-gray-400 opacity-80 hover:opacity-100"
+            }`}
+          onClick={() => setMainImage(img.src)}
+        >
+          <img
+            src={img.src}
+            alt={img.alt}
+            className="w-full h-full object-cover rounded-md"
+          />
+        </div>
+      ))}
+    </div>
 
-              {/* Main image */}
-              <div className="relative w-full max-w-md aspect-[3/4] bg-white rounded-lg shadow mx-auto order-1 lg:order-2">
-                <img
-                  src={product.mainImage}   // ✅ use product.mainImage
-                  alt={product.name}
-                  className="w-90 lg:w-full h-full object-cover rounded-lg"
-                />
-              </div>
-
-
-              {/* Thumbnails */}
-              <div className="flex lg:flex-col gap-3 mt-3 lg:mt-0 overflow-x-auto lg:overflow-visible px-2 lg:px-0 order-2 lg:order-1">
-                {product.images.map((img, index) => (
-                  <img
-                    key={index}
-                    src={img.src}
-                    alt={img.alt}
-                    className={`w-16 h-20 sm:w-20 sm:h-24 object-cover rounded-md cursor-pointer border transition 
-          ${mainImage === img.src ? "ring ring-black" : "ring-1 ring-gray-200 hover:ring-gray-400"}`}
-                    onClick={() => setMainImage(img.src)}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
+    {/* Main image with zoom capability */}
+    <div className="relative w-full max-w-md aspect-[3/4] bg-white rounded-lg shadow-lg mx-auto order-1 lg:order-2 overflow-hidden group">
+      <img
+        src={mainImage}
+        alt={product.name}
+        className="w-full h-full object-cover rounded-lg transition-transform duration-500 group-hover:scale-105"
+      />
+      
+      {/* Zoom indicator */}
+      <div className="absolute bottom-3 right-3 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+        Hover to zoom
+      </div>
+    </div>
+  </div>
+</div>
 
 
           {/* Details Section */}
