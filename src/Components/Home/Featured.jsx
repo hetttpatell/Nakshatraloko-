@@ -1,118 +1,302 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Heart, Eye, Star, ShoppingCart, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 
-export default function Featured() {
-  const Heading = {
-    first: "Featured",
-    second: "Items",
-    message:
-      "Handpicked selections crafted with precision and elegance, curated just for you.",
+const categories = [
+  { id: "all", name: "All" },
+  { id: "earrings", name: "Earrings" },
+  { id: "necklaces", name: "Necklaces" },
+  { id: "rings", name: "Rings" },
+  { id: "bracelets", name: "Bracelets" },
+];
+
+export default function FeaturedProducts() {
+  const [wishlist, setWishlist] = useState([]);
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+  let isMounted = true;
+
+  axios.post("http://localhost:8001/api/getProduct")
+    .then((res) => {
+      console.log("Raw API response:", res.data);
+
+      if (isMounted) {
+        // ✅ Extract from res.data.data
+        const apiProducts = Array.isArray(res.data?.data) ? res.data.data : [];
+
+        // ✅ Map backend fields → frontend-friendly fields
+        const mappedProducts = apiProducts.map((p) => ({
+          id: p.ID,
+          name: p.Name,
+          description: p.Description,
+          category: p.CatogaryName,   // backend typo "CatogaryName"
+          price: p.Price || "N/A",
+          img: p.img || "/placeholder.jpg",    // replace with real image later
+          rating:p.rating || 4,                  // default rating
+          reviews: p.reviews || 10,                // default reviews
+          inStock:p.inStock || true               // assume in stock for now
+        }));
+
+        setProducts(mappedProducts);
+        setLoading(false);
+      }
+    })
+    .catch((err) => {
+      console.error("Error fetching products:", err);
+      setLoading(false);
+    });
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
+
+
+  const filteredProducts =
+    activeCategory === "all"
+      ? products
+      : products.filter((product) => product.category === activeCategory);
+
+  const toggleWishlist = (id) => {
+    setWishlist((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
   };
 
-  const products = [
-    {
-      id: 1,
-      name: "14KT Yellow Gold Diamond Hoop Earrings",
-      category: "Women | Earrings",
-      price: "₹ 4,554.00",
-      discount: "-30%",
-      img: "/s1.jpeg",
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
     },
-    {
-      id: 2,
-      name: "14KT Yellow Gold Diamond Hoop Earrings",
-      category: "Women | Earrings",
-      price: "₹ 4,554.00",
-      discount: "-30%",
-      img: "/s2.jpeg",
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+      },
     },
-    {
-      id: 3,
-      name: "14KT Yellow Gold Diamond Hoop Earrings",
-      category: "Women | Earrings",
-      price: "₹ 4,554.00",
-      discount: "-30%",
-      img: "/s3.jpeg",
-    },
-    {
-      id: 4,
-      name: "14KT Yellow Gold Diamond Hoop Earrings",
-      category: "Women | Earrings",
-      price: "₹ 4,554.00",
-      discount: "-30%",
-      img: "/s4.jpeg",
-    },
-  ];
+  };
 
   return (
-    <>
-      
-        <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 py-16">
-          <div className="max-w-7xl mx-auto px-6 text-center text-white">
-
-            <h2
-              className="group text-4xl md:text-5xl font-serif font-bold relative 
-              inline-block hover:scale-105 transition-transform duration-300"
-            >
-              {Heading.first}
-              <span className="text-yellow-400 ml-3">{Heading.second}</span>
-
-              <span
-                className="absolute left-1/2 -translate-x-1/2 bottom-[-10px]
-                w-24 h-1 bg-yellow-400 rounded-full 
-                transition-all duration-500 ease-in-out group-hover:w-40"
-              ></span>
-            </h2>
-
-            <p className="mt-6 text-gray-300 text-lg max-w-2xl mx-auto">
-              {Heading.message}
-            </p>
-          </div>
-        </div>
-      
-
-      {/* {Product Grid} */}
-     <div className="bg-[var(--color-bg)] py-12">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
-      {products.map((product) => (
-        <Link
-          to={`/product/${product.id}`}
-          key={product.id}
-          className="bg-white border rounded-lg overflow-hidden shadow-sm hover:shadow-lg hover:scale-105 transition-transform duration-300"
-        >
-          {/* Image + Discount Badge */}
-          <div className="relative w-full aspect-square sm:aspect-[4/5]">
-            <img
-              src={product.img}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-            <span className="absolute top-2 left-2 bg-blue-900 text-white text-xs sm:text-sm font-semibold px-2 py-1 rounded-lg">
-              {product.discount}
+    <section className="py-8 md:py-20 bg-[var(--color-background)]">
+      <div className="container mx-auto px-3 sm:px-6">
+        {/* Header */}
+        <div className="text-center mb-8 md:mb-16">
+          <div className="inline-flex items-center gap-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 md:px-4 md:py-2 rounded-full mb-3 md:mb-4">
+            <Sparkles size={14} />
+            <span className="text-xs md:text-sm font-medium">
+              Premium Collection
             </span>
           </div>
 
-          {/* Product Details */}
-          <div className="p-3 sm:p-4">
-            <h3 className="text-sm sm:text-base font-medium text-gray-900 truncate">
-              {product.name}
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-500">{product.category}</p>
-            <p className="text-blue-900 font-semibold mt-2 sm:mt-3 text-sm sm:text-base">
-              {product.price}
-            </p>
-          </div>
-        </Link>
-      ))}
-    </div>
-  </div>
-</div>
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-[var(--color-text)] mb-3 md:mb-4">
+            Featured{" "}
+            <span className="text-[var(--color-primary)]">Masterpieces</span>
+          </h2>
 
+          <p className="text-sm md:text-lg text-[var(--color-text-light)] max-w-2xl mx-auto px-2">
+            Handpicked selections crafted with precision and elegance, curated
+            just for you.
+          </p>
+        </div>
 
+        {/* Category Filters */}
+        {/* <div className="flex flex-wrap justify-center gap-1 md:gap-3 mb-6 md:mb-12 px-2">
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setActiveCategory(category.id)}
+              className={`px-2 py-1 md:px-5 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all ${
+                activeCategory === category.id
+                  ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-md)]"
+                  : "bg-white text-[var(--color-text)] border border-[var(--color-border)] hover:bg-[var(--color-primary)]/5"
+              }`}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div> */}
 
+        {/* Loading State */}
+        {loading ? (
+          <p className="text-center text-[var(--color-text-light)]">
+            Loading products...
+          </p>
+        ) : (
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 lg:gap-8 mb-6 md:mb-12"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {filteredProducts.map((product) => (
+              <motion.div
+                key={product.id}
+                variants={itemVariants}
+                className="group bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-300 border border-[var(--color-border)] hover:border-[var(--color-primary)]/20"
+              >
+                {/* Image Container */}
+                <div className="relative aspect-square overflow-hidden">
+                  <img
+                    src={product.img}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
 
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
 
-    </>
+                  {/* Badges */}
+                  <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col items-start gap-1">
+                    {product.discount && (
+                      <span className="bg-[var(--color-primary)] text-white text-xs font-semibold px-1.5 py-0.5 md:px-2.5 md:py-1 rounded">
+                        {product.discount}
+                      </span>
+                    )}
+
+                    {product.tags?.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="bg-white text-[var(--color-primary)] text-xs font-semibold px-1.5 py-0.5 md:px-2.5 md:py-1 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="absolute top-2 right-2 md:top-4 md:right-4 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <button
+                      onClick={() => toggleWishlist(product.id)}
+                      className="p-1 md:p-2.5 bg-white rounded-full shadow-[var(--shadow-sm)] hover:bg-[var(--color-primary)]/10 transition-colors"
+                    >
+                      <Heart
+                        size={14}
+                        className={
+                          wishlist.includes(product.id)
+                            ? "fill-[var(--color-primary)] text-[var(--color-primary)]"
+                            : "text-[var(--color-text)]"
+                        }
+                      />
+                    </button>
+
+                    <button
+                      onClick={() => setQuickViewProduct(product)}
+                      className="p-1 md:p-2.5 bg-white rounded-full shadow-[var(--shadow-sm)] hover:bg-[var(--color-primary)]/10 transition-colors"
+                    >
+                      <Eye size={14} className="text-[var(--color-text)]" />
+                    </button>
+                  </div>
+
+                  {/* Out of Stock Overlay */}
+                  {!product.inStock && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <span className="text-white font-semibold bg-[var(--color-primary)] px-2 py-1 md:px-4 md:py-2 rounded text-xs">
+                        Out of Stock
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Product Details */}
+                <div className="p-3 md:p-6">
+                  <Link to={`/product/${product.id}`}>
+                    <h3 className="font-medium text-[var(--color-text)] line-clamp-2 mb-1 md:mb-2 group-hover:text-[var(--color-primary)] transition-colors text-xs md:text-base">
+                      {product.name}
+                    </h3>
+                  </Link>
+
+                  <p className="text-xs text-[var(--color-text-light)] mb-1 md:mb-3">
+                    {product.subcategory}
+                  </p>
+
+                  {/* Rating */}
+                  <div className="flex items-center gap-1 mb-1 md:mb-3">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={10}
+                          className={
+                            i < Math.floor(product.rating)
+                              ? "text-amber-500 fill-amber-500"
+                              : "text-gray-300"
+                          }
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-[var(--color-text-light)]">
+                      ({product.reviews})
+                    </span>
+                  </div>
+
+                  {/* Price */}
+                  <div className="flex items-center gap-1 mb-2 md:mb-4">
+                    <p className="text-sm md:text-lg font-semibold text-[var(--color-primary)]">
+                      {product.price}
+                    </p>
+                    {product.originalPrice && (
+                      <p className="text-xs text-[var(--color-text-light)] line-through">
+                        {product.originalPrice}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Add to Cart Button */}
+                  <button
+                    className={`w-full py-1.5 md:py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-1 text-xs md:text-base ${
+                      product.inStock
+                        ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]"
+                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    }`}
+                    disabled={!product.inStock}
+                  >
+                    <ShoppingCart size={12} />
+                    {product.inStock ? "Add to Cart" : "Out of Stock"}
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </div>
+
+      {/* Quick View Modal */}
+      <AnimatePresence>
+        {quickViewProduct && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setQuickViewProduct(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl md:rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal content goes here */}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
   );
 }

@@ -17,15 +17,15 @@ function App() {
 
   const hideFooter = location.pathname.startsWith("/admin");
 
-  useEffect(() => {
-    // ✅ Example fetch from backend
-    fetch(`${import.meta.env.VITE_API_URL}/`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => setBackendData(data))
-      .catch((err) => console.error("Backend error:", err));
-  }, []);
+  // useEffect(() => {
+  //   // ✅ Example fetch from backend
+  //   fetch(`${import.meta.env.VITE_API_URL}/`, {
+  //     credentials: "include",
+  //   })
+  //     .then((res) => res.json())
+  //     .then((data) => setBackendData(data))
+  //     .catch((err) => console.error("Backend error:", err));
+  // }, []);
 
 
 // SCROLL TO THE TOP WHEN CALL THE SECTION 

@@ -1,25 +1,24 @@
 import React from "react";  
-import Slideshow from "./Slideshow";
-import Featured from "./Featured";
-import Information from "./Information";
-import AboutSection from "./AboutSection";
-import HelpingForm from "./HelpingForm";
-import Collection from "./Collections";
+import HeroSection from "./Slideshow";
+import FeaturedProducts from "./Featured";
+import ValueProposition from "./Information";
+import BrandStory from "./AboutSection";
+import Collections from "./Collections";
+import Testimonials from "./Testimonals";
+import ConsultationForm from "./HelpingForm";
 import ExpertCall from "./ExpertCall";
-import Testimonial from "./Testimonals";
-
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
-      <Slideshow autoPlay={true} autoPlayInterval={4000} />
-      <ExpertCall/>
-      <Featured />
-      <Information />
-      <AboutSection />
-      <Collection />
-      <Testimonial />
-      <HelpingForm />
+    <div className="min-h-screen bg-[var(--color-background)]">
+      <HeroSection />
+      <ValueProposition />
+      <FeaturedProducts />
+      <BrandStory />
+      <Collections />
+      <Testimonials />
+      <ConsultationForm />
+      <ExpertCall />
     </div>
   );
 }

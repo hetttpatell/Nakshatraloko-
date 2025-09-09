@@ -18,6 +18,35 @@
   transform-origin: center;
 }
 
+:root {
+  /* Primary Colors */
+  --color-primary: #b89f7a;
+  --color-primary-dark: #a58a65;
+  --color-primary-light: #f5f2eb;
+  
+  /* Background Colors */
+  --color-background: #faf8f5;
+  --color-background-alt: #f9f7f3;
+  --color-surface: #ffffff;
+  
+  /* Text Colors */
+  --color-text: #2c2c2c;
+  --color-text-light: #5a5a5a;
+  --color-text-muted: #7d7d7d;
+  
+  /* Border & Divider Colors */
+  --color-border: #e5e5e5;
+  
+  /* Accent Colors */
+  --color-accent-gold: #b89f7a;
+  --color-accent-amber: #f59e0b;
+  --color-accent-green: #10b981;
+  --color-accent-red: #ef4444;
+  
+  /* Rating Colors */
+  --color-rating: #f59e0b;
+}
+
 @theme {
   --font-inter: "Inter", sans-serif;
   --font-poppins: "Poppins", sans-serif;
@@ -32,18 +61,7 @@
   font-family: 'IBM Plex Sans', sans-serif;
 }
 
-:root {
-  --color-productcontainerbg: #fcf8f4;
-  --color-productbg: #f6f1eb;
-  --color-bg: #f5f5dc;
-  --color-aboutbg: #e6d9c3;
-  --color-navy: #001f3f;
-  --color-text: #333333;
-}
-
-
-  
- @keyframes slideIn {
+@keyframes slideIn {
   0% { opacity: 0; transform: translateX(100%); }
   100% { opacity: 1; transform: translateX(0); }
 }
@@ -51,3 +69,29 @@
 .animate-slideIn {
   animation: slideIn 0.3s ease forwards;
 }
+
+/* Additional utility classes for the color variables */
+.bg-color-background { background-color: var(--color-background); }
+.bg-color-background-alt { background-color: var(--color-background-alt); }
+.bg-color-surface { background-color: var(--color-surface); }
+.bg-color-primary { background-color: var(--color-primary); }
+.bg-color-primary-dark { background-color: var(--color-primary-dark); }
+.bg-color-primary-light { background-color: var(--color-primary-light); }
+
+.text-color-text { color: var(--color-text); }
+.text-color-text-light { color: var(--color-text-light); }
+.text-color-text-muted { color: var(--color-text-muted); }
+.text-color-primary { color: var(--color-primary); }
+.text-color-rating { color: var(--color-rating); }
+.text-color-surface { color: var(--color-surface); }
+.text-color-accent-green { color: var(--color-accent-green); }
+
+.border-color-border { border-color: var(--color-border); }
+.border-color-primary { border-color: var(--color-primary); }
+
+.hover\:bg-color-primary:hover { background-color: var(--color-primary); }
+.hover\:text-color-primary:hover { color: var(--color-primary); }
+.hover\:text-color-surface:hover { color: var(--color-surface); }
+.hover\:border-color-primary:hover { border-color: var(--color-primary); }
+
+.focus\:ring-color-primary:focus { --tw-ring-color: var(--color-primary); }

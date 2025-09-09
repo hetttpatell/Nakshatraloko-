@@ -72,7 +72,7 @@ const ModernTestimonialsCarousel = () => {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
   const [liked, setLiked] = useState({});
-  const [viewMode, setViewMode] = useState("carousel"); // 'carousel' or 'grid'
+  const [viewMode, setViewMode] = useState("carousel");
 
   // Auto-play always
   useEffect(() => {
@@ -148,44 +148,44 @@ const ModernTestimonialsCarousel = () => {
   };
 
   return (
-    <section className="relative py-16 sm:py-20 px-4 sm:px-6 mt-10 overflow-hidden bg-[var(--color-bg)] min-h-full">
-      <div className="max-w-7xl mx-auto">
+    <section className="relative py-16 bg-[var(--color-background)]">
+      <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
           <motion.h2 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-800 mb-4"
+            className="text-4xl font-bold text-[var(--color-text)] mb-4"
           >
-            What Our <span className="text-amber-500">Clients Say</span>
+            What Our <span className="text-[var(--color-primary)]">Clients Say</span>
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-slate-600 text-lg sm:text-xl md:text-2xl max-w-3xl mx-auto mb-8"
+            className="text-[var(--color-text-light)] text-lg max-w-2xl mx-auto"
           >
-            Discover why businesses trust us with their branding needs
+            Discover why customers trust us with their jewelry needs
           </motion.p>
 
           {/* View Toggle */}
           <motion.div 
-            className="flex justify-center gap-4 mb-8"
+            className="flex justify-center gap-4 mb-8 mt-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
             <button
               onClick={() => setViewMode('carousel')}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all ${viewMode === 'carousel' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-slate-700 hover:bg-amber-50 shadow-md'}`}
+              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all ${viewMode === 'carousel' ? 'bg-[var(--color-primary)] text-white shadow-[var(--shadow-lg)]' : 'bg-white text-[var(--color-text)] hover:bg-[var(--color-primary-light)] shadow-[var(--shadow-md)]'}`}
             >
               <Layout size={20} />
               Carousel View
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all ${viewMode === 'grid' ? 'bg-amber-500 text-white shadow-lg' : 'bg-white text-slate-700 hover:bg-amber-50 shadow-md'}`}
+              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all ${viewMode === 'grid' ? 'bg-[var(--color-primary)] text-white shadow-[var(--shadow-lg)]' : 'bg-white text-[var(--color-text)] hover:bg-[var(--color-primary-light)] shadow-[var(--shadow-md)]'}`}
             >
               <Grid size={20} />
               Grid View
@@ -200,9 +200,9 @@ const ModernTestimonialsCarousel = () => {
             <button
               onClick={handlePrev}
               aria-label="Previous Review"
-              className="absolute left-0 sm:-left-4 p-3 rounded-full bg-white shadow-lg z-10 transition-all hover:bg-amber-50 hover:scale-110 group"
+              className="absolute left-0 sm:-left-4 p-3 rounded-full bg-white shadow-[var(--shadow-lg)] z-10 transition-all hover:bg-[var(--color-primary)] hover:text-white hover:scale-110 group"
             >
-              <ArrowLeft size={24} className="text-slate-700 group-hover:text-amber-500" />
+              <ArrowLeft size={24} className="text-[var(--color-text)] group-hover:text-white" />
             </button>
 
             {/* Testimonial Card */}
@@ -220,19 +220,19 @@ const ModernTestimonialsCarousel = () => {
                     stiffness: 300, 
                     damping: 30 
                   }}
-                  className="bg-white rounded-2xl shadow-xl p-8 sm:p-10 md:p-12 flex flex-col md:flex-row items-center gap-8 md:gap-10 relative"
+                  className="bg-white rounded-2xl shadow-[var(--shadow-lg)] p-8 flex flex-col md:flex-row items-center gap-8"
                 >
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
                     <motion.img
                       src={review.img}
                       alt={review.name}
-                      className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white shadow-2xl"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-[var(--shadow-lg)]"
                       whileHover={{ scale: 1.05 }}
                       transition={{ type: "spring", stiffness: 300 }}
                     />
                     <motion.div 
-                      className="absolute -bottom-2 -right-2 bg-amber-500 rounded-full p-2 shadow-md"
+                      className="absolute -bottom-2 -right-2 bg-[var(--color-primary)] rounded-full p-2 shadow-[var(--shadow-md)]"
                       whileHover={{ rotate: 15 }}
                     >
                       <Quote size={20} className="text-white" />
@@ -246,13 +246,13 @@ const ModernTestimonialsCarousel = () => {
                         <Star 
                           key={idx}
                           size={20}
-                          className={`${idx < review.stars ? "text-amber-500 fill-amber-500" : "text-slate-300"} mx-0.5`}
+                          className={`${idx < review.stars ? "text-[var(--color-primary)] fill-[var(--color-primary)]" : "text-gray-300"} mx-0.5`}
                         />
                       ))}
                     </div>
                     
                     <motion.blockquote 
-                      className="text-slate-700 text-lg sm:text-xl mb-6 leading-relaxed"
+                      className="text-[var(--color-text)] text-lg mb-6"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
@@ -261,22 +261,22 @@ const ModernTestimonialsCarousel = () => {
                     </motion.blockquote>
                     
                     <div className="mb-4">
-                      <h3 className="text-slate-800 font-bold text-xl sm:text-2xl">{review.name}</h3>
-                      <p className="text-slate-600 text-base sm:text-lg">{review.title}</p>
-                      <p className="text-slate-500 text-sm mt-1">{review.date} • {review.category}</p>
+                      <h3 className="text-[var(--color-text)] font-bold text-xl">{review.name}</h3>
+                      <p className="text-[var(--color-text-light)]">{review.title}</p>
+                      <p className="text-[var(--color-text-light)] text-sm mt-1">{review.date} • {review.category}</p>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex justify-center md:justify-start gap-4 mt-6">
                       <button 
                         onClick={() => toggleLike(review.id)}
-                        className={`p-2 rounded-full transition-all ${liked[review.id] ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600 hover:bg-amber-100'}`}
+                        className={`p-2 rounded-full transition-all ${liked[review.id] ? 'bg-[var(--color-primary-light)] text-[var(--color-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-primary-light)]'}`}
                       >
-                        <ThumbsUp size={18} className={liked[review.id] ? "fill-amber-600" : ""} />
+                        <ThumbsUp size={18} className={liked[review.id] ? "fill-[var(--color-primary)]" : ""} />
                       </button>
                       <button 
                         onClick={() => handleShare(review)}
-                        className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-amber-100 transition-all"
+                        className="p-2 rounded-full bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-primary-light)] transition-all"
                       >
                         <Share size={18} />
                       </button>
@@ -290,9 +290,9 @@ const ModernTestimonialsCarousel = () => {
             <button
               onClick={handleNext}
               aria-label="Next Review"
-              className="absolute right-0 sm:-right-4 p-3 rounded-full bg-white shadow-lg z-10 transition-all hover:bg-amber-50 hover:scale-110 group"
+              className="absolute right-0 sm:-right-4 p-3 rounded-full bg-white shadow-[var(--shadow-lg)] z-10 transition-all hover:bg-[var(--color-primary)] hover:text-white hover:scale-110 group"
             >
-              <ArrowRight size={24} className="text-slate-700 group-hover:text-amber-500" />
+              <ArrowRight size={24} className="text-[var(--color-text)] group-hover:text-white" />
             </button>
           </div>
         ) : (
@@ -313,17 +313,17 @@ const ModernTestimonialsCarousel = () => {
               <motion.div
                 key={review.id}
                 variants={gridVariants}
-                className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300"
+                className="bg-white rounded-2xl shadow-[var(--shadow-lg)] p-6 hover:shadow-[var(--shadow-xl)] transition-all duration-300"
               >
                 <div className="flex items-center gap-4 mb-4">
                   <img
                     src={review.img}
                     alt={review.name}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-[var(--shadow-md)]"
                   />
                   <div>
-                    <h3 className="text-slate-800 font-bold text-lg">{review.name}</h3>
-                    <p className="text-slate-600 text-sm">{review.title}</p>
+                    <h3 className="text-[var(--color-text)] font-bold text-lg">{review.name}</h3>
+                    <p className="text-[var(--color-text-light)] text-sm">{review.title}</p>
                   </div>
                 </div>
                 
@@ -332,27 +332,27 @@ const ModernTestimonialsCarousel = () => {
                     <Star 
                       key={idx}
                       size={16}
-                      className={`${idx < review.stars ? "text-amber-500 fill-amber-500" : "text-slate-300"} mx-0.5`}
+                      className={`${idx < review.stars ? "text-[var(--color-primary)] fill-[var(--color-primary)]" : "text-gray-300"} mx-0.5`}
                     />
                   ))}
                 </div>
                 
-                <blockquote className="text-slate-700 text-base mb-4 leading-relaxed line-clamp-4">
+                <blockquote className="text-[var(--color-text)] text-base mb-4 leading-relaxed line-clamp-4">
                   "{review.description}"
                 </blockquote>
                 
-                <p className="text-slate-500 text-xs mb-4">{review.date} • {review.category}</p>
+                <p className="text-[var(--color-text-light)] text-xs mb-4">{review.date} • {review.category}</p>
                 
                 <div className="flex gap-3">
                   <button 
                     onClick={() => toggleLike(review.id)}
-                    className={`p-2 rounded-full transition-all ${liked[review.id] ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600 hover:bg-amber-100'}`}
+                    className={`p-2 rounded-full transition-all ${liked[review.id] ? 'bg-[var(--color-primary-light)] text-[var(--color-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-primary-light)]'}`}
                   >
-                    <ThumbsUp size={16} className={liked[review.id] ? "fill-amber-600" : ""} />
+                    <ThumbsUp size={16} className={liked[review.id] ? "fill-[var(--color-primary)]" : ""} />
                   </button>
                   <button 
                     onClick={() => handleShare(review)}
-                    className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-amber-100 transition-all"
+                    className="p-2 rounded-full bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-primary-light)] transition-all"
                   >
                     <Share size={16} />
                   </button>
@@ -368,7 +368,7 @@ const ModernTestimonialsCarousel = () => {
             {reviews.map((_, idx) => (
               <motion.button
                 key={idx}
-                className={`w-3 h-3 rounded-full ${idx === current ? "bg-amber-500" : "bg-slate-300"}`}
+                className={`w-3 h-3 rounded-full ${idx === current ? "bg-[var(--color-primary)]" : "bg-gray-300"}`}
                 onClick={() => goToSlide(idx)}
                 whileHover={{ scale: 1.5 }}
                 whileTap={{ scale: 0.9 }}
@@ -380,9 +380,9 @@ const ModernTestimonialsCarousel = () => {
       </div>
 
       {/* Decorative elements */}
-      <div className="absolute top-10 left-10 w-32 h-32 bg-amber-200 rounded-full blur-3xl opacity-30"></div>
-      <div className="absolute bottom-10 right-10 w-40 h-40 bg-amber-100 rounded-full blur-3xl opacity-40"></div>
-      <div className="absolute top-1/2 left-20 w-24 h-24 bg-blue-100 rounded-full blur-2xl opacity-20"></div>
+      <div className="absolute top-10 left-10 w-32 h-32 bg-[var(--color-primary-light)] rounded-full blur-3xl opacity-30"></div>
+      <div className="absolute bottom-10 right-10 w-40 h-40 bg-[var(--color-primary-light)] rounded-full blur-3xl opacity-40"></div>
+      <div className="absolute top-1/2 left-20 w-24 h-24 bg-[var(--color-secondary)]/20 rounded-full blur-2xl opacity-20"></div>
     </section>
   );
 };

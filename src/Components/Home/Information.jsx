@@ -1,36 +1,69 @@
 import React from "react";
+import { Gem, Shield, Award, Heart } from "lucide-react";
 
-export default function Information() {
-  const FeaturedInfo = [
-    { id: 1, name: "Lab Certified", image: "/lab.png" },
-    { id: 2, name: "Affordable Price", image: "/price-tag-svgrepo-com.png" },
-    { id: 3, name: "100% Pure Product", image: "/100-percent.png" },
-    { id: 4, name: "Natural Stones", image: "/leaves.png" },
-  ];
+const features = [
+  {
+    icon: <Gem className="w-8 h-8" />,
+    title: "Lab Certified",
+    description: "Every piece undergoes rigorous testing in certified laboratories to ensure authenticity and quality."
+  },
+  {
+    icon: <Shield className="w-8 h-8" />,
+    title: "Premium Materials",
+    description: "Crafted with 925 Sterling Silver and genuine gemstones sourced from ethical suppliers worldwide."
+  },
+  {
+    icon: <Award className="w-8 h-8" />,
+    title: "Expert Craftsmanship",
+    description: "Each jewelry piece is meticulously handcrafted by our master artisans with decades of experience."
+  },
+  {
+    icon: <Heart className="w-8 h-8" />,
+    title: "Ethical Practices",
+    description: "Committed to sustainable and ethical practices throughout our supply chain and production process."
+  }
+];
 
+export default function ValueProposition() {
   return (
-    <div className="w-full mt-4 bg-[var(--color-navy)] py-6">
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row flex-wrap justify-center sm:justify-between items-center px-4 sm:px-6 gap-6 sm:gap-0">
-        {FeaturedInfo.map((item, index) => (
-          <React.Fragment key={item.id}>
-            <div className="flex flex-col items-center text-center gap-2 sm:gap-2 w-full sm:w-auto">
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-12 h-12 sm:w-10 sm:h-10 mb-1 object-contain invert"
-              />
-              <p className="text-white text-base sm:text-sm font-sans">
-                {item.name}
-              </p>
-            </div>
+    <section className="py-20 bg-[var(--color-background-alt)]">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-text)] mb-4">
+            The Nakshatraloko <span className="text-[var(--color-primary)]">Difference</span>
+          </h2>
+          <p className="text-lg text-[var(--color-text-light)] max-w-2xl mx-auto">
+            Excellence is in the details. Discover what sets our jewelry apart in quality, craftsmanship, and customer experience.
+          </p>
+        </div>
 
-            {/* Divider (show only on desktop) */}
-            {index < FeaturedInfo.length - 1 && (
-              <div className="hidden sm:block w-px h-16 bg-white/30"></div>
-            )}
-          </React.Fragment>
-        ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {features.map((feature, index) => (
+            <div 
+              key={index}
+              className="group p-8 bg-white rounded-2xl shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-xl)] transition-all duration-500 border border-[var(--color-border)] hover:border-[var(--color-primary)]/20"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="p-4 bg-[var(--color-primary)]/10 rounded-2xl mb-6 group-hover:bg-[var(--color-primary)]/20 transition-colors">
+                  <div className="text-[var(--color-primary)]">
+                    {feature.icon}
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-semibold text-[var(--color-text)] mb-3">
+                  {feature.title}
+                </h3>
+                
+                <p className="text-[var(--color-text-light)] leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        
       </div>
-    </div>
+    </section>
   );
 }
