@@ -10,8 +10,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
   CartesianGrid,
   Legend
 } from "recharts";
@@ -40,48 +38,63 @@ const pieData = [
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
-const ChartsSection = () => {
+const ChartsSection = ({ isMobile }) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
       {/* Sales Chart */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+      <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-gray-100">
         <h3 className="text-lg font-semibold mb-4">Sales Overview</h3>
-        <div className="h-80">
+        <div className="h-64 md:h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={salesData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
+            <LineChart data={salesData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="name" tick={{ fontSize: isMobile ? 10 : 12 }} />
+              <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
               <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="sales" stroke="#0088FE" strokeWidth={2} activeDot={{ r: 10 }} />
-              <Line type="monotone" dataKey="revenue" stroke="#00C49F" strokeWidth={2} />
+              <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+              <Line 
+                type="monotone" 
+                dataKey="sales" 
+                stroke="#0088FE" 
+                strokeWidth={2} 
+                activeDot={{ r: 6 }} 
+                dot={{ r: isMobile ? 2 : 3 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="revenue" 
+                stroke="#00C49F" 
+                strokeWidth={2} 
+                activeDot={{ r: 6 }}
+                dot={{ r: isMobile ? 2 : 3 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
       
       {/* Products Chart */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+      <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-gray-100">
         <h3 className="text-lg font-semibold mb-4">Top Products</h3>
-        <div className="h-80">
+        <div className="h-64 md:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
-                outerRadius={80}
+                outerRadius={isMobile ? 70 : 80}
                 fill="#8884d8"
                 dataKey="value"
-                label
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                labelLine={false}
               >
                 {pieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
-              <Legend />
+              <Tooltip formatter={(value) => [`${value} units`, 'Sales']} />
+              <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
             </PieChart>
           </ResponsiveContainer>
         </div>

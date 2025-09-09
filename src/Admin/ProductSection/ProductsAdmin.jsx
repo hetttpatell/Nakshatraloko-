@@ -1,11 +1,12 @@
-// components/ProductAdmin.jsx
-import React, { useMemo } from "react";
+// components/ProductsAdmin.jsx
+import React, { useMemo, useState } from "react";
 import ProductTable from "./ProductTable";
 import ProductModal from "./ProductModal";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import SearchAndFilterBar from "./SearchAndFilterBar";
 import { useProductManagement } from "../../CustomHooks/useProductManagement";
 import { filterProducts } from "../ProductSection/productFilters";
+import axios from 'axios';
 
 // Constants for options
 const BRAND_OPTIONS = ["STYLIUM", "PEARLIX", "DIAMONDX", "GOLDEN"];
@@ -55,6 +56,33 @@ const ProductAdmin = () => {
     handleEditProduct,
     viewProductDetails
   } = useProductManagement();
+
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Function to handle adding product via API
+  const handleAddProductWithAPI = async (productData) => {
+    setIsSaving(true);
+    try {
+      const response = await axios.post('http://localhost:8001/api/saveProduct', productData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const savedProduct = response.data;
+
+      // Call the original handleAddProduct to update local state
+      handleAddProduct(savedProduct);
+
+      // Show success message
+      alert('Product added successfully!');
+    } catch (error) {
+      console.error('Error saving product:', error);
+      alert('Failed to save product. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Memoize filtered products to improve performance
   const filteredProducts = useMemo(
@@ -106,13 +134,14 @@ const ProductAdmin = () => {
           initialProduct={{}}
           onClose={() => setIsAddModalOpen(false)}
           onSave={(productData) => {
-            handleAddProduct(productData);
+            handleAddProductWithAPI(productData);
             setIsAddModalOpen(false);
           }}
           brandOptions={BRAND_OPTIONS}
           sizeOptions={SIZE_OPTIONS}
           materialOptions={MATERIAL_OPTIONS}
           isEditing={false}
+          isLoading={isSaving}
         />
       )}
 
@@ -146,6 +175,7 @@ const ProductAdmin = () => {
             handleDeleteProduct();
             setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
           }}
+          isLoading={isSaving}
         />
       )}
     </div>

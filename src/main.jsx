@@ -37,7 +37,9 @@ const router = createBrowserRouter(
       <Route path="faqs" element={<FAQs />} />
       <Route path="cart" element={<Cart />} />
       <Route path="admin" element={<Admin />} />
-      <Route path="auth-sucess" element={<AuthSuccess />} />
+      <Route path="login" element={<LoginSignup />} />
+      <Route path="auth/success" element={<AuthSuccess />} />
+
       <Route path="signup" element={<SignupForm />} />
       <Route path="wishlist" element={<Wishlist />} />
       <Route path="account" element={<UserAccount />} />

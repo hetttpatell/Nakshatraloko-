@@ -1,5 +1,5 @@
 // Admin.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -29,7 +29,8 @@ import {
   FaChevronDown,
   FaEye,
   FaEdit,
-  FaTrash
+  FaTrash,
+  FaTimes
 } from "react-icons/fa";
 
 // Components
@@ -47,62 +48,140 @@ import Consultancy from "./Consultancy/Consultancy";
 const Admin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activePage, setActivePage] = useState("Dashboard");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Handle window resize for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      // Auto-close sidebar on mobile when switching to a smaller screen
+      if (mobile && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+      
+      // Auto-open sidebar on larger screens
+      if (!mobile && !sidebarOpen) {
+        setSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [sidebarOpen]);
+
+  // Close sidebar when a menu item is clicked on mobile
+  const handlePageChange = (page) => {
+    setActivePage(page);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
+  // Toggle sidebar function
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 relative">
+      {/* Mobile overlay for sidebar */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-opacity-50 z-20"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Sidebar */}
-      <Sidebar 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen}
-        activePage={activePage}
-        setActivePage={setActivePage}
-      />
+      <div className={`
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+        ${isMobile ? 'fixed inset-y-0 left-0 z-30 w-64 transform transition duration-300 ease-in-out' : 'relative'} 
+        flex-shrink-0 z-40
+      `}>
+        <Sidebar 
+          sidebarOpen={sidebarOpen} 
+          setSidebarOpen={setSidebarOpen}
+          activePage={activePage}
+          setActivePage={handlePageChange}
+          isMobile={isMobile}
+        />
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <Header 
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
+        {/* Header with hamburger menu */}
+        <header className="bg-white shadow-sm z-10">
+          <div className="flex items-center justify-between p-4 md:px-6">
+            <div className="flex items-center">
+              {/* Hamburger menu button */}
+              <button
+                onClick={toggleSidebar}
+                className="p-2 mr-4 text-gray-600 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                aria-label="Toggle sidebar"
+              >
+                <FaBars className="h-5 w-5" />
+              </button>
+              
+              {/* Page title */}
+              <h1 className="text-xl font-semibold text-gray-800">{activePage}</h1>
+            </div>
+            
+            {/* Right side header content (notifications, user profile, etc.) */}
+            <div className="flex items-center space-x-4">
+              <button className="relative p-2 text-gray-600 hover:text-gray-800">
+                <FaBell className="h-5 w-5" />
+                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+              </button>
+              
+              <div className="flex items-center">
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+                  <FaUserCircle className="h-5 w-5 text-gray-600" />
+                </div>
+                <span className="hidden md:block text-sm font-medium text-gray-700">Admin User</span>
+              </div>
+            </div>
+          </div>
+        </header>
         
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {activePage === "Dashboard" && (
             <>
               {/* Overview Widgets */}
-              <StatsOverview />
+              <StatsOverview isMobile={isMobile} />
               
               {/* Charts */}
-              <ChartsSection />
+              <ChartsSection isMobile={isMobile} />
               
               {/* Recent Orders Table */}
-              <RecentOrders />
+              <RecentOrders isMobile={isMobile} />
             </>
           )}
           
           {activePage === "Orders" && (
-           <OrdersManagement />
+           <OrdersManagement isMobile={isMobile} />
           )}
           
           {activePage === "Products" && (
-            <ProductAdmin />
+            <ProductAdmin isMobile={isMobile} />
           )}
           
           {activePage === "Catagories" && (
-            <CategoriesAdmin/>
+            <CategoriesAdmin isMobile={isMobile} />
           )}
 
           {activePage === "Coupons" && (
-            <Coupons />
+            <Coupons isMobile={isMobile} />
           )}
 
           {activePage === "Consultancy" && (
-            <Consultancy />
+            <Consultancy isMobile={isMobile} />
           )}
           
           {activePage === "Settings" && (
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow p-4 md:p-6">
               <h2 className="text-xl font-semibold mb-4">Settings</h2>
               <p>Settings content goes here...</p>
             </div>

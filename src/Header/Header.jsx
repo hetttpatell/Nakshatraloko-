@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { ShoppingBag, Heart, User, ChevronDown, Menu, X, UserCog, Search, Sparkles } from "lucide-react";
+import { ShoppingBag, Heart, User, ChevronDown, Menu, X, UserCog, Search, Sparkles, LogOut } from "lucide-react";
 import { useCart } from "../Context/CartContext";
 import { useWishlist } from "../Context/WishlistContext";
 import LoginSignup from "../Components/Login/Login";
@@ -231,8 +231,25 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [hoverUnderlineStyle, setHoverUnderlineStyle] = useState({});
   const [categoryData, setCategoryData] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
+    const token = localStorage.getItem("authToken") || localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+    
+    if (token) {
+      setIsLoggedIn(true);
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          setUser(parsedUser);
+        } catch (e) {
+          console.error("Error parsing user data:", e);
+        }
+      }
+    }
+    
     axios
       .post("http://localhost:8001/api/getCategories")
       .then((res) => {
@@ -243,6 +260,35 @@ export default function Header() {
       .catch((err) => console.log(err));
   }, []);
 
+  // Check login state when modal closes
+  useEffect(() => {
+    if (!showLogin) {
+      const token = localStorage.getItem("authToken") || localStorage.getItem("token");
+      const userData = localStorage.getItem("user");
+      
+      if (token) {
+        setIsLoggedIn(true);
+        if (userData) {
+          setUser(JSON.parse(userData));
+        }
+      } else {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+    }
+  }, [showLogin]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setIsLoggedIn(false);
+    setUser(null);
+    setMenuOpen(false);
+    window.location.href = "/";
+  };
+
+  const isAdmin = isLoggedIn && (user?.role === "admin" || user?.role === "Admin");
   const menuRef = useRef(null);
   const searchRef = useRef(null);
   const navRef = useRef(null);
@@ -260,11 +306,6 @@ export default function Header() {
   const shouldShowSearch = searchEnabledPages.some(path =>
     location.pathname.startsWith(path)
   );
-
-  // Example login and role data
-  const isLoggedIn = false; // change as needed
-  const user = { role: "admin" }; // Replace with actual user data
-  const isAdmin = isLoggedIn && user.role === "admin";
 
   // Handle scroll effect
   useEffect(() => {
@@ -323,7 +364,7 @@ export default function Header() {
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-primary)]/80 via-[var(--color-primary)] to-[var(--color-primary-dark)]"></div>
 
         <nav className="container mx-auto px-4 flex items-center justify-between">
-          {/* Enhanced Logo with original functionality */}
+          {/* Enhanced Logo */}
           <NavLink
             to="/"
             className="flex-shrink-0 cursor-pointer z-50 flex items-center transition-all duration-500 ease-out group"
@@ -419,13 +460,24 @@ export default function Header() {
                   />
                 ))}
 
+                {/* Admin Panel Icon - Always show if user is admin */}
                 {isAdmin && (
                   <UserMenuIcon
                     to="/admin"
                     Icon={UserCog}
+                    badgeCount={0}
                     className="bg-gradient-to-r from-[var(--color-accent-amber)]/20 to-[var(--color-accent-amber)]/10 text-[var(--color-accent-amber)] border border-[var(--color-accent-amber)]/20"
                   />
                 )}
+                
+                {/* Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  className="p-3 rounded-xl text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md transition-all duration-300 ease-out"
+                  title="Logout"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
               </>
             ) : (
               <button
@@ -453,20 +505,22 @@ export default function Header() {
               </button>
             )}
 
+            {/* Mobile Icons - Show cart and admin panel if logged in */}
             {isLoggedIn && (
               <div className="flex items-center space-x-1 mr-2">
-                {cartCount > 0 && (
-                  <UserMenuIcon
-                    to="/cart"
-                    Icon={ShoppingBag}
-                    badgeCount={cartCount}
-                    closeMenu={closeMenu}
-                  />
-                )}
+                <UserMenuIcon
+                  to="/cart"
+                  Icon={ShoppingBag}
+                  badgeCount={cartCount}
+                  closeMenu={closeMenu}
+                />
+                
+                {/* Admin Panel Icon for Mobile */}
                 {isAdmin && (
                   <UserMenuIcon
                     to="/admin"
                     Icon={UserCog}
+                    badgeCount={0}
                     className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
                     closeMenu={closeMenu}
                   />
@@ -528,22 +582,44 @@ export default function Header() {
             {/* Enhanced Mobile Login/User Section */}
             <div className="pt-6 mt-6 border-t border-[var(--color-border)] transition-all duration-300 ease-out">
               {isLoggedIn ? (
-                <div className="flex items-center justify-around bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 p-4 rounded-2xl">
-                  {userMenuItems.map(({ to, icon: Icon, badgeType }, idx) => (
-                    <UserMenuIcon
-                      key={idx}
-                      to={to}
-                      Icon={Icon}
-                      badgeCount={
-                        badgeType === "cart"
-                          ? cartCount
-                          : badgeType === "wishlist"
-                            ? wishlistCount
-                            : 0
-                      }
-                      closeMenu={closeMenu}
-                    />
-                  ))}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-around bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 p-4 rounded-2xl">
+                    {userMenuItems.map(({ to, icon: Icon, badgeType }, idx) => (
+                      <UserMenuIcon
+                        key={idx}
+                        to={to}
+                        Icon={Icon}
+                        badgeCount={
+                          badgeType === "cart"
+                            ? cartCount
+                            : badgeType === "wishlist"
+                              ? wishlistCount
+                              : 0
+                        }
+                        closeMenu={closeMenu}
+                      />
+                    ))}
+                    
+                    {/* Admin Panel Icon for Mobile Menu */}
+                    {isAdmin && (
+                      <UserMenuIcon
+                        to="/admin"
+                        Icon={UserCog}
+                        badgeCount={0}
+                        closeMenu={closeMenu}
+                        className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Logout Button in Mobile */}
+                  <button
+                    onClick={handleLogout}
+                    className="w-full py-3 rounded-2xl bg-[var(--color-primary)] text-white font-semibold transition-all duration-300 ease-out flex items-center justify-center gap-2"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    Logout
+                  </button>
                 </div>
               ) : (
                 <button

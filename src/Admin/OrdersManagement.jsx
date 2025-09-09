@@ -1,8 +1,8 @@
 // components/OrdersManagement.jsx
-import React, { useState } from "react";
-import { FaEye, FaEdit, FaTrash, FaPlus, FaSearch, FaFilter, FaChevronDown, FaTimes, FaExclamationTriangle } from "react-icons/fa";
+import React, { useState, useEffect, useRef } from "react";
+import { FaEye, FaEdit, FaTrash, FaPlus, FaSearch, FaFilter, FaChevronDown, FaTimes, FaExclamationTriangle, FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
-const OrdersManagement = () => {
+const OrdersManagement = ({ isMobile }) => {
   const [orders, setOrders] = useState([
     {
       id: "#ORD-1001",
@@ -68,9 +68,11 @@ const OrdersManagement = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [deleteConfirmModal, setDeleteConfirmModal] = useState({ isOpen: false, orderId: null, orderCode: "" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = isMobile ? 3 : 5;
 
   // Filter orders based on search term and status
-  React.useEffect(() => {
+  useEffect(() => {
     let result = orders;
     
     if (searchTerm) {
@@ -87,6 +89,7 @@ const OrdersManagement = () => {
     }
     
     setFilteredOrders(result);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [searchTerm, statusFilter, orders]);
 
   const statusStyles = {
@@ -134,14 +137,26 @@ const OrdersManagement = () => {
     setSelectedOrder(order);
   };
 
+  // Pagination logic
+  const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-white rounded-lg shadow p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
         <h2 className="text-xl font-semibold text-gray-800">Orders Management</h2>
+        <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+          <FaPlus />
+          <span>Add New Order</span>
+        </button>
       </div>
 
       {/* Search and Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col md:flex-row gap-3 mb-6">
         <div className="relative flex-1">
           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
@@ -174,7 +189,7 @@ const OrdersManagement = () => {
             onClick={() => setIsFilterOpen(!isFilterOpen)}
           >
             <FaFilter className="text-sm" />
-            <span>More Filters</span>
+            <span className="hidden sm:inline">More Filters</span>
           </button>
         </div>
       </div>
@@ -184,36 +199,39 @@ const OrdersManagement = () => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
-              <th className="p-3 font-semibold text-gray-600">Order ID</th>
-              <th className="p-3 font-semibold text-gray-600">Customer</th>
-              <th className="p-3 font-semibold text-gray-600">Date</th>
-              <th className="p-3 font-semibold text-gray-600">Items</th>
-              <th className="p-3 font-semibold text-gray-600">Amount</th>
-              <th className="p-3 font-semibold text-gray-600">Status</th>
-              <th className="p-3 font-semibold text-gray-600">Actions</th>
+              <th className="p-3 font-semibold text-gray-600 text-sm">Order ID</th>
+              <th className="p-3 font-semibold text-gray-600 text-sm">Customer</th>
+              {!isMobile && <th className="p-3 font-semibold text-gray-600 text-sm">Date</th>}
+              <th className="p-3 font-semibold text-gray-600 text-sm">Items</th>
+              <th className="p-3 font-semibold text-gray-600 text-sm">Amount</th>
+              <th className="p-3 font-semibold text-gray-600 text-sm">Status</th>
+              <th className="p-3 font-semibold text-gray-600 text-sm">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.map((order, index) => (
-              <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="p-3 font-medium">{order.id}</td>
+            {currentOrders.map((order, index) => (
+              <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                <td className="p-3 font-medium text-sm">{order.id}</td>
                 <td className="p-3">
                   <div>
-                    <p className="font-medium">{order.customer}</p>
-                    <p className="text-sm text-gray-500">{order.email}</p>
+                    <p className="font-medium text-sm">{order.customer}</p>
+                    <p className="text-xs text-gray-500">{order.email}</p>
                   </div>
                 </td>
-                <td className="p-3">{new Date(order.date).toLocaleDateString()}</td>
+                {!isMobile && <td className="p-3 text-sm">{new Date(order.date).toLocaleDateString()}</td>}
                 <td className="p-3">
-                  <div className="text-sm">
-                    {order.items.map((item, i) => (
+                  <div className="text-xs">
+                    {order.items.slice(0, isMobile ? 1 : 3).map((item, i) => (
                       <div key={i} className="mb-1">
                         {item.quantity} × {item.name}
                       </div>
                     ))}
+                    {order.items.length > (isMobile ? 1 : 3) && (
+                      <div className="text-blue-500">+{order.items.length - (isMobile ? 1 : 3)} more</div>
+                    )}
                   </div>
                 </td>
-                <td className="p-3 font-medium">${order.amount}</td>
+                <td className="p-3 font-medium text-sm">${order.amount}</td>
                 <td className="p-3">
                   <select
                     className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[order.status]} border-none focus:ring-2 focus:ring-blue-500`}
@@ -229,25 +247,25 @@ const OrdersManagement = () => {
                 <td className="p-3">
                   <div className="flex gap-2">
                     <button 
-                      className="p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors"
+                      className="p-1 md:p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors"
                       onClick={() => viewOrderDetails(order)}
                       title="View details"
                     >
-                      <FaEye />
+                      <FaEye className="text-sm md:text-base" />
                     </button>
                     <button 
-                      className="p-2 text-green-500 hover:bg-green-50 rounded transition-colors"
+                      className="p-1 md:p-2 text-green-500 hover:bg-green-50 rounded transition-colors"
                       onClick={() => handleEditOrder(order)}
                       title="Edit order"
                     >
-                      <FaEdit />
+                      <FaEdit className="text-sm md:text-base" />
                     </button>
                     <button 
-                      className="p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
+                      className="p-1 md:p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
                       onClick={() => openDeleteConfirm(order.id, order.id)}
                       title="Delete order"
                     >
-                      <FaTrash />
+                      <FaTrash className="text-sm md:text-base" />
                     </button>
                   </div>
                 </td>
@@ -263,10 +281,69 @@ const OrdersManagement = () => {
         )}
       </div>
 
+      {/* Pagination */}
+      {filteredOrders.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
+          <div className="text-sm text-gray-600">
+            Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} entries
+          </div>
+          <div className="flex gap-1">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 transition-colors'}`}
+              aria-label="Previous page"
+            >
+              <FaAngleLeft />
+            </button>
+            
+            {[...Array(totalPages)].map((_, i) => {
+              // Show limited page numbers on mobile
+              if (isMobile && (i + 1 < currentPage - 1 || i + 1 > currentPage + 1)) {
+                if (i === 0 || i === totalPages - 1) {
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => paginate(i + 1)}
+                      className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300 transition-colors'}`}
+                    >
+                      {i + 1}
+                    </button>
+                  );
+                }
+                if (i === currentPage - 2 || i === currentPage + 2) {
+                  return <span key={i} className="px-1 self-center">...</span>;
+                }
+                return null;
+              }
+              
+              return (
+                <button
+                  key={i}
+                  onClick={() => paginate(i + 1)}
+                  className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300 transition-colors'}`}
+                >
+                  {i + 1}
+                </button>
+              );
+            })}
+            
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded ${currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 transition-colors'}`}
+              aria-label="Next page"
+            >
+              <FaAngleRight />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Delete Confirmation Modal */}
       {deleteConfirmModal.isOpen && (
-        <div className="fixed inset-0 backdrop-blur-xs  bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md animate-slideIn">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md animate-scaleIn">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto mb-4">
                 <FaExclamationTriangle className="text-red-600 text-xl" />
@@ -302,43 +379,48 @@ const OrdersManagement = () => {
 
       {/* Order Detail Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 backdrop-blur-xs  shadow-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold">Order Details</h3>
                 <button 
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
                   onClick={() => setSelectedOrder(null)}
                 >
                   <FaTimes className="text-lg" />
                 </button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
                 <div>
                   <h4 className="font-medium text-gray-700 mb-2">Order Information</h4>
-                  <p><span className="text-gray-600">Order ID:</span> {selectedOrder.id}</p>
-                  <p><span className="text-gray-600">Date:</span> {new Date(selectedOrder.date).toLocaleDateString()}</p>
-                  <p><span className="text-gray-600">Status:</span> 
-                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${statusStyles[selectedOrder.status]}`}>
-                      {selectedOrder.status}
-                    </span>
-                  </p>
-                  <p><span className="text-gray-600">Total Amount:</span> ${selectedOrder.amount}</p>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="text-gray-600">Order ID:</span> {selectedOrder.id}</p>
+                    <p><span className="text-gray-600">Date:</span> {new Date(selectedOrder.date).toLocaleDateString()}</p>
+                    <p className="flex items-center">
+                      <span className="text-gray-600 mr-2">Status:</span> 
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[selectedOrder.status]}`}>
+                        {selectedOrder.status}
+                      </span>
+                    </p>
+                    <p><span className="text-gray-600">Total Amount:</span> ${selectedOrder.amount}</p>
+                  </div>
                 </div>
                 
                 <div>
                   <h4 className="font-medium text-gray-700 mb-2">Customer Information</h4>
-                  <p>{selectedOrder.customer}</p>
-                  <p>{selectedOrder.email}</p>
-                  <p>{selectedOrder.phone}</p>
+                  <div className="space-y-1 text-sm">
+                    <p>{selectedOrder.customer}</p>
+                    <p>{selectedOrder.email}</p>
+                    <p>{selectedOrder.phone}</p>
+                  </div>
                 </div>
               </div>
               
               <div className="mb-6">
                 <h4 className="font-medium text-gray-700 mb-2">Shipping Address</h4>
-                <p>{selectedOrder.shippingAddress}</p>
+                <p className="text-sm">{selectedOrder.shippingAddress}</p>
               </div>
               
               <div>
@@ -352,15 +434,15 @@ const OrdersManagement = () => {
                           <img 
                             src={product.mainImage} 
                             alt={product.name} 
-                            className="w-16 h-16 object-cover rounded mr-4"
+                            className="w-12 h-12 md:w-16 md:h-16 object-cover rounded mr-3 md:mr-4"
                           />
                         )}
                         <div className="flex-1">
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                          <p className="text-sm text-gray-600">Price: ${item.price}</p>
+                          <p className="font-medium text-sm">{item.name}</p>
+                          <p className="text-xs text-gray-600">Quantity: {item.quantity}</p>
+                          <p className="text-xs text-gray-600">Price: ${item.price}</p>
                         </div>
-                        <div className="font-medium">${item.quantity * item.price}</div>
+                        <div className="font-medium text-sm">${item.quantity * item.price}</div>
                       </div>
                     );
                   })}
@@ -373,13 +455,13 @@ const OrdersManagement = () => {
 
       {/* Edit Order Modal */}
       {isEditModalOpen && editingOrder && (
-        <div className="fixed inset-0 backdrop-blur-xs  shadow-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold">Edit Order</h3>
                 <button 
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
                   onClick={() => setIsEditModalOpen(false)}
                 >
                   <FaTimes className="text-lg" />
@@ -548,4 +630,4 @@ const products = [
   },
 ];
 
-export default OrdersManagement;    
+export default OrdersManagement;

@@ -1,105 +1,238 @@
 // components/ProductModal.jsx
 import React, { useState, useEffect } from "react";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaArrowUp, FaArrowDown, FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 
 const ProductModal = ({
   title,
   initialProduct = {},
   onClose,
   onSave,
-  brandOptions = [],
+  categoryOptions = [],
   sizeOptions = [],
-  materialOptions = [],
   isEditing = false,
+  isLoading = false,
 }) => {
   // Individual states for all fields
   const [name, setName] = useState("");
-  const [brand, setBrand] = useState("");
-  const [price, setPrice] = useState("");
-  const [mainImage, setMainImage] = useState("");
+  const [categoryName, setCategoryName] = useState("");
   const [description, setDescription] = useState("");
-  const [sizes, setSizes] = useState([]);
-  const [materials, setMaterials] = useState([]);
   const [advantages, setAdvantages] = useState("");
-  const [shipping, setShipping] = useState("");
-  const [inStock, setInStock] = useState(false);
-  const [imagePreview, setImagePreview] = useState("");
+  const [howToWear, setHowToWear] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const [sizes, setSizes] = useState([
+    { size: "", price: "", dummyPrice: "", stock: "" }
+  ]);
+  const [images, setImages] = useState([]);
+  const [errors, setErrors] = useState({});
 
   // Populate state when editing
   useEffect(() => {
     if (initialProduct) {
       setName(initialProduct.name || "");
-      setBrand(initialProduct.brand || "");
-      setPrice(initialProduct.price || "");
-      setMainImage(initialProduct.mainImage || "");
+      setCategoryName(initialProduct.categoryName || "");
       setDescription(initialProduct.description || "");
-      setSizes(initialProduct.size || []);
-      setMaterials(initialProduct.material || []);
       setAdvantages(
         typeof initialProduct.advantages === "string"
           ? initialProduct.advantages
           : (initialProduct.advantages || []).join(", ")
       );
-      setShipping(initialProduct.shipping || "");
-      setInStock(initialProduct.inStock || false);
+      setHowToWear(initialProduct.howToWear || "");
+      setIsActive(initialProduct.isActive !== undefined ? initialProduct.isActive : true);
       
-      // Set image preview if editing with existing image
-      if (initialProduct.mainImage) {
-        setImagePreview(initialProduct.mainImage);
+      // Set sizes if editing with existing sizes
+      if (initialProduct.sizes && initialProduct.sizes.length > 0) {
+        setSizes(initialProduct.sizes);
+      } else {
+        setSizes([{ size: "", price: "", dummyPrice: "", stock: "" }]);
+      }
+      
+      // Set images if editing with existing images
+      if (initialProduct.images && initialProduct.images.length > 0) {
+        setImages(initialProduct.images);
       }
     }
-    // Run only once on mount
-  }, []);
+  }, [initialProduct]);
+
+  const validateFile = (file) => {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const errors = {};
+    
+    if (file.size > MAX_FILE_SIZE) {
+      errors.fileSize = "File size must be less than 5MB";
+    }
+    
+    if (!file.type.startsWith("image/")) {
+      errors.fileType = "File must be an image";
+    }
+    
+    return errors;
+  };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    
+    const newErrors = {};
+    const validFiles = [];
+    
+    files.forEach((file, index) => {
+      const fileErrors = validateFile(file);
+      
+      if (Object.keys(fileErrors).length > 0) {
+        newErrors[`file-${index}`] = fileErrors;
+      } else {
+        validFiles.push(file);
+      }
+    });
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors({ ...errors, ...newErrors });
+      return;
+    }
+    
+    // Process valid files
+    validFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target.result;
+        const newImage = {
+          imageData: base64,
+          altText: `${name || "Product"} image`,
+          isPrimary: images.length === 0, // Set as primary if it's the first image
+          isActive: true,
+          file: file // Keep reference to original file for potential re-upload
+        };
+        
+        setImages(prev => [...prev, newImage]);
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    // Clear file input
+    e.target.value = "";
+  };
 
-    // Set preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target.result);
-    };
-    reader.readAsDataURL(file);
+  const removeImage = (index) => {
+    setImages(prev => {
+      const newImages = [...prev];
+      newImages.splice(index, 1);
+      
+      // If we removed the primary image and there are other images, set the first one as primary
+      if (prev[index].isPrimary && newImages.length > 0) {
+        newImages[0].isPrimary = true;
+      }
+      
+      return newImages;
+    });
+  };
 
-    // Convert to base64
-    const base64Reader = new FileReader();
-    base64Reader.onload = (e) => {
-      const base64 = e.target.result;
-      setMainImage(base64);
-      console.log(base64);
-    };
-    base64Reader.readAsDataURL(file);
+  const setPrimaryImage = (index) => {
+    setImages(prev => {
+      return prev.map((img, i) => ({
+        ...img,
+        isPrimary: i === index
+      }));
+    });
+  };
+
+  const moveImage = (index, direction) => {
+    if (
+      (direction === "up" && index === 0) ||
+      (direction === "down" && index === images.length - 1)
+    ) {
+      return;
+    }
+    
+    setImages(prev => {
+      const newImages = [...prev];
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      
+      // Swap positions
+      [newImages[index], newImages[targetIndex]] = [newImages[targetIndex], newImages[index]];
+      
+      return newImages;
+    });
+  };
+
+  // Handle size input changes
+  const handleSizeChange = (index, field, value) => {
+    const newSizes = [...sizes];
+    newSizes[index][field] = value;
+    
+    // Auto-calculate dummyPrice if price changes and dummyPrice is empty
+    if (field === "price" && !newSizes[index].dummyPrice) {
+      newSizes[index].dummyPrice = Math.round(parseFloat(value || 0) * 1.2).toString();
+    }
+    
+    setSizes(newSizes);
+  };
+
+  // Add a new size row
+  const addSize = () => {
+    setSizes([...sizes, { size: "", price: "", dummyPrice: "", stock: "" }]);
+  };
+
+  // Remove a size row
+  const removeSize = (index) => {
+    if (sizes.length > 1) {
+      const newSizes = [...sizes];
+      newSizes.splice(index, 1);
+      setSizes(newSizes);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validate at least one image is uploaded
+    if (images.length === 0) {
+      setErrors({ ...errors, images: "At least one image is required" });
+      return;
+    }
+    
+    // Validate all sizes are filled
+    const sizeErrors = {};
+    sizes.forEach((size, index) => {
+      if (!size.size) sizeErrors[`size-${index}`] = "Size is required";
+      if (!size.price) sizeErrors[`price-${index}`] = "Price is required";
+      if (!size.dummyPrice) sizeErrors[`dummyPrice-${index}`] = "Dummy price is required";
+      if (!size.stock) sizeErrors[`stock-${index}`] = "Stock is required";
+    });
+    
+    if (Object.keys(sizeErrors).length > 0) {
+      setErrors({ ...errors, ...sizeErrors });
+      return;
+    }
 
-    // Prepare product object to pass to onSave
+    // Prepare product object in the required API format
     const productData = {
+      id: isEditing ? initialProduct.id : 0, // API will assign ID for new products
+      categoryName,
       name,
-      brand,
-      price,
-      mainImage,
       description,
-      size: sizes,
-      material: materials,
       advantages: advantages.split(",").map((adv) => adv.trim()),
-      shipping,
-      inStock,
+      howToWear,
+      isActive,
+      sizes: sizes.map(size => ({
+        size: parseInt(size.size),
+        price: parseFloat(size.price),
+        dummyPrice: parseFloat(size.dummyPrice),
+        stock: parseInt(size.stock)
+      })),
+      images: images.map((img, index) => ({
+        imageData: img.imageData,
+        altText: img.altText,
+        isPrimary: index === 0, // First image is always primary
+        isActive: img.isActive
+      }))
     };
 
     onSave(productData);
   };
 
-  const handleMultiSelectChange = (e, setter) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, (opt) => opt.value);
-    setter(selectedOptions);
-  };
-
   return (
     <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold">{title}</h3>
@@ -114,6 +247,27 @@ const ProductModal = ({
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Category Name */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  Category Name *
+                </label>
+                <select
+                  value={categoryName}
+                  onChange={(e) => setCategoryName(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm appearance-none bg-chevron-down bg-no-repeat bg-right-4 bg-center pr-10"
+                  style={{ backgroundImage: "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e\")" }}
+                >
+                  <option value="">Select Category</option>
+                  {categoryOptions.map((category) => (
+                    <option key={category} value={category} className="py-2">
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Product Name */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
@@ -129,92 +283,114 @@ const ProductModal = ({
                 />
               </div>
 
-              {/* Brand */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  Brand *
-                </label>
-                <select
-                  value={brand}
-                  onChange={(e) => setBrand(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm appearance-none bg-chevron-down bg-no-repeat bg-right-4 bg-center pr-10"
-                  style={{ backgroundImage: "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e\")" }}
-                >
-                  <option value="">Select Brand</option>
-                  {brandOptions.map((b) => (
-                    <option key={b} value={b} className="py-2">
-                      {b}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Price */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  Price *
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-3 text-gray-500 font-medium">₹</span>
-                  <input
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    required
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Main Image Upload */}
+              {/* Image Upload */}
               <div className="space-y-2 md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  Product Image *
+                  Product Images *
                 </label>
                 
+                {errors.images && (
+                  <p className="text-red-500 text-sm">{errors.images}</p>
+                )}
+
                 <div className="flex flex-col items-center justify-center w-full">
-                  {imagePreview ? (
-                    <div className="relative w-full max-w-xs">
-                      <img 
-                        src={imagePreview} 
-                        alt="Preview" 
-                        className="w-full h-48 object-contain rounded-lg border border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setImagePreview("");
-                          setMainImage("");
-                        }}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                      >
-                        <FaTimes className="text-xs" />
-                      </button>
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                      </svg>
+                      <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                      <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (MAX. 5MB)</p>
                     </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                        </svg>
-                        <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                        <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (MAX. 5MB)</p>
-                      </div>
-                      <input 
-                        id="dropzone-file" 
-                        type="file" 
-                        className="hidden" 
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        required={!mainImage}
-                      />
-                    </label>
-                  )}
+                    <input
+                      id="dropzone-file"
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      multiple
+                    />
+                  </label>
                 </div>
+
+                {/* Image Previews */}
+                {images.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Uploaded Images:</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {images.map((image, index) => (
+                        <div key={index} className={`relative border rounded-lg p-2 ${image.isPrimary ? 'border-2 border-blue-500' : 'border-gray-200'}`}>
+                          <img
+                            src={image.imageData}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-32 object-contain rounded"
+                          />
+                          
+                          {/* Primary badge */}
+                          {image.isPrimary && (
+                            <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                              Primary
+                            </span>
+                          )}
+                          
+                          {/* Image controls */}
+                          <div className="absolute top-2 right-2 flex space-x-1">
+                            <button
+                              type="button"
+                              onClick={() => moveImage(index, 'up')}
+                              disabled={index === 0}
+                              className="bg-white rounded p-1 shadow-sm disabled:opacity-50"
+                              title="Move up"
+                            >
+                              <FaArrowUp size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveImage(index, 'down')}
+                              disabled={index === images.length - 1}
+                              className="bg-white rounded p-1 shadow-sm disabled:opacity-50"
+                              title="Move down"
+                            >
+                              <FaArrowDown size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPrimaryImage(index)}
+                              disabled={image.isPrimary}
+                              className="bg-white rounded p-1 shadow-sm disabled:opacity-50"
+                              title="Set as primary"
+                            >
+                              <span className="text-xs font-bold">P</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="bg-white rounded p-1 shadow-sm"
+                              title="Remove image"
+                            >
+                              <FaTrash size={12} className="text-red-500" />
+                            </button>
+                          </div>
+                          
+                          {/* Alt text input */}
+                          <div className="mt-2">
+                            <input
+                              type="text"
+                              value={image.altText}
+                              onChange={(e) => {
+                                const newImages = [...images];
+                                newImages[index].altText = e.target.value;
+                                setImages(newImages);
+                              }}
+                              placeholder="Image description"
+                              className="w-full text-xs p-1 border border-gray-200 rounded"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Description */}
@@ -232,50 +408,19 @@ const ProductModal = ({
                 />
               </div>
 
-              {/* Sizes */}
-              <div className="space-y-2">
+              {/* How to Wear */}
+              <div className="space-y-2 md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  Sizes *
+                  How to Wear *
                 </label>
-                <select
-                  multiple
-                  value={sizes}
-                  onChange={(e) => handleMultiSelectChange(e, setSizes)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm min-h-32"
+                <textarea
+                  value={howToWear}
+                  onChange={(e) => setHowToWear(e.target.value)}
+                  placeholder="Instructions on how to wear or use the product..."
                   required
-                >
-                  {sizeOptions.map((s) => (
-                    <option key={s} value={s} className="py-2 px-3 hover:bg-blue-50">
-                      {s}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 font-medium">
-                  ⌘ + Click to select multiple sizes
-                </p>
-              </div>
-
-              {/* Materials */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  Materials *
-                </label>
-                <select
-                  multiple
-                  value={materials}
-                  onChange={(e) => handleMultiSelectChange(e, setMaterials)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm min-h-32"
-                  required
-                >
-                  {materialOptions.map((m) => (
-                    <option key={m} value={m} className="py-2 px-3 hover:bg-blue-50">
-                      {m}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 font-medium">
-                  ⌘ + Click to select multiple materials
-                </p>
+                  rows="3"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm resize-vertical"
+                />
               </div>
 
               {/* Advantages */}
@@ -292,38 +437,122 @@ const ProductModal = ({
                 />
               </div>
 
-              {/* Shipping */}
+              {/* Sizes */}
               <div className="space-y-2 md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  Shipping Information *
+                  Sizes *
                 </label>
-                <textarea
-                  value={shipping}
-                  onChange={(e) => setShipping(e.target.value)}
-                  placeholder="Free shipping, Delivery time, Return policy..."
-                  required
-                  rows="3"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm resize-vertical"
-                />
+                
+                {sizes.map((size, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border border-gray-200 rounded-lg">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Size</label>
+                      <select
+                        value={size.size}
+                        onChange={(e) => handleSizeChange(index, "size", e.target.value)}
+                        required
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
+                      >
+                        <option value="">Select Size</option>
+                        {sizeOptions.map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      {errors[`size-${index}`] && (
+                        <p className="text-red-500 text-xs">{errors[`size-${index}`]}</p>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Price (₹)</label>
+                      <input
+                        type="number"
+                        value={size.price}
+                        onChange={(e) => handleSizeChange(index, "price", e.target.value)}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                        required
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
+                      />
+                      {errors[`price-${index}`] && (
+                        <p className="text-red-500 text-xs">{errors[`price-${index}`]}</p>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Dummy Price (₹)</label>
+                      <input
+                        type="number"
+                        value={size.dummyPrice}
+                        onChange={(e) => handleSizeChange(index, "dummyPrice", e.target.value)}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                        required
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
+                      />
+                      {errors[`dummyPrice-${index}`] && (
+                        <p className="text-red-500 text-xs">{errors[`dummyPrice-${index}`]}</p>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Stock</label>
+                      <input
+                        type="number"
+                        value={size.stock}
+                        onChange={(e) => handleSizeChange(index, "stock", e.target.value)}
+                        placeholder="0"
+                        min="0"
+                        required
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
+                      />
+                      {errors[`stock-${index}`] && (
+                        <p className="text-red-500 text-xs">{errors[`stock-${index}`]}</p>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-end justify-center">
+                      <button
+                        type="button"
+                        onClick={() => removeSize(index)}
+                        disabled={sizes.length === 1}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Remove size"
+                      >
+                        <FaMinus size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                
+                <button
+                  type="button"
+                  onClick={addSize}
+                  className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  <FaPlus size={14} className="mr-2" /> Add Another Size
+                </button>
               </div>
 
-              {/* In Stock */}
+              {/* Active Status */}
               <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg md:col-span-2">
                 <div className="flex items-center h-5">
                   <input
                     type="checkbox"
-                    id="inStock"
-                    checked={inStock}
-                    onChange={(e) => setInStock(e.target.checked)}
+                    id="isActive"
+                    checked={isActive}
+                    onChange={(e) => setIsActive(e.target.checked)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                 </div>
                 <div className="flex flex-col">
-                  <label htmlFor="inStock" className="text-sm font-semibold text-gray-900">
-                    In Stock
+                  <label htmlFor="isActive" className="text-sm font-semibold text-gray-900">
+                    Active Product
                   </label>
                   <p className="text-xs text-gray-500">
-                    Toggle to mark product as available for purchase
+                    Toggle to make product visible to customers
                   </p>
                 </div>
               </div>
@@ -340,9 +569,20 @@ const ProductModal = ({
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-sm hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none transition-all duration-200 transform hover:-translate-y-0.5"
+                disabled={isLoading}
+                className="px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-sm hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isEditing ? "Update Product" : "Add Product"}
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {isEditing ? "Updating..." : "Adding..."}
+                  </>
+                ) : (
+                  isEditing ? "Update Product" : "Add Product"
+                )}
               </button>
             </div>
           </form>

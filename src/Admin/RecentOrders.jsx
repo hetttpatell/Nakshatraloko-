@@ -1,8 +1,8 @@
 // components/RecentOrders.jsx
 import React, { useState, useEffect } from "react";
-import { FaEye, FaEdit, FaTrash, FaChevronDown, FaFilter, FaSearch, FaTimes } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrash, FaChevronDown, FaFilter, FaSearch, FaTimes, FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
-const RecentOrders = () => {
+const RecentOrders = ({ isMobile }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -29,7 +29,7 @@ const RecentOrders = () => {
   ];
   
   const statusOptions = ["all", "Pending", "Completed", "Processing", "Cancelled"];
-  const ordersPerPage = 5;
+  const ordersPerPage = isMobile ? 3 : 5;
   
   const statusStyles = {
     Pending: "bg-yellow-100 text-yellow-800",
@@ -121,17 +121,17 @@ const RecentOrders = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-gray-100">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
         <h3 className="text-lg font-semibold">Recent Orders</h3>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {/* Search input */}
-          <div className="relative">
+          <div className="relative w-full sm:w-48">
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search orders..."
-              className="pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               name="search"
               value={filters.search}
               onChange={handleFilterChange}
@@ -140,7 +140,7 @@ const RecentOrders = () => {
           
           {/* Filter toggle button */}
           <button 
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors w-full sm:w-auto"
             onClick={() => setIsFilterOpen(!isFilterOpen)}
           >
             <FaFilter className="text-sm" />
@@ -152,8 +152,8 @@ const RecentOrders = () => {
       
       {/* Filter panel */}
       {isFilterOpen && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 animate-slideIn">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Status filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -207,7 +207,7 @@ const RecentOrders = () => {
                   value={filters.startDate}
                   onChange={handleFilterChange}
                 />
-                <span className="self-center">to</span>
+                <span className="self-center hidden sm:inline">to</span>
                 <input
                   type="date"
                   className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -220,9 +220,9 @@ const RecentOrders = () => {
           </div>
           
           {/* Clear filters button */}
-          <div className="mt-4 flex justify-end">
+          <div className="mt-3 flex justify-end">
             <button
-              className="flex items-center gap-2 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+              className="flex items-center gap-2 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
               onClick={clearFilters}
             >
               <FaTimes />
@@ -236,47 +236,47 @@ const RecentOrders = () => {
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="p-3 font-semibold text-gray-600">Order ID</th>
-              <th className="p-3 font-semibold text-gray-600">Customer</th>
-              <th className="p-3 font-semibold text-gray-600">Date</th>
-              <th className="p-3 font-semibold text-gray-600">Status</th>
-              <th className="p-3 font-semibold text-gray-600">Amount</th>
-              <th className="p-3 font-semibold text-gray-600">Actions</th>
+            <tr className="border-b border-gray-200 bg-gray-50">
+              <th className="p-3 font-semibold text-gray-600 text-sm">Order ID</th>
+              <th className="p-3 font-semibold text-gray-600 text-sm">Customer</th>
+              {!isMobile && <th className="p-3 font-semibold text-gray-600 text-sm">Date</th>}
+              <th className="p-3 font-semibold text-gray-600 text-sm">Status</th>
+              <th className="p-3 font-semibold text-gray-600 text-sm">Amount</th>
+              <th className="p-3 font-semibold text-gray-600 text-sm">Actions</th>
             </tr>
           </thead>
           <tbody>
             {currentOrders.length > 0 ? (
               currentOrders.map((order, index) => (
-                <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="p-3 font-medium">{order.id}</td>
-                  <td className="p-3">{order.customer}</td>
-                  <td className="p-3">{formatDate(order.date)}</td>
+                <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                  <td className="p-3 font-medium text-sm">{order.id}</td>
+                  <td className="p-3 text-sm">{order.customer}</td>
+                  {!isMobile && <td className="p-3 text-sm">{formatDate(order.date)}</td>}
                   <td className="p-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[order.status]}`}>
                       {order.status}
                     </span>
                   </td>
-                  <td className="p-3 font-medium">{formatCurrency(order.amount)}</td>
+                  <td className="p-3 font-medium text-sm">{formatCurrency(order.amount)}</td>
                   <td className="p-3">
                     <div className="flex gap-2">
                       <button 
-                        className="p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors"
+                        className="p-1 md:p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors"
                         title="View order"
                       >
-                        <FaEye />
+                        <FaEye className="text-sm md:text-base" />
                       </button>
                       <button 
-                        className="p-2 text-green-500 hover:bg-green-50 rounded transition-colors"
+                        className="p-1 md:p-2 text-green-500 hover:bg-green-50 rounded transition-colors"
                         title="Edit order"
                       >
-                        <FaEdit />
+                        <FaEdit className="text-sm md:text-base" />
                       </button>
                       <button 
-                        className="p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
+                        className="p-1 md:p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
                         title="Delete order"
                       >
-                        <FaTrash />
+                        <FaTrash className="text-sm md:text-base" />
                       </button>
                     </div>
                   </td>
@@ -284,7 +284,7 @@ const RecentOrders = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="p-4 text-center text-gray-500">
+                <td colSpan={isMobile ? 5 : 6} className="p-4 text-center text-gray-500">
                   No orders found matching your filters.
                 </td>
               </tr>
@@ -295,7 +295,7 @@ const RecentOrders = () => {
       
       {/* Pagination */}
       {filteredOrders.length > 0 && (
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
           <div className="text-sm text-gray-600">
             Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} entries
           </div>
@@ -303,27 +303,50 @@ const RecentOrders = () => {
             <button
               onClick={() => paginate(currentPage - 1)}
               disabled={currentPage === 1}
-              className={`px-3 py-1 rounded ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300'}`}
+              className={`px-3 py-1 rounded ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 transition-colors'}`}
+              aria-label="Previous page"
             >
-              Previous
+              <FaAngleLeft />
             </button>
             
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i}
-                onClick={() => paginate(i + 1)}
-                className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
-              >
-                {i + 1}
-              </button>
-            ))}
+            {[...Array(totalPages)].map((_, i) => {
+              // Show limited page numbers on mobile
+              if (isMobile && (i + 1 < currentPage - 1 || i + 1 > currentPage + 1)) {
+                if (i === 0 || i === totalPages - 1) {
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => paginate(i + 1)}
+                      className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300 transition-colors'}`}
+                    >
+                      {i + 1}
+                    </button>
+                  );
+                }
+                if (i === currentPage - 2 || i === currentPage + 2) {
+                  return <span key={i} className="px-1 self-center">...</span>;
+                }
+                return null;
+              }
+              
+              return (
+                <button
+                  key={i}
+                  onClick={() => paginate(i + 1)}
+                  className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300 transition-colors'}`}
+                >
+                  {i + 1}
+                </button>
+              );
+            })}
             
             <button
               onClick={() => paginate(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className={`px-3 py-1 rounded ${currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300'}`}
+              className={`px-3 py-1 rounded ${currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 transition-colors'}`}
+              aria-label="Next page"
             >
-              Next
+              <FaAngleRight />
             </button>
           </div>
         </div>
