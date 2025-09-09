@@ -1,4 +1,5 @@
 // components/ProductModal.jsx
+import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { FaTimes, FaArrowUp, FaArrowDown, FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 
@@ -15,6 +16,7 @@ const ProductModal = ({
   // Individual states for all fields
   const [name, setName] = useState("");
   const [categoryName, setCategoryName] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [description, setDescription] = useState("");
   const [advantages, setAdvantages] = useState("");
   const [howToWear, setHowToWear] = useState("");
@@ -24,12 +26,29 @@ const ProductModal = ({
   ]);
   const [images, setImages] = useState([]);
   const [errors, setErrors] = useState({});
+  const [categoryData, setCategoryData] = useState([]);
+  const [apiStatus, setApiStatus] = useState({ loading: false, message: "" });
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken") || localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+
+    axios.post("http://localhost:8001/api/getCategories")
+      .then((res) => {
+        if (res.data.success) {
+          setCategoryData(res.data.data);
+        }
+      })
+      .catch((err) => console.error("Category fetch error:", err));
+
+  }, []);
 
   // Populate state when editing
   useEffect(() => {
     if (initialProduct) {
       setName(initialProduct.name || "");
       setCategoryName(initialProduct.categoryName || "");
+      setCategoryId(initialProduct.categoryId || "");
       setDescription(initialProduct.description || "");
       setAdvantages(
         typeof initialProduct.advantages === "string"
@@ -38,14 +57,14 @@ const ProductModal = ({
       );
       setHowToWear(initialProduct.howToWear || "");
       setIsActive(initialProduct.isActive !== undefined ? initialProduct.isActive : true);
-      
+
       // Set sizes if editing with existing sizes
       if (initialProduct.sizes && initialProduct.sizes.length > 0) {
         setSizes(initialProduct.sizes);
       } else {
         setSizes([{ size: "", price: "", dummyPrice: "", stock: "" }]);
       }
-      
+
       // Set images if editing with existing images
       if (initialProduct.images && initialProduct.images.length > 0) {
         setImages(initialProduct.images);
@@ -53,43 +72,55 @@ const ProductModal = ({
     }
   }, [initialProduct]);
 
+  // Handle category selection
+  const handleCategoryChange = (e) => {
+    const selectedCategoryName = e.target.value;
+    setCategoryName(selectedCategoryName);
+    
+    // Find the corresponding category ID
+    const selectedCategory = categoryData.find(cat => cat.CategoryName === selectedCategoryName);
+    if (selectedCategory) {
+      setCategoryId(selectedCategory.id);
+    }
+  };
+
   const validateFile = (file) => {
     const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
     const errors = {};
-    
+
     if (file.size > MAX_FILE_SIZE) {
       errors.fileSize = "File size must be less than 5MB";
     }
-    
+
     if (!file.type.startsWith("image/")) {
       errors.fileType = "File must be an image";
     }
-    
+
     return errors;
   };
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    
+
     const newErrors = {};
     const validFiles = [];
-    
+
     files.forEach((file, index) => {
       const fileErrors = validateFile(file);
-      
+
       if (Object.keys(fileErrors).length > 0) {
         newErrors[`file-${index}`] = fileErrors;
       } else {
         validFiles.push(file);
       }
     });
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors({ ...errors, ...newErrors });
       return;
     }
-    
+
     // Process valid files
     validFiles.forEach((file) => {
       const reader = new FileReader();
@@ -102,12 +133,12 @@ const ProductModal = ({
           isActive: true,
           file: file // Keep reference to original file for potential re-upload
         };
-        
+
         setImages(prev => [...prev, newImage]);
       };
       reader.readAsDataURL(file);
     });
-    
+
     // Clear file input
     e.target.value = "";
   };
@@ -116,12 +147,12 @@ const ProductModal = ({
     setImages(prev => {
       const newImages = [...prev];
       newImages.splice(index, 1);
-      
+
       // If we removed the primary image and there are other images, set the first one as primary
       if (prev[index].isPrimary && newImages.length > 0) {
         newImages[0].isPrimary = true;
       }
-      
+
       return newImages;
     });
   };
@@ -142,14 +173,14 @@ const ProductModal = ({
     ) {
       return;
     }
-    
+
     setImages(prev => {
       const newImages = [...prev];
       const targetIndex = direction === "up" ? index - 1 : index + 1;
-      
+
       // Swap positions
       [newImages[index], newImages[targetIndex]] = [newImages[targetIndex], newImages[index]];
-      
+
       return newImages;
     });
   };
@@ -158,12 +189,12 @@ const ProductModal = ({
   const handleSizeChange = (index, field, value) => {
     const newSizes = [...sizes];
     newSizes[index][field] = value;
-    
+
     // Auto-calculate dummyPrice if price changes and dummyPrice is empty
     if (field === "price" && !newSizes[index].dummyPrice) {
       newSizes[index].dummyPrice = Math.round(parseFloat(value || 0) * 1.2).toString();
     }
-    
+
     setSizes(newSizes);
   };
 
@@ -181,15 +212,24 @@ const ProductModal = ({
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setApiStatus({ loading: true, message: "" });
+
     // Validate at least one image is uploaded
     if (images.length === 0) {
       setErrors({ ...errors, images: "At least one image is required" });
+      setApiStatus({ loading: false, message: "Validation failed" });
       return;
     }
-    
+
+    // Validate category is selected
+    if (!categoryId) {
+      setErrors({ ...errors, category: "Please select a category" });
+      setApiStatus({ loading: false, message: "Validation failed" });
+      return;
+    }
+
     // Validate all sizes are filled
     const sizeErrors = {};
     sizes.forEach((size, index) => {
@@ -198,19 +238,20 @@ const ProductModal = ({
       if (!size.dummyPrice) sizeErrors[`dummyPrice-${index}`] = "Dummy price is required";
       if (!size.stock) sizeErrors[`stock-${index}`] = "Stock is required";
     });
-    
+
     if (Object.keys(sizeErrors).length > 0) {
       setErrors({ ...errors, ...sizeErrors });
+      setApiStatus({ loading: false, message: "Validation failed" });
       return;
     }
 
     // Prepare product object in the required API format
     const productData = {
       id: isEditing ? initialProduct.id : 0, // API will assign ID for new products
-      categoryName,
+      categoryId: parseInt(categoryId),
       name,
       description,
-      advantages: advantages.split(",").map((adv) => adv.trim()),
+      advantages: advantages.split(",").map((adv) => adv.trim()).join(", "),
       howToWear,
       isActive,
       sizes: sizes.map(size => ({
@@ -222,12 +263,33 @@ const ProductModal = ({
       images: images.map((img, index) => ({
         imageData: img.imageData,
         altText: img.altText,
-        isPrimary: index === 0, // First image is always primary
+        isPrimary: img.isPrimary,
         isActive: img.isActive
       }))
     };
 
-    onSave(productData);
+    try {
+      // Send data to API
+      const response = await axios.post("http://localhost:8001/api/saveProduct", productData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`
+        }
+      });
+      
+      if (response.data.success) {
+        setApiStatus({ loading: false, message: "success" });
+        onSave(response.data); // Pass the response to parent component
+      } else {
+        console.error("API Error:", response.data.message);
+        setApiStatus({ loading: false, message: "error" });
+        setErrors({ submit: response.data.message });
+      }
+    } catch (error) {
+      console.error("API Request Failed:", error);
+      setApiStatus({ loading: false, message: "error" });
+      setErrors({ submit: "Failed to save product. Please try again." });
+    }
   };
 
   return (
@@ -245,6 +307,18 @@ const ProductModal = ({
             </button>
           </div>
 
+          {errors.submit && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+              {errors.submit}
+            </div>
+          )}
+
+          {apiStatus.message === "success" && (
+            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg">
+              Product {isEditing ? "updated" : "added"} successfully!
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Category Name */}
@@ -254,18 +328,26 @@ const ProductModal = ({
                 </label>
                 <select
                   value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
+                  onChange={handleCategoryChange}
                   required
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm appearance-none bg-chevron-down bg-no-repeat bg-right-4 bg-center pr-10"
-                  style={{ backgroundImage: "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e\")" }}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' 
+      fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' 
+      stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' 
+      d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`
+                  }}
                 >
                   <option value="">Select Category</option>
-                  {categoryOptions.map((category) => (
-                    <option key={category} value={category} className="py-2">
-                      {category}
+                  {categoryData.map((cat, index) => (
+                    <option key={index} value={cat.CategoryName}>
+                      {cat.CategoryName}
                     </option>
                   ))}
                 </select>
+                {errors.category && (
+                  <p className="text-red-500 text-sm">{errors.category}</p>
+                )}
               </div>
 
               {/* Product Name */}
@@ -288,7 +370,7 @@ const ProductModal = ({
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
                   Product Images *
                 </label>
-                
+
                 {errors.images && (
                   <p className="text-red-500 text-sm">{errors.images}</p>
                 )}
@@ -325,14 +407,14 @@ const ProductModal = ({
                             alt={`Preview ${index + 1}`}
                             className="w-full h-32 object-contain rounded"
                           />
-                          
+
                           {/* Primary badge */}
                           {image.isPrimary && (
                             <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
                               Primary
                             </span>
                           )}
-                          
+
                           {/* Image controls */}
                           <div className="absolute top-2 right-2 flex space-x-1">
                             <button
@@ -371,7 +453,7 @@ const ProductModal = ({
                               <FaTrash size={12} className="text-red-500" />
                             </button>
                           </div>
-                          
+
                           {/* Alt text input */}
                           <div className="mt-2">
                             <input
@@ -442,7 +524,7 @@ const ProductModal = ({
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
                   Sizes *
                 </label>
-                
+
                 {sizes.map((size, index) => (
                   <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border border-gray-200 rounded-lg">
                     <div className="space-y-2">
@@ -462,7 +544,7 @@ const ProductModal = ({
                         <p className="text-red-500 text-xs">{errors[`size-${index}`]}</p>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">Price (₹)</label>
                       <input
@@ -479,7 +561,7 @@ const ProductModal = ({
                         <p className="text-red-500 text-xs">{errors[`price-${index}`]}</p>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">Dummy Price (₹)</label>
                       <input
@@ -493,10 +575,10 @@ const ProductModal = ({
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
                       />
                       {errors[`dummyPrice-${index}`] && (
-                        <p className="text-red-500 text-xs">{errors[`dummyPrice-${index}`]}</p>
+                        <p className="textred-500 text-xs">{errors[`dummyPrice-${index}`]}</p>
                       )}
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">Stock</label>
                       <input
@@ -512,7 +594,7 @@ const ProductModal = ({
                         <p className="text-red-500 text-xs">{errors[`stock-${index}`]}</p>
                       )}
                     </div>
-                    
+
                     <div className="flex items-end justify-center">
                       <button
                         type="button"
@@ -526,7 +608,7 @@ const ProductModal = ({
                     </div>
                   </div>
                 ))}
-                
+
                 <button
                   type="button"
                   onClick={addSize}
@@ -569,10 +651,10 @@ const ProductModal = ({
               </button>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={apiStatus.loading}
                 className="px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-sm hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? (
+                {apiStatus.loading ? (
                   <>
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
