@@ -262,7 +262,7 @@ export default function Header() {
   );
 
   // Example login and role data
-  const isLoggedIn = true; // change as needed
+  const isLoggedIn = false; // change as needed
   const user = { role: "admin" }; // Replace with actual user data
   const isAdmin = isLoggedIn && user.role === "admin";
 

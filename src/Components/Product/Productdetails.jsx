@@ -75,7 +75,7 @@ const ProductDetails = () => {
       : parseFloat(data.Price || data.price || 0),
     inStock: data.InStock !== undefined ? data.InStock : true,
     mainImage: data.Image || data.image || data.mainImage || data.img || "/s2.jpeg",
-    size: Array.isArray(data.Size) ? data.Size : ["5 Ratti", "6 Ratti"],
+    size: Array.isArray(data.Size) ? data.Size : ["5 Ratti", "6 Ratti"],  
     material: Array.isArray(data.Material) ? data.Material : ["Gemstone", "Pendant", "Necklace"],
     images: Array.isArray(data.Images)
       ? data.Images.map((img) => ({ src: img, alt: "Product Image" }))

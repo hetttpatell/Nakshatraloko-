@@ -1,16 +1,68 @@
 import React, { useState } from "react";
+import axios from "axios";
 import Input from "../Input/Input";
 
 const SignupForm = ({ onClose }) => {
   const [fullName, setFullName] = useState("");
-  const [emailOrNumber, setEmailOrNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    console.log({ fullName, emailOrNumber, password, confirmPassword });
-    onClose(); // close modal after signup
+
+    // Validate required fields
+    if (!fullName || !email || !phone || !password) {
+      setError("All fields are required");
+      return;
+    }
+
+    // Validate password strength (at least 6 characters)
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    // Validate phone number format (basic validation)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone.replace(/\D/g, ""))) {
+      setError("Please enter a valid 10-digit phone number");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.post("http://localhost:8001/api/saveUser", {
+        fullname: fullName,
+        email: email,
+        phone: phone.replace(/\D/g, ""), // only digits
+        password_hash: password,
+      });
+
+      console.log("Signup success:", response.data);
+
+      if (response.data.success) {
+        onClose(); // close modal after success
+      } else {
+        setError(response.data.errors?.[0]?.msg || "Signup failed");
+      }
+    } catch (err) {
+      console.error("Signup failed:", err);
+      setError(err.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -22,76 +74,112 @@ const SignupForm = ({ onClose }) => {
       ></div>
 
       {/* Modal */}
-      <div className="relative bg-[#fffaf6] w-[95%] max-w-md p-8 rounded-2xl shadow-lg z-10">
+      <div className="relative bg-[var(--color-surface)] w-[95%] max-w-md p-8 rounded-2xl shadow-xl z-10 border border-[var(--color-border)]">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="
-            absolute top-3 right-3 w-10 h-10 flex items-center justify-center
-            text-[#5a4d41] font-bold text-lg
-            rounded-full hover:bg-[#0b1c47] hover:text-[#f0e6da]
-            transition-all duration-300 ease-in-out
-            shadow-sm hover:shadow-md
-            transform hover:scale-105
-          "
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[var(--color-text-muted)] font-bold text-lg rounded-full hover:bg-[var(--color-primary)] hover:text-white transition-all duration-300 ease-in-out shadow-sm hover:shadow-md"
         >
           ✕
         </button>
 
         {/* Title */}
-        <h2 className="text-2xl font-semibold mb-6 text-center">
-          Signup
+        <h2 className="text-2xl font-bold mb-6 text-center text-[var(--color-text)]">
+          Create Account
         </h2>
 
         {/* Form */}
-        <form onSubmit={handleSignup} className="space-y-4">
+        <form onSubmit={handleSignup} className="space-y-5">
           <Input
             type="text"
             label="Full Name"
             placeholder="Enter your full name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
+            required
           />
 
           <Input
-            type="text"
-            label="Email or Mobile Number"
-            placeholder="Enter your email or mobile number"
-            value={emailOrNumber}
-            onChange={(e) => setEmailOrNumber(e.target.value)}
+            type="email"
+            label="Email Address"
+            placeholder="Enter your email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <Input
+            type="tel"
+            label="Phone Number"
+            placeholder="Enter your 10-digit phone number"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            required
           />
 
           <Input
             type="password"
             label="Password"
-            placeholder="Enter your password"
+            placeholder="Enter your password (min. 6 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
-          <Input
-            type="password"
-            label="Confirm Password"
-            placeholder="Confirm your password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
+          {error && (
+            <p className="text-[var(--color-accent-red)] text-sm text-center p-2 bg-red-50 rounded-md">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
-            className="w-full bg-[#0b1c47] text-white py-3 font-semibold rounded-lg hover:bg-[#1a2b65] transition"
+            disabled={loading}
+            className="w-full bg-[var(--color-primary)] text-white py-3 font-semibold rounded-lg hover:bg-[var(--color-primary-dark)] transition-all duration-300 disabled:opacity-50 shadow-md hover:shadow-lg"
           >
-            SIGN UP
+            {loading ? (
+              <span className="flex items-center justify-center">
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Signing up...
+              </span>
+            ) : (
+              "SIGN UP"
+            )}
           </button>
         </form>
 
-        <p className="text-xs text-gray-600 mt-5 text-center">
+        <p className="text-xs text-[var(--color-text-muted)] mt-6 text-center">
           By signing up, you agree to our{" "}
-          <a href="#" className="text-blue-600 underline">
+          <a
+            href="#"
+            className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-dark)]"
+          >
             Terms of Use
           </a>{" "}
           &{" "}
-          <a href="#" className="text-blue-600 underline">
+          <a
+            href="#"
+            className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-dark)]"
+          >
             Privacy Policy
           </a>
         </p>
