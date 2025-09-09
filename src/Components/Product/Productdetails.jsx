@@ -98,7 +98,7 @@ const ProductDetails = () => {
   // Fetch recommended products
   const fetchRecommendedProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:8001/api/getAllProducts");
+      const res = await axios.post("http://localhost:8001/api/getAllProducts");
       const apiProducts = Array.isArray(res.data) ? res.data : res.data?.products || [];
       const filtered = apiProducts.filter(p => (p.ID || p.id) !== id);
       const recommended = filtered.map(p => mapProductData(p));
