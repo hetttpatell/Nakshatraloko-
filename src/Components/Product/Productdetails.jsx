@@ -63,26 +63,20 @@ const ProductDetails = () => {
   const { addToWishlist, wishlist } = useWishlist();
   const { addToCart } = useCart();
 
-
   // Helper function to map product data from API to our expected format
-   const mapProductData = (data) => ({
+  const mapProductData = (data) => ({
     id: data.ID || data.id || id,
     name: data.Name || data.name || "Gemstone Product",
     brand: data.Brand || data.brand || "STYLIUM",
     rating: data.Rating || data.rating || 4.5,
     reviews: data.Reviews || data.reviews || 0,
-    price: parseFloat(data.Price || data.price || 0),
+    price: typeof data.price === "string"
+      ? parseFloat(data.price.replace(/[^\d.]/g, ""))
+      : parseFloat(data.Price || data.price || 0),
     inStock: data.InStock !== undefined ? data.InStock : true,
-    mainImage:
-      data.MainImage ||
-      data.mainImage ||
-      data.Image ||
-      data.image ||
-      "/s1.jpeg",
+    mainImage: data.Image || data.image || data.mainImage || data.img || "/s2.jpeg",
     size: Array.isArray(data.Size) ? data.Size : ["5 Ratti", "6 Ratti"],
-    material: Array.isArray(data.Material)
-      ? data.Material
-      : ["Gemstone", "Pendant", "Necklace"],
+    material: Array.isArray(data.Material) ? data.Material : ["Gemstone", "Pendant", "Necklace"],
     images: Array.isArray(data.Images)
       ? data.Images.map((img) => ({ src: img, alt: "Product Image" }))
       : [
@@ -91,8 +85,7 @@ const ProductDetails = () => {
             alt: "Product Image",
           },
         ],
-    description:
-      data.Description || data.description || "Beautiful gemstone jewelry",
+    description: data.Description || data.description || "Beautiful gemstone jewelry",
     advantages: Array.isArray(data.Advantages)
       ? data.Advantages
       : typeof data.Advantages === "string"
@@ -102,81 +95,55 @@ const ProductDetails = () => {
     reviewList: Array.isArray(data.ReviewList) ? data.ReviewList : [],
   });
 
-  const fetchRecommendedProducts = () => {
-    let isMounted = true;
-
-    axios
-      .post("http://localhost:8001/api/getAllProducts")
-      .then((res) => {
-        if (!isMounted) return;
-
-        let apiProducts = [];
-        if (Array.isArray(res.data)) apiProducts = res.data;
-        else if (Array.isArray(res.data?.data)) apiProducts = res.data.data;
-        else if (Array.isArray(res.data?.products))
-          apiProducts = res.data.products;
-
-        const recommended = apiProducts
-          .filter((p) => (p.ID || p.id) !== id)
-          .map((p) => ({
-            id: p.ID || p.id,
-            name: p.Name || p.name,
-            price: parseFloat(p.Price || p.price || 0),
-            mainImage: p.Image || p.image || p.img,
-            rating: p.Rating || p.rating,
-          }));
-
-        const final =
-          recommended.length >= 4
-            ? recommended.sort(() => 0.5 - Math.random()).slice(0, 4)
-            : recommended;
-
-        setRecommendedProducts(final);
-      })
-      .catch((err) => console.error("Error fetching recommended:", err));
-
-    return () => {
-      isMounted = false;
-    };
+  // Fetch recommended products
+  const fetchRecommendedProducts = async () => {
+    try {
+      const res = await axios.get("http://localhost:8001/api/getAllProducts");
+      const apiProducts = Array.isArray(res.data) ? res.data : res.data?.products || [];
+      const filtered = apiProducts.filter(p => (p.ID || p.id) !== id);
+      const recommended = filtered.map(p => mapProductData(p));
+      setRecommendedProducts(recommended.slice(0, 4)); // pick first 4
+    } catch (err) {
+      console.error("Error fetching recommended products:", err);
+    }
   };
-
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
     setError(null);
 
-    if (passedProduct) {
-      const mapped = mapProductData(passedProduct);
-      setProduct(mapped);
-      setMainImage(mapped.mainImage);
-      setSelectedSize(mapped.size[0] || "");
-      setSelectedMaterial(mapped.material[0] || "");
-      setLoading(false);
-      fetchRecommendedProducts();
-    } else {
-      axios
-        .post(`http://localhost:8001/api/getProductById/${id}`)
-        .then((res) => {
-          if (!isMounted) return;
-          const mapped = mapProductData(res.data);
-          setProduct(mapped);
-          setMainImage(mapped.mainImage);
-          setSelectedSize(mapped.size[0] || "");
-          setSelectedMaterial(mapped.material[0] || "");
-          setLoading(false);
-          fetchRecommendedProducts();
-        })
-        .catch((err) => {
-          console.error("Error fetching product:", err);
-          if (isMounted) {
-            setError("Failed to load product. Please try again later.");
-            setLoading(false);
-          }
-        });
-    }
+    const loadProduct = async () => {
+      try {
+        let productData = passedProduct;
 
-     return () => {
+        if (!productData) {
+          const res = await axios.get(`http://localhost:8001/api/getProductById/${id}`);
+          productData = res.data;
+        }
+
+        if (!isMounted) return;
+
+        const mapped = mapProductData(productData);
+        setProduct(mapped);
+        setMainImage(mapped.mainImage);
+        setSelectedSize(mapped.size[0] || "");
+        setSelectedMaterial(mapped.material[0] || "");
+        setLoading(false);
+
+        fetchRecommendedProducts();
+      } catch (err) {
+        console.error("Error loading product:", err);
+        if (isMounted) {
+          setError("Failed to load product.");
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProduct();
+
+    return () => {
       isMounted = false;
     };
   }, [id, passedProduct]);
@@ -662,7 +629,7 @@ const ProductDetails = () => {
         <div className="mt-20">
           <h3 className="text-2xl font-serif font-normal text-color-text mb-10 text-center">You May Also Like</h3>
           <Recommendation products={recommendedProducts} />
-        </div>  
+        </div>
       </div>
 
       {/* Toast Notification */}
