@@ -190,8 +190,7 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
                   `group/sub block px-6 py-4 text-sm transition-all duration-300 border-b [var(--color-border)] last:border-b-0 relative overflow-hidden ${isActive
                     ? "bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 text-[var(--color-primary)] font-semibold"
                     : "text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/50 hover:to-[var(--color-primary-light)]/30 hover:text-[var(--color-primary)]"
-                  }`
-                }
+                  }`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="font-medium">{cat.CategoryName}</div>
@@ -234,32 +233,30 @@ export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
 
-useEffect(() => {
-  const token = localStorage.getItem("authToken");
-  const userData = localStorage.getItem("user");
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    const userData = localStorage.getItem("user");
 
-  if (token) {
-    setIsLoggedIn(true);
+    if (token) {
+      setIsLoggedIn(true);
 
-    if (userData) {
-      try {
-       const parsedUser = JSON.parse(userData);
-if (parsedUser?.role) {
-  parsedUser.role = parsedUser.role.toLowerCase(); // normalize role
-}
-setUser(parsedUser);
-
-      } catch (e) {
-        console.error("Error parsing user data:", e);
-        setUser(null);
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          if (parsedUser?.role) {
+            parsedUser.role = parsedUser.role.toLowerCase(); // normalize role
+          }
+          setUser(parsedUser);
+        } catch (e) {
+          console.error("Error parsing user data:", e);
+          setUser(null);
+        }
       }
+    } else {
+      setIsLoggedIn(false);
+      setUser(null);
     }
-  } else {
-    setIsLoggedIn(false);
-    setUser(null);
-  }
-}, [showLogin]);
-
+  }, [showLogin]);
 
   // Check login state when modal closes
   useEffect(() => {
@@ -460,15 +457,15 @@ setUser(parsedUser);
                 ))}
 
                 {/* Admin Panel Icon - Only show if user is admin */}
-               {isAdmin && (
-                      <UserMenuIcon
-                        to="/admin"
-                        Icon={UserCog}
-                        badgeCount={0}
-                        closeMenu={closeMenu}
-                        className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                      />
-                    )}
+                {isAdmin && (
+                  <UserMenuIcon
+                    to="/admin"
+                    Icon={UserCog}
+                    badgeCount={0}
+                    closeMenu={closeMenu}
+                    className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                  />
+                )}
 
                 {/* Logout Button */}
                 <button
@@ -516,15 +513,15 @@ setUser(parsedUser);
                 />
 
                 {/* Admin Panel Icon for Mobile - Only show if user is admin */}
-               {isAdmin && (
-                      <UserMenuIcon
-                        to="/admin"
-                        Icon={UserCog}
-                        badgeCount={0}
-                        closeMenu={closeMenu}
-                        className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                      />
-                    )}
+                {isAdmin && (
+                  <UserMenuIcon
+                    to="/admin"
+                    Icon={UserCog}
+                    badgeCount={0}
+                    closeMenu={closeMenu}
+                    className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                  />
+                )}
               </div>
             )}
 
