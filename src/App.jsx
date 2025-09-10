@@ -10,10 +10,12 @@ import ScrollToTop from "./Scrollingfix";
 import { ConsultancyProvider } from "./Context/ConsultancyContext";
 import { ThemeProvider } from "./Context/ThemeContext";
 
+
 function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [backendData, setBackendData] = useState(null); // <-- store backend response
   const location = useLocation();
+
 
   const hideFooter = location.pathname.startsWith("/admin");
 

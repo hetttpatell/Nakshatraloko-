@@ -1,66 +1,11 @@
 // components/OrdersManagement.jsx
+import axios from "axios";
 import React, { useState, useEffect, useRef } from "react";
 import { FaEye, FaEdit, FaTrash, FaPlus, FaSearch, FaFilter, FaChevronDown, FaTimes, FaExclamationTriangle, FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
 const OrdersManagement = ({ isMobile }) => {
-  const [orders, setOrders] = useState([
-    {
-      id: "#ORD-1001",
-      customer: "John Doe",
-      email: "john@example.com",
-      phone: "+1 234-567-8901",
-      date: "2023-04-15",
-      status: "Pending",
-      amount: 900,
-      items: [
-        { productId: 1, name: "Stellar Dainty Diamond Hoop", quantity: 1, price: 900 }
-      ],
-      shippingAddress: "123 Main St, New York, NY 10001"
-    },
-    {
-      id: "#ORD-1002",
-      customer: "Jane Smith",
-      email: "jane@example.com",
-      phone: "+1 345-678-9012",
-      date: "2023-04-14",
-      status: "Completed",
-      amount: 2400,
-      items: [
-        { productId: 2, name: "Another Product Name", quantity: 2, price: 1200 }
-      ],
-      shippingAddress: "456 Oak Ave, Los Angeles, CA 90001"
-    },
-    {
-      id: "#ORD-1003",
-      customer: "Robert Johnson",
-      email: "robert@example.com",
-      phone: "+1 456-789-0123",
-      date: "2023-04-14",
-      status: "Processing",
-      amount: 1200,
-      items: [
-        { productId: 3, name: "Another Product Name id-3", quantity: 1, price: 1200 }
-      ],
-      shippingAddress: "789 Pine Rd, Chicago, IL 60007"
-    },
-    {
-      id: "#ORD-1004",
-      customer: "Sarah Williams",
-      email: "sarah@example.com",
-      phone: "+1 567-890-1234",
-      date: "2023-04-13",
-      status: "Pending",
-      amount: 1200,
-      items: [
-        { productId: 4, name: "Another Product Name id-4", quantity: 2, price: 1200 },
-        { productId: 2, name: "Another Product Name id-4", quantity: 1, price: 1200 },
-        { productId: 1, name: "Another Product Name id-4", quantity: 1, price: 1200 }
-      ],
-      shippingAddress: "321 Elm St, Houston, TX 77001"
-    }
-  ]);
-
-  const [filteredOrders, setFilteredOrders] = useState(orders);
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -69,28 +14,9 @@ const OrdersManagement = ({ isMobile }) => {
   const [editingOrder, setEditingOrder] = useState(null);
   const [deleteConfirmModal, setDeleteConfirmModal] = useState({ isOpen: false, orderId: null, orderCode: "" });
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const ordersPerPage = isMobile ? 3 : 5;
-
-  // Filter orders based on search term and status
-  useEffect(() => {
-    let result = orders;
-    
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(order => 
-        order.id.toLowerCase().includes(term) ||
-        order.customer.toLowerCase().includes(term) ||
-        order.email.toLowerCase().includes(term)
-      );
-    }
-    
-    if (statusFilter !== "all") {
-      result = result.filter(order => order.status === statusFilter);
-    }
-    
-    setFilteredOrders(result);
-    setCurrentPage(1); // Reset to first page when filters change
-  }, [searchTerm, statusFilter, orders]);
 
   const statusStyles = {
     Pending: "bg-yellow-100 text-yellow-800",
@@ -99,13 +25,68 @@ const OrdersManagement = ({ isMobile }) => {
     Cancelled: "bg-red-100 text-red-800",
   };
 
-  const statusOptions = ["all", "Pending", "Completed", "Processing", "Cancelled"];
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:8001/api/listAllOrders");
+        if (!response.ok) throw new Error("Failed to fetch orders");
+        const data = await response.json();
+        setOrders(data);
+        setFilteredOrders(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleStatusChange = (orderId, newStatus) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
+    fetchOrders();
+  }, []);
+
+  // Filter orders based on search term and status
+  useEffect(() => {
+    let result = orders;
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(order => 
+        order.id.toLowerCase().includes(term) ||
+        order.customer.toLowerCase().includes(term) ||
+        order.email.toLowerCase().includes(term)
+      );
+    }
+
+    if (statusFilter !== "all") {
+      result = result.filter(order => order.status === statusFilter);
+    }
+
+    setFilteredOrders(result);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [searchTerm, statusFilter, orders]); 
+
+
+
+  // const statusOptions = ["all", "Pending", "Completed", "Processing", "Cancelled"];
+
+  
+   const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      const response = await axios.post(`http://localhost:8001/api/updateOrderStatus/${orderId}/${newStatus}`, {
+        method: "PUT",
+      });
+      if (!response.ok) throw new Error("Failed to update order status");
+
+      // Update local state
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ));
+    } catch (err) {
+      alert(err.message);
+    }
   };
+
+   
 
   const handleDeleteOrder = () => {
     if (deleteConfirmModal.orderId) {
@@ -123,13 +104,28 @@ const OrdersManagement = ({ isMobile }) => {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveOrder = () => {
-    if (editingOrder) {
+   
+
+  const handleSaveOrder = async () => {
+    if (!editingOrder) return;
+
+    try {
+      const response = await fetch("http://localhost:8001/api/saveOrder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingOrder),
+      });
+      if (!response.ok) throw new Error("Failed to save order");
+
+      // Update local state
       setOrders(prev => prev.map(order => 
         order.id === editingOrder.id ? editingOrder : order
       ));
+
       setIsEditModalOpen(false);
       setEditingOrder(null);
+    } catch (err) {
+      alert(err.message);
     }
   };
 
@@ -138,13 +134,15 @@ const OrdersManagement = ({ isMobile }) => {
   };
 
   // Pagination logic
-  const indexOfLastOrder = currentPage * ordersPerPage;
+   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
-  
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  if (loading) return <div className="text-center py-8 text-gray-600">Loading orders...</div>;
+  if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
+  
   return (
     <div className="bg-white rounded-lg shadow p-4 md:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
@@ -167,7 +165,7 @@ const OrdersManagement = ({ isMobile }) => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <div className="flex gap-2">
           <div className="relative">
             <select
@@ -183,8 +181,8 @@ const OrdersManagement = ({ isMobile }) => {
             </select>
             <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none text-xs" />
           </div>
-          
-          <button 
+
+          <button
             className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
             onClick={() => setIsFilterOpen(!isFilterOpen)}
           >
@@ -246,21 +244,21 @@ const OrdersManagement = ({ isMobile }) => {
                 </td>
                 <td className="p-3">
                   <div className="flex gap-2">
-                    <button 
+                    <button
                       className="p-1 md:p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors"
                       onClick={() => viewOrderDetails(order)}
                       title="View details"
                     >
                       <FaEye className="text-sm md:text-base" />
                     </button>
-                    <button 
+                    <button
                       className="p-1 md:p-2 text-green-500 hover:bg-green-50 rounded transition-colors"
                       onClick={() => handleEditOrder(order)}
                       title="Edit order"
                     >
                       <FaEdit className="text-sm md:text-base" />
                     </button>
-                    <button 
+                    <button
                       className="p-1 md:p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
                       onClick={() => openDeleteConfirm(order.id, order.id)}
                       title="Delete order"
@@ -273,7 +271,7 @@ const OrdersManagement = ({ isMobile }) => {
             ))}
           </tbody>
         </table>
-        
+
         {filteredOrders.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             No orders found matching your criteria.
@@ -296,7 +294,7 @@ const OrdersManagement = ({ isMobile }) => {
             >
               <FaAngleLeft />
             </button>
-            
+
             {[...Array(totalPages)].map((_, i) => {
               // Show limited page numbers on mobile
               if (isMobile && (i + 1 < currentPage - 1 || i + 1 > currentPage + 1)) {
@@ -316,7 +314,7 @@ const OrdersManagement = ({ isMobile }) => {
                 }
                 return null;
               }
-              
+
               return (
                 <button
                   key={i}
@@ -327,7 +325,7 @@ const OrdersManagement = ({ isMobile }) => {
                 </button>
               );
             })}
-            
+
             <button
               onClick={() => paginate(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -348,16 +346,16 @@ const OrdersManagement = ({ isMobile }) => {
               <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto mb-4">
                 <FaExclamationTriangle className="text-red-600 text-xl" />
               </div>
-              
+
               <h3 className="text-lg font-semibold text-gray-800 text-center mb-2">
                 Confirm Deletion
               </h3>
-              
+
               <p className="text-gray-600 text-center mb-6">
-                Are you sure you want to delete order <span className="font-medium">{deleteConfirmModal.orderCode}</span>? 
+                Are you sure you want to delete order <span className="font-medium">{deleteConfirmModal.orderCode}</span>?
                 This action cannot be undone.
               </p>
-              
+
               <div className="flex justify-center gap-3">
                 <button
                   className="px-5 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
@@ -384,14 +382,14 @@ const OrdersManagement = ({ isMobile }) => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold">Order Details</h3>
-                <button 
+                <button
                   className="text-gray-500 hover:text-gray-700 transition-colors"
                   onClick={() => setSelectedOrder(null)}
                 >
                   <FaTimes className="text-lg" />
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
                 <div>
                   <h4 className="font-medium text-gray-700 mb-2">Order Information</h4>
@@ -399,7 +397,7 @@ const OrdersManagement = ({ isMobile }) => {
                     <p><span className="text-gray-600">Order ID:</span> {selectedOrder.id}</p>
                     <p><span className="text-gray-600">Date:</span> {new Date(selectedOrder.date).toLocaleDateString()}</p>
                     <p className="flex items-center">
-                      <span className="text-gray-600 mr-2">Status:</span> 
+                      <span className="text-gray-600 mr-2">Status:</span>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[selectedOrder.status]}`}>
                         {selectedOrder.status}
                       </span>
@@ -407,7 +405,7 @@ const OrdersManagement = ({ isMobile }) => {
                     <p><span className="text-gray-600">Total Amount:</span> ${selectedOrder.amount}</p>
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-medium text-gray-700 mb-2">Customer Information</h4>
                   <div className="space-y-1 text-sm">
@@ -417,12 +415,12 @@ const OrdersManagement = ({ isMobile }) => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mb-6">
                 <h4 className="font-medium text-gray-700 mb-2">Shipping Address</h4>
                 <p className="text-sm">{selectedOrder.shippingAddress}</p>
               </div>
-              
+
               <div>
                 <h4 className="font-medium text-gray-700 mb-2">Order Items</h4>
                 <div className="border rounded-lg overflow-hidden">
@@ -431,9 +429,9 @@ const OrdersManagement = ({ isMobile }) => {
                     return (
                       <div key={index} className="p-4 border-b last:border-b-0 flex items-center">
                         {product && (
-                          <img 
-                            src={product.mainImage} 
-                            alt={product.name} 
+                          <img
+                            src={product.mainImage}
+                            alt={product.name}
                             className="w-12 h-12 md:w-16 md:h-16 object-cover rounded mr-3 md:mr-4"
                           />
                         )}
@@ -460,21 +458,21 @@ const OrdersManagement = ({ isMobile }) => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold">Edit Order</h3>
-                <button 
+                <button
                   className="text-gray-500 hover:text-gray-700 transition-colors"
                   onClick={() => setIsEditModalOpen(false)}
                 >
                   <FaTimes className="text-lg" />
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={editingOrder.status}
-                    onChange={(e) => setEditingOrder({...editingOrder, status: e.target.value})}
+                    onChange={(e) => setEditingOrder({ ...editingOrder, status: e.target.value })}
                   >
                     <option value="Pending">Pending</option>
                     <option value="Processing">Processing</option>
@@ -482,38 +480,38 @@ const OrdersManagement = ({ isMobile }) => {
                     <option value="Cancelled">Cancelled</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
                   <input
                     type="text"
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={editingOrder.customer}
-                    onChange={(e) => setEditingOrder({...editingOrder, customer: e.target.value})}
+                    onChange={(e) => setEditingOrder({ ...editingOrder, customer: e.target.value })}
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
                     type="email"
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={editingOrder.email}
-                    onChange={(e) => setEditingOrder({...editingOrder, email: e.target.value})}
+                    onChange={(e) => setEditingOrder({ ...editingOrder, email: e.target.value })}
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Shipping Address</label>
                   <textarea
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={editingOrder.shippingAddress}
-                    onChange={(e) => setEditingOrder({...editingOrder, shippingAddress: e.target.value})}
+                    onChange={(e) => setEditingOrder({ ...editingOrder, shippingAddress: e.target.value })}
                     rows="3"
                   />
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"

@@ -44,13 +44,15 @@ import ProductAdmin from "./ProductSection/ProductsAdmin";
 import CategoriesAdmin from "./CatagoryAdmin/CategoriesAdmin";
 import Coupons from "./Coupons/Coupons";
 import Consultancy from "./Consultancy/Consultancy";
+import axios from "axios";
 
 const Admin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activePage, setActivePage] = useState("Dashboard");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Handle window resize for responsive behavior
+ 
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;

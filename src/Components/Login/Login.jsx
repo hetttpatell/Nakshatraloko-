@@ -30,40 +30,45 @@ const LoginSignup = ({ onClose }) => {
   };
 
   // ✅ Normal login
-  const handleLogin = async (e) => {
-    e.preventDefault(); // prevent page reload
-    setError("");
-    setLoading(true);
-    navigate('/')
-    try {
-      // Login flow
-      if (!email || !password) {
-        setError("Email and password are required.");
-        setLoading(false);
-        return;
-      }
 
-      const res = await axios.post("http://localhost:8001/api/login", {
-        email,
-        password,
-      });
+// Replace your login function with:
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-      if (res.data.success) {
-  setIsLogedin(true);
-  localStorage.setItem("token", res.data.token);
-   if (res.data.user) {
-    localStorage.setItem("user", JSON.stringify(res.data.user));
-  }
-  onClose();
-      } else {
-        setError(res.data.message || "Invalid credentials.");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong.");
-    } finally {
+  try {
+    if (!email || !password) {
+      setError("Email and password are required.");
       setLoading(false);
+      return;
     }
-  };
+
+    const res = await api.post("/login", { email, password });
+
+    if (res.data.success) {
+      setIsLogedin(true);
+      
+      if (res.data.token) {
+        localStorage.setItem("authToken", res.data.token);
+      }
+      if (res.data.user) {
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+      }
+
+      if (onClose) onClose();
+    } else {
+      setError(res.data.message || "Login failed");
+    }
+  } catch (err) {
+    console.error("Login error:", err);
+    setError(err.response?.data?.message || "Something went wrong. Try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   // ✅ Signup function
   const handleSignup = async (e) => {
@@ -99,12 +104,17 @@ const LoginSignup = ({ onClose }) => {
     setError(null);
 
     try {
-      const response = await axios.post("http://localhost:8001/api/saveUser", {
-        fullname: fullname,
-        email: signupEmail,
-        phone: phone.replace(/\D/g, ""),
-        password_hash: signupPassword,   // 👈 matches backend
-      });
+      const response = await axios.post(
+        "http://localhost:8001/api/saveUser",
+        {
+          fullname,
+          email: signupEmail,
+          phone: phone.replace(/\D/g, ""),
+          password_hash: signupPassword,
+        },
+        { withCredentials: true }   // 👈 add this
+      );
+
 
 
 

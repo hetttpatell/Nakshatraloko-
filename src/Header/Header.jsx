@@ -223,6 +223,8 @@ const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "" }) => (
   </NavLink>
 );
 
+
+
 // ---------- MAIN HEADER ----------
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -234,38 +236,36 @@ export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem("authToken") || localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-    
-    if (token) {
-      setIsLoggedIn(true);
-      if (userData) {
-        try {
-          const parsedUser = JSON.parse(userData);
-          setUser(parsedUser);
-        } catch (e) {
-          console.error("Error parsing user data:", e);
-        }
+
+
+useEffect(() => {
+  const token = localStorage.getItem("authToken"); // 👈 we’ll store this in login
+  const userData = localStorage.getItem("user");
+
+  if (token) {
+    setIsLoggedIn(true);
+
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+      } catch (e) {
+        console.error("Error parsing user data:", e);
+        setUser(null);
       }
     }
-    
-    axios
-      .post("http://localhost:8001/api/getCategories")
-      .then((res) => {
-        if (res.data.success) {
-          setCategoryData(res.data.data);
-        }
-      })
-      .catch((err) => console.log(err));
-  }, []);
+  } else {
+    setIsLoggedIn(false);
+    setUser(null);
+  }
+}, [showLogin]); // 👈 re-run when login modal closes
 
   // Check login state when modal closes
   useEffect(() => {
     if (!showLogin) {
       const token = localStorage.getItem("authToken") || localStorage.getItem("token");
       const userData = localStorage.getItem("user");
-      
+
       if (token) {
         setIsLoggedIn(true);
         if (userData) {
@@ -279,14 +279,12 @@ export default function Header() {
   }, [showLogin]);
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
-    setUser(null);
-    setMenuOpen(false);
-    window.location.href = "/";
-  };
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("user");
+  setIsLoggedIn(false);
+  setUser(null);
+};
+
 
   const isAdmin = isLoggedIn && (user?.role === "admin" || user?.role === "Admin");
   const menuRef = useRef(null);
@@ -469,7 +467,7 @@ export default function Header() {
                     className="bg-gradient-to-r from-[var(--color-accent-amber)]/20 to-[var(--color-accent-amber)]/10 text-[var(--color-accent-amber)] border border-[var(--color-accent-amber)]/20"
                   />
                 )}
-                
+
                 {/* Logout Button */}
                 <button
                   onClick={handleLogout}
@@ -514,7 +512,7 @@ export default function Header() {
                   badgeCount={cartCount}
                   closeMenu={closeMenu}
                 />
-                
+
                 {/* Admin Panel Icon for Mobile */}
                 {isAdmin && (
                   <UserMenuIcon
@@ -599,7 +597,7 @@ export default function Header() {
                         closeMenu={closeMenu}
                       />
                     ))}
-                    
+
                     {/* Admin Panel Icon for Mobile Menu */}
                     {isAdmin && (
                       <UserMenuIcon
@@ -611,7 +609,7 @@ export default function Header() {
                       />
                     )}
                   </div>
-                  
+
                   {/* Logout Button in Mobile */}
                   <button
                     onClick={handleLogout}

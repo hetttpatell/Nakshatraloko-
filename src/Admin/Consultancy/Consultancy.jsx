@@ -14,7 +14,18 @@ import React, { useState, useEffect, useContext } from "react";import {
   FaVenusMars
 } from "react-icons/fa";
 import  ConsultancyContext  from "../../Context/ConsultancyContext";
+import axios from "axios";
+// const [category ,setcategory]= useState([])
 
+//  useEffect(()=>{
+//   axios
+//   .post("http://localhost:8001/api/getAllCatogary")
+//   .then((res)=>{
+//     if(res.data.data){
+//       setcategory(res.data.data)
+//       }
+//   })
+//  },[])
 const Consultancy = () => {
   // Sample data - in a real app, this would come from your backend
   const { submissions, updateSubmission, deleteSubmission } = useContext(ConsultancyContext);

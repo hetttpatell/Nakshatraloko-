@@ -1,35 +1,13 @@
 // components/CategoriesAdmin.jsx
 import React, { useState, useEffect } from "react";
 import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaTimes, FaCheck, FaArrowLeft, FaSearch, FaFilter } from "react-icons/fa";
+import axios from "axios";
 
 const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   // State for categories
-  const [categories, setCategories] = useState([
-    {
-      id: 1,
-      name: "Kavach",
-      description: "Protective spiritual items and amulets",
-      productCount: 12,
-      isShown: true,
-      isActive: true
-    },
-    {
-      id: 2,
-      name: "Rudraksh",
-      description: "Sacred beads used for meditation and prayer",
-      productCount: 8,
-      isShown: true,
-      isActive: true
-    },
-    {
-      id: 3,
-      name: "Gemstone",
-      description: "Precious and semi-precious stones with spiritual properties",
-      productCount: 15,
-      isShown: true,
-      isActive: true
-    }
-  ]);
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [newCategory, setNewCategory] = useState({
     name: "",
@@ -44,12 +22,55 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.post("http://localhost:8001/api/getAllCatogary");
+        
+        if (response.data.data) {
+          // Transform API data to match our component structure
+          const formattedCategories = response.data.data.map(category => ({
+  id: category._id || category.id || category.ID,
+  name: category.name || category.Name || "",
+  description: category.description || category.Description || "",
+  productCount: 0,
+  isShown:
+    category.isShown !== undefined
+      ? category.isShown
+      : category.IsShown !== undefined
+      ? category.IsShown
+      : true,
+  isActive:
+    category.isActive !== undefined
+      ? category.isActive
+      : category.IsActive !== undefined
+      ? category.IsActive
+      : true
+}));
+
+          
+          setCategories(formattedCategories);
+        }
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setError("Failed to load categories. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   // Calculate product counts for each category
   useEffect(() => {
-    if (products && products.length > 0) {
+    if (products && products.length > 0 && categories.length > 0) {
       const updatedCategories = categories.map(category => {
         const count = products.filter(product => 
           product.categoryId === category.id ||
+          (product.category && product.category.toString() === category.id.toString()) ||
           product.name.toLowerCase().includes(category.name.toLowerCase()) ||
           (product.description && product.description.toLowerCase().includes(category.name.toLowerCase()))
         ).length;
@@ -62,13 +83,16 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       
       setCategories(updatedCategories);
     }
-  }, [products]);
+  }, [products, categories]);
 
   // Filter products for the selected category
   const filteredProducts = selectedCategory 
     ? products.filter(product => {
         // First check if product has the categoryId matching selected category
-        if (product.categoryId === selectedCategory.id) return true;
+        if (product.categoryId === selectedCategory.id || 
+            (product.category && product.category.toString() === selectedCategory.id.toString())) {
+          return true;
+        }
         
         // Fallback: check if product name or description contains category name
         return (
@@ -92,50 +116,149 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       })
     : [];
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!newCategory.name.trim()) return;
     
-    const categoryToAdd = {
-      ...newCategory,
-      id: Date.now(),
-      productCount: 0
-    };
-    
-    setCategories([...categories, categoryToAdd]);
-    setNewCategory({ name: "", description: "", isShown: true, isActive: true });
-    setIsAdding(false);
-  };
-
-  const handleEditCategory = () => {
-    if (!editingCategory.name.trim()) return;
-    
-    setCategories(categories.map(cat => 
-      cat.id === editingCategory.id ? editingCategory : cat
-    ));
-    setEditingCategory(null);
-  };
-
-  const handleDeleteCategory = (id) => {
-    setCategories(categories.filter(cat => cat.id !== id));
-    setDeleteConfirm(null);
-    
-    // If the deleted category was selected, go back to categories list
-    if (selectedCategory && selectedCategory.id === id) {
-      setSelectedCategory(null);
+    try {
+      // Call API to add category
+      const response = await axios.post("http://localhost:8001/api/addCategory", {
+        name: newCategory.name,
+        description: newCategory.description,
+        isShown: newCategory.isShown,
+        isActive: newCategory.isActive
+      });
+      
+      if (response.data.success) {
+        const categoryToAdd = {
+          ...newCategory,
+          id: response.data.data._id || Date.now(),
+          productCount: 0
+        };
+        
+        setCategories([...categories, categoryToAdd]);
+        setNewCategory({ name: "", description: "", isShown: true, isActive: true });
+        setIsAdding(false);
+      }
+    } catch (err) {
+      console.error("Error adding category:", err);
+      setError("Failed to add category. Please try again.");
     }
   };
 
-  const toggleCategoryVisibility = (id) => {
-    setCategories(categories.map(cat => 
-      cat.id === id ? { ...cat, isShown: !cat.isShown } : cat
-    ));
+  const handleEditCategory = async () => {
+    if (!editingCategory.name.trim()) return;
+    
+    try {
+      // Call API to update category
+      const response = await axios.put(`http://localhost:8001/api/updateCategory/${editingCategory.id}`, {
+        name: editingCategory.name,
+        description: editingCategory.description,
+        isShown: editingCategory.isShown,
+        isActive: editingCategory.isActive
+      });
+      
+      if (response.data.success) {
+        setCategories(categories.map(cat => 
+          cat.id === editingCategory.id ? editingCategory : cat
+        ));
+        setEditingCategory(null);
+      }
+    } catch (err) {
+      console.error("Error updating category:", err);
+      setError("Failed to update category. Please try again.");
+    }
   };
 
-  const toggleCategoryStatus = (id) => {
-    setCategories(categories.map(cat => 
-      cat.id === id ? { ...cat, isActive: !cat.isActive } : cat
-    ));
+  const handleDeleteCategory = async (id) => {
+    try {
+      // Call API to delete category
+      const response = await axios.delete(`http://localhost:8001/api/deleteCategory/${id}`);
+      
+      if (response.data.success) {
+        setCategories(categories.filter(cat => cat.id !== id));
+        setDeleteConfirm(null);
+        
+        // If the deleted category was selected, go back to categories list
+        if (selectedCategory && selectedCategory.id === id) {
+          setSelectedCategory(null);
+        }
+      }
+    } catch (err) {
+      console.error("Error deleting category:", err);
+      setError("Failed to delete category. Please try again.");
+    }
   };
+
+  const toggleCategoryVisibility = async (id) => {
+    const category = categories.find(cat => cat.id === id);
+    const newVisibility = !category.isShown;
+    
+    try {
+      // Call API to update visibility
+      const response = await axios.put(`http://localhost:8001/api/updateCategory/${id}`, {
+        isShown: newVisibility
+      });
+      
+      if (response.data.success) {
+        setCategories(categories.map(cat => 
+          cat.id === id ? { ...cat, isShown: newVisibility } : cat
+        ));
+      }
+    } catch (err) {
+      console.error("Error updating category visibility:", err);
+      setError("Failed to update category visibility. Please try again.");
+    }
+  };
+
+  const toggleCategoryStatus = async (id) => {
+    const category = categories.find(cat => cat.id === id);
+    const newStatus = !category.isActive;
+    
+    try {
+      // Call API to update status
+      const response = await axios.put(`http://localhost:8001/api/updateCategory/${id}`, {
+        isActive: newStatus
+      });
+      
+      if (response.data.success) {
+        setCategories(categories.map(cat => 
+          cat.id === id ? { ...cat, isActive: newStatus } : cat
+        ));
+      }
+    } catch (err) {
+      console.error("Error updating category status:", err);
+      setError("Failed to update category status. Please try again.");
+    }
+  };
+
+  // Render loading state
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading categories...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render error state
+  if (error && categories.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="text-center py-8 text-red-500">
+          <p>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Render product list for selected category
   const renderProductList = () => {
@@ -250,6 +373,13 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const renderCategoriesList = () => {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
+        {/* Error message */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+
         {/* Header and Add Button */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Categories Management</h2>
@@ -423,7 +553,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                     value={editingCategory.name}
                     onChange={(e) => setEditingCategory({...editingCategory, name: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  /> 
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>

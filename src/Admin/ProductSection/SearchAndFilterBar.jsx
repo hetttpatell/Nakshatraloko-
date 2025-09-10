@@ -22,7 +22,7 @@ const SearchAndFilterBar = ({
     setStatusFilter("all");
     if (onClearFilters) onClearFilters();
   };
-
+  
   return (
     <div className={`flex flex-col gap-4 mb-6 ${className}`}>
       <div className="flex flex-col md:flex-row gap-4">

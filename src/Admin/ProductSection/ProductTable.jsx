@@ -15,7 +15,7 @@ const ProductTable = ({ products, onView, onEdit, onDelete }) => {
       <table className="w-full text-left">
         <thead>
           <tr className="bg-gray-50">
-            {["Product", "Category", "Price", "Stock", "Status", "Actions"].map(
+            {["Product",  "Price", "Stock", "Status", "Actions"].map(
               (header) => (
                 <th key={header} className="p-3 font-semibold text-gray-700">
                   {header}
@@ -69,7 +69,7 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
         </td>
 
         {/* Category */}
-        <td className="p-3">{product.categoryId}</td>
+        {/* <td className="p-3">{product.categoryId}</td> */}
 
         {/* Price */}
         <td className="p-3 font-medium">
