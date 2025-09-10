@@ -263,8 +263,7 @@ export default function Header() {
       setUserrole(false);
     }
   }, [showLogin]);
-
-
+    
   // Check login state when modal closes
   useEffect(() => {
     if (!showLogin) {
@@ -274,11 +273,16 @@ export default function Header() {
       if (token) {
         setIsLoggedIn(true);
         if (userData) {
-          setUser(JSON.parse(userData));
+          const parsedUser = JSON.parse(userData);
+          setUser(parsedUser);
+          if (parsedUser?.role) {
+            setUserrole(parsedUser.role.toLowerCase() === "admin");
+          }
         }
       } else {
         setIsLoggedIn(false);
         setUser(null);
+        setUserrole(false);
       }
     }
   }, [showLogin]);
@@ -289,9 +293,8 @@ export default function Header() {
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
+    setUserrole(false);
   };
-
-  // const isAdmin = user?.role === 'admin';
 
   const menuRef = useRef(null);
   const searchRef = useRef(null);
@@ -475,11 +478,10 @@ export default function Header() {
                   />
                 )}
 
-
-                {/* Logout Button */}
+                {/* Logout Button - Separated from other icons */}
                 <button
                   onClick={handleLogout}
-                  className="p-3 rounded-xl text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md transition-all duration-300 ease-out"
+                  className="p-3 rounded-xl text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md transition-all duration-300 ease-out ml-2"
                   title="Logout"
                 >
                   <LogOut className="h-5 w-5" />
@@ -547,7 +549,6 @@ export default function Header() {
                     className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
                   />
                 )}
-
               </div>
             )}
 
@@ -633,13 +634,12 @@ export default function Header() {
                         className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
                       />
                     )}
-
                   </div>
 
-                  {/* Logout Button in Mobile */}
+                  {/* Logout Button in Mobile - Separated from icons */}
                   <button
                     onClick={handleLogout}
-                    className="w-full py-3 rounded-2xl bg-[var(--color-primary)] text-white font-semibold transition-all duration-300 ease-out flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-2xl bg-[var(--color-primary)] text-white font-semibold transition-all duration-300 ease-out flex items-center justify-center gap-2 mt-4"
                   >
                     <LogOut className="h-5 w-5" />
                     Logout
