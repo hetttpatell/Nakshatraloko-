@@ -232,9 +232,10 @@ export default function Header() {
   const [categoryData, setCategoryData] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [userrole, setUserrole] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("authToken") || localStorage.getItem("token");
     const userData = localStorage.getItem("user");
 
     if (token) {
@@ -245,18 +246,24 @@ export default function Header() {
           const parsedUser = JSON.parse(userData);
           if (parsedUser?.role) {
             parsedUser.role = parsedUser.role.toLowerCase(); // normalize role
+            setUserrole(parsedUser.role === "admin"); // 👈 set userrole true if admin
+          } else {
+            setUserrole(false);
           }
           setUser(parsedUser);
         } catch (e) {
           console.error("Error parsing user data:", e);
           setUser(null);
+          setUserrole(false);
         }
       }
     } else {
       setIsLoggedIn(false);
       setUser(null);
+      setUserrole(false);
     }
   }, [showLogin]);
+
 
   // Check login state when modal closes
   useEffect(() => {
@@ -278,12 +285,13 @@ export default function Header() {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
   };
 
-  const isAdmin = isLoggedIn && user?.role?.toLowerCase() === 'admin';
+  // const isAdmin = user?.role === 'admin';
 
   const menuRef = useRef(null);
   const searchRef = useRef(null);
@@ -457,7 +465,7 @@ export default function Header() {
                 ))}
 
                 {/* Admin Panel Icon - Only show if user is admin */}
-                {isAdmin && (
+                {userrole && (
                   <UserMenuIcon
                     to="/admin"
                     Icon={UserCog}
@@ -466,6 +474,7 @@ export default function Header() {
                     className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
                   />
                 )}
+
 
                 {/* Logout Button */}
                 <button
@@ -492,6 +501,17 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center space-x-3">
+            {/* Mobile Login Button for non-logged-in users */}
+            {!isLoggedIn && (
+              <button
+                onClick={() => setShowLogin(true)}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white font-semibold transition-all duration-300 ease-out flex items-center gap-1"
+              >
+                <User className="h-4 w-4" />
+                Login
+              </button>
+            )}
+
             {/* Mobile Search - Conditionally Rendered */}
             {shouldShowSearch && (
               <button
@@ -502,7 +522,7 @@ export default function Header() {
               </button>
             )}
 
-            {/* Mobile Icons - Show cart and admin panel if logged in */}
+            {/* Mobile Icons - Show cart and wishlist if logged in */}
             {isLoggedIn && (
               <div className="flex items-center space-x-1 mr-2">
                 <UserMenuIcon
@@ -511,9 +531,14 @@ export default function Header() {
                   badgeCount={cartCount}
                   closeMenu={closeMenu}
                 />
-
+                <UserMenuIcon
+                  to="/wishlist"
+                  Icon={Heart}
+                  badgeCount={wishlistCount}
+                  closeMenu={closeMenu}
+                />
                 {/* Admin Panel Icon for Mobile - Only show if user is admin */}
-                {isAdmin && (
+                {userrole && (
                   <UserMenuIcon
                     to="/admin"
                     Icon={UserCog}
@@ -522,6 +547,7 @@ export default function Header() {
                     className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
                   />
                 )}
+
               </div>
             )}
 
@@ -576,9 +602,9 @@ export default function Header() {
               ))}
             </ul>
 
-            {/* Enhanced Mobile Login/User Section */}
-            <div className="pt-6 mt-6 border-t border-[var(--color-border)] transition-all duration-300 ease-out">
-              {isLoggedIn ? (
+            {/* Enhanced Mobile User Section - Only show if logged in */}
+            {isLoggedIn && (
+              <div className="pt-6 mt-6 border-t border-[var(--color-border)] transition-all duration-300 ease-out">
                 <div className="space-y-4">
                   <div className="flex items-center justify-around bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 p-4 rounded-2xl">
                     {userMenuItems.map(({ to, icon: Icon, badgeType }, idx) => (
@@ -598,7 +624,7 @@ export default function Header() {
                     ))}
 
                     {/* Admin Panel Icon for Mobile Menu - Only show if user is admin */}
-                    {isAdmin && (
+                    {userrole && (
                       <UserMenuIcon
                         to="/admin"
                         Icon={UserCog}
@@ -607,6 +633,7 @@ export default function Header() {
                         className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
                       />
                     )}
+
                   </div>
 
                   {/* Logout Button in Mobile */}
@@ -618,19 +645,8 @@ export default function Header() {
                     Logout
                   </button>
                 </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    setShowLogin(true);
-                    closeMenu();
-                  }}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-primary)]/90 to-[var(--color-primary-dark)] text-white font-semibold hover:from-[var(--color-primary)]/90 hover:via-[var(--color-primary)]/80 hover:to-[var(--color-primary-dark)] transition-all duration-300 ease-out shadow-xl flex items-center justify-center gap-2"
-                >
-                  <User className="h-5 w-5" />
-                  Login / Sign Up
-                </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
