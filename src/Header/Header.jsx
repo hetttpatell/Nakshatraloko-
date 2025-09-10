@@ -222,50 +222,6 @@ const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "" }) => (
     {badgeCount > 0 && <Badge count={badgeCount} />}
   </NavLink>
 );
-// Add this function to handle authenticated requests
-const makeAuthenticatedRequest = async (url, method = 'GET', data = null) => {
-  try {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      setShowLogin(true);
-      return null;
-    }
-
-    const response = await fetch(`${API_URL}${url}`, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: data ? JSON.stringify(data) : null
-    });
-
-    if (response.status === 401) {
-      // Token expired
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      setIsLoggedIn(false);
-      setUser(null);
-      setShowLogin(true);
-      return null;
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('API request failed:', error);
-    return null;
-  }
-};
-
-// Example usage in your component:
-const handleCreateProduct = async (productData) => {
-  const result = await makeAuthenticatedRequest('/admin/products', 'POST', productData);
-  if (result) {
-    // Handle success
-    console.log('Product created:', result);
-  }
-};
-
 
 // ---------- MAIN HEADER ----------
 export default function Header() {
@@ -278,10 +234,8 @@ export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
 
-
-
 useEffect(() => {
-  const token = localStorage.getItem("authToken"); // 👈 we’ll store this in login
+  const token = localStorage.getItem("authToken");
   const userData = localStorage.getItem("user");
 
   if (token) {
@@ -289,8 +243,12 @@ useEffect(() => {
 
     if (userData) {
       try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
+       const parsedUser = JSON.parse(userData);
+if (parsedUser?.role) {
+  parsedUser.role = parsedUser.role.toLowerCase(); // normalize role
+}
+setUser(parsedUser);
+
       } catch (e) {
         console.error("Error parsing user data:", e);
         setUser(null);
@@ -300,7 +258,8 @@ useEffect(() => {
     setIsLoggedIn(false);
     setUser(null);
   }
-}, [showLogin]); // 👈 re-run when login modal closes
+}, [showLogin]);
+
 
   // Check login state when modal closes
   useEffect(() => {
@@ -321,14 +280,14 @@ useEffect(() => {
   }, [showLogin]);
 
   const handleLogout = () => {
-  localStorage.removeItem("authToken");
-  localStorage.removeItem("user");
-  setIsLoggedIn(false);
-  setUser(null);
-};
-
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    setIsLoggedIn(false);
+    setUser(null);
+  };
 
   const isAdmin = isLoggedIn && user?.role?.toLowerCase() === 'admin';
+
   const menuRef = useRef(null);
   const searchRef = useRef(null);
   const navRef = useRef(null);
@@ -500,15 +459,16 @@ useEffect(() => {
                   />
                 ))}
 
-                {/* Admin Panel Icon - Always show if user is admin */}
-                {isAdmin && (
-                  <UserMenuIcon
-                    to="/admin"
-                    Icon={UserCog}
-                    badgeCount={0}
-                    className="bg-gradient-to-r from-[var(--color-accent-amber)]/20 to-[var(--color-accent-amber)]/10 text-[var(--color-accent-amber)] border border-[var(--color-accent-amber)]/20"
-                  />
-                )}
+                {/* Admin Panel Icon - Only show if user is admin */}
+               {isAdmin && (
+                      <UserMenuIcon
+                        to="/admin"
+                        Icon={UserCog}
+                        badgeCount={0}
+                        closeMenu={closeMenu}
+                        className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                      />
+                    )}
 
                 {/* Logout Button */}
                 <button
@@ -555,16 +515,16 @@ useEffect(() => {
                   closeMenu={closeMenu}
                 />
 
-                {/* Admin Panel Icon for Mobile */}
-                {isAdmin && (
-                  <UserMenuIcon
-                    to="/admin"
-                    Icon={UserCog}
-                    badgeCount={0}
-                    className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                    closeMenu={closeMenu}
-                  />
-                )}
+                {/* Admin Panel Icon for Mobile - Only show if user is admin */}
+               {isAdmin && (
+                      <UserMenuIcon
+                        to="/admin"
+                        Icon={UserCog}
+                        badgeCount={0}
+                        closeMenu={closeMenu}
+                        className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                      />
+                    )}
               </div>
             )}
 
@@ -640,7 +600,7 @@ useEffect(() => {
                       />
                     ))}
 
-                    {/* Admin Panel Icon for Mobile Menu */}
+                    {/* Admin Panel Icon for Mobile Menu - Only show if user is admin */}
                     {isAdmin && (
                       <UserMenuIcon
                         to="/admin"

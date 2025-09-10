@@ -46,10 +46,44 @@ const handleLogin = async (e) => {
     }
 
     const res = await api.post("/login", { email, password });
-    console.log("Login API response:", res.data); // Add this line
+    console.log("Login API response:", res.data);
 
     if (res.data.success) {
-      // ... rest of the code
+      setIsLogedin(true);
+
+      // ✅ Save auth token
+      if (res.data.token) {
+        localStorage.setItem("authToken", res.data.token);
+      }
+
+      // ✅ Handle user data
+      if (res.data.user) {
+        const normalizedUser = {
+          id: res.data.user.id || "",
+          name: res.data.user.fullname || res.data.user.name || "",
+          email: res.data.user.email || email,
+          role: res.data.user.role
+            ? res.data.user.role.toLowerCase()
+            : "user", // 👈 always lowercase, fallback to "user"
+        };
+
+        localStorage.setItem("user", JSON.stringify(normalizedUser));
+      } else {
+        // Fallback if backend doesn't return user
+        const fallbackUser = {
+          id: "",
+          name: "",
+          email: email,
+          role: "user",
+        };
+        localStorage.setItem("user", JSON.stringify(fallbackUser));
+      }
+
+      // ✅ Close modal and navigate home
+      if (onClose) onClose();
+      navigate("/");
+    } else {
+      setError(res.data.message || "Login failed. Please try again.");
     }
   } catch (error) {
     console.error("Login error:", error);
@@ -58,8 +92,6 @@ const handleLogin = async (e) => {
     setLoading(false);
   }
 };
-
-
 
   // ✅ Signup function
   const handleSignup = async (e) => {
