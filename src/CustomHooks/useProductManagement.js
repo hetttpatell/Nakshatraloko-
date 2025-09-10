@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-
+import axios from "axios";
 export const useProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,17 +14,42 @@ export const useProductManagement = () => {
     isOpen: false, productId: null, productName: "" 
   });
 
+   const [error, setError] = useState(null);
+
   // Simulate loading products from an API
   useEffect(() => {
     const loadProducts = async () => {
       try {
         setLoading(true);
-        // In a real app, this would be an API call
-        // For now, we'll use an empty array
-        const sampleProducts = [];
-        setProducts(sampleProducts);
+        setError(null); // Reset error state on new attempt
+        
+        // REPLACE THIS WITH YOUR ACTUAL API CALL
+        const response = await axios.post('http://localhost:8001/api/getAllProducts'); 
+        
+        // Check the structure of your API's response and adjust these lines accordingly
+        if (response.data.success) {
+  const normalized = response.data.data.map(item => ({
+    id: item.ID,
+    categoryId: item.CatogaryID,
+    name: item.Name,
+    description: item.Description,
+    price: item.Price,
+    dummyPrice: item.DummyPrice,
+    discountPercentage: item.DiscountPercentage,
+    stock: item.Stock,
+    advantages: item.Advantages,
+    howToWear: item.HowToWear,
+    isActive: item.IsActive,
+  }));
+  setProducts(normalized);
+}
+ else {
+          // Handle API response indicating failure
+          throw new Error(response.data.message || 'Failed to fetch products');
+        }
       } catch (error) {
         console.error("Failed to load products:", error);
+        setError(error.message); // Store the error to display it later
       } finally {
         setLoading(false);
       }
@@ -74,18 +99,31 @@ export const useProductManagement = () => {
     });
   };
 
-  const handleEditProduct = (product) => {
-    setEditingProduct(product);
-    setIsEditModalOpen(true);
+ const handleEditProduct = (product) => {
+  const normalizedProduct = {
+    id: product.ID || product.id,
+    categoryId: product.CategoryID || product.categoryId || "",
+    Name: product.Name || product.name || "",
+    Description: product.Description || product.description || "",
+    Advantages: product.Advantages || product.advantages || "",
+    HowToWear: product.HowToWear || product.howToWear || "",
+    IsActive: product.IsActive !== undefined ? product.IsActive : (product.isActive !== undefined ? product.isActive : true),
+    sizes: product.Sizes || product.sizes || [],
+    images: product.Images || product.images || [],
   };
+
+  setEditingProduct(normalizedProduct);
+  setIsEditModalOpen(true);
+};
 
   const viewProductDetails = (product) => {
     setSelectedProduct(product);
   };
 
-  return {
+ return {
     products,
     loading,
+    error, // Make error available to the component
     searchTerm,
     brandFilter,
     statusFilter,

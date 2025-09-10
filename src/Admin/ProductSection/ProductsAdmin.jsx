@@ -35,6 +35,7 @@ const ProductAdmin = () => {
   const {
     products,
     loading,
+    error, // Destructure the error
     searchTerm,
     brandFilter,
     statusFilter,
@@ -58,31 +59,37 @@ const ProductAdmin = () => {
   } = useProductManagement();
 
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Function to handle adding product via API
+  // Add Product with API
   const handleAddProductWithAPI = async (productData) => {
     setIsSaving(true);
     try {
-      const response = await axios.post('http://localhost:8001/api/getAllProducts', productData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await axios.post(
+        "http://localhost:8001/api/saveProduct",
+        productData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
+          },
+        }
+      );
 
-      const savedProduct = response.data;
-
-      // Call the original handleAddProduct to update local state
-      handleAddProduct(savedProduct);
-
-      // Show success message
-      alert('Product added successfully!');
+      if (response.data.success) {
+        handleAddProduct(response.data.data); // update state
+        alert("Product added successfully!");
+      } else {
+        alert(response.data.message || "Failed to save product");
+      }
     } catch (error) {
-      console.error('Error saving product:', error);
-      alert('Failed to save product. Please try again.');
+      console.error("Error saving product:", error);
+      alert("Failed to save product. Please try again.");
     } finally {
       setIsSaving(false);
     }
   };
+
 
   // Memoize filtered products to improve performance
   const filteredProducts = useMemo(
@@ -90,9 +97,18 @@ const ProductAdmin = () => {
     [products, searchTerm, brandFilter, statusFilter]
   );
 
+  // Then, somewhere in your JSX, conditionally render the error
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Error loading products: {error}
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="loading-spinner">
+      <div className="text-center py-8 text-gray-500">
         Loading products...
       </div>
     );
@@ -146,26 +162,16 @@ const ProductAdmin = () => {
       )}
 
       {/* Edit Product Modal */}
-      {isEditModalOpen && editingProduct && (
-        <ProductModal
-          title="Edit Product"
-          initialProduct={editingProduct}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditingProduct(null);
-          }}
-          onSave={(updatedProduct) => {
-            handleSaveProduct(updatedProduct);
-            setIsEditModalOpen(false);
-            setEditingProduct(null);
-          }}
-          brandOptions={BRAND_OPTIONS}
-          sizeOptions={SIZE_OPTIONS}
-          materialOptions={MATERIAL_OPTIONS}
-          isEditing={true}
-        />
-      )}
-
+      {isEditModalOpen && (
+  <ProductModal
+    title="Edit Product"
+    initialProduct={editingProduct}
+    onClose={() => setIsEditModalOpen(false)}
+    onSave={handleSaveProduct}
+    sizeOptions={["1 Ratti", "2 Ratti", "3 Ratti", "4 Ratti", "5 Ratti", "6 Ratti"]}
+    isEditing={true}
+  />
+)}
       {/* Delete Confirmation Modal */}
       {deleteConfirmModal.isOpen && (
         <DeleteConfirmationModal

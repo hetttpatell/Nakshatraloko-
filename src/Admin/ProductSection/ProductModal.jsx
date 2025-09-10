@@ -40,23 +40,32 @@ const ProductModal = ({
   // Populate state when editing
   useEffect(() => {
     if (initialProduct && Object.keys(initialProduct).length > 0) {
+      console.log("Initial product data:", initialProduct);
       // Basic fields
-      setName(initialProduct.name || "");
+      setName(initialProduct.Name || initialProduct.name || "");
       setCategoryId(
-        initialProduct.catogaryId !== undefined && initialProduct.catogaryId !== null
-          ? String(initialProduct.catogaryId)
+        initialProduct.CategoryID || initialProduct.categoryId
+          ? String(initialProduct.CategoryID || initialProduct.categoryId)
           : ""
       );
-      setDescription(initialProduct.description || "");
-      setAdvantages(initialProduct.advantages || "");
-      setHowToWear(initialProduct.howToWear || "");
-      setIsActive(initialProduct.isActive !== undefined ? initialProduct.isActive : true);
+      setDescription(initialProduct.Description || initialProduct.description || "");
+      setAdvantages(initialProduct.Advantages || initialProduct.advantages || "");
+      setHowToWear(initialProduct.HowToWear || initialProduct.howToWear || "");
+      setIsActive(
+        initialProduct.IsActive !== undefined
+          ? initialProduct.IsActive
+          : initialProduct.isActive !== undefined
+            ? initialProduct.isActive
+            : true
+      );
+
 
       // Sizes
-      if (Array.isArray(initialProduct.sizes) && initialProduct.sizes.length > 0) {
+      const productSizes = initialProduct.Sizes || initialProduct.sizes || [];
+      if (Array.isArray(productSizes) && productSizes.length > 0) {
         setSizes(
-          initialProduct.sizes.map((size) => ({
-            size: size.size ? String(size.size) : "",
+          productSizes.map((size) => ({
+            size: size.size ? `${size.size}` : "", // Remove "Ratti" suffix if present
             price: size.price !== undefined && size.price !== null ? String(size.price) : "",
             dummyPrice: size.dummyPrice !== undefined && size.dummyPrice !== null ? String(size.dummyPrice) : "",
             stock: size.stock !== undefined && size.stock !== null ? String(size.stock) : ""
@@ -66,9 +75,10 @@ const ProductModal = ({
         setSizes([{ size: "", price: "", dummyPrice: "", stock: "" }]);
       }
 
-      // Images
-      if (Array.isArray(initialProduct.images) && initialProduct.images.length > 0) {
-        setImages(initialProduct.images);
+      // Images - handle both API response and expected format
+      const productImages = initialProduct.Images || initialProduct.images || [];
+      if (Array.isArray(productImages) && productImages.length > 0) {
+        setImages(productImages);
       } else {
         setImages([]);
       }
@@ -176,17 +186,18 @@ const ProductModal = ({
   };
 
   // Handle size input changes
-  const handleSizeChange = (index, field, value) => {
+    const handleSizeChange = (index, field, value) => {
     const newSizes = [...sizes];
     newSizes[index][field] = value;
 
     // Auto-calculate dummyPrice if price changes and dummyPrice is empty
     if (field === "price" && !newSizes[index].dummyPrice) {
-      newSizes[index].dummyPrice = Math.round(parseFloat(value || 0) * 1.2).toString();
-    }
+    newSizes[index].dummyPrice = Math.round(parseFloat(value || 0) * 1.2).toString();
+  }
 
-    setSizes(newSizes);
-  };
+
+  setSizes(newSizes)  
+};
 
   // Add a new size row
   const addSize = () => {
@@ -205,12 +216,12 @@ const ProductModal = ({
   const submittingRef = React.useRef(false);
 
   const handleSubmit = React.useCallback(async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (submittingRef.current) return; // prevent multiple calls
-  submittingRef.current = true; 
-    setErrors({}); 
-  setApiStatus({ loading: true, message: "" });
+    if (submittingRef.current) return; // prevent multiple calls
+    submittingRef.current = true;
+    setErrors({});
+    setApiStatus({ loading: true, message: "" });
 
     const newErrors = {};
     // --- Validations ---
@@ -226,7 +237,7 @@ const ProductModal = ({
       newErrors.images = "Please upload at least one image";
       console.log("Images validation failed");
     }
-    
+
     // Validate each size
     sizes.forEach((size, index) => {
       if (!size.size) newErrors[`size-${index}`] = "Size is required";
@@ -275,9 +286,9 @@ const ProductModal = ({
         isActive: Boolean(img.isActive),
       })),
     };
-    
+
     console.log('Sending product data:', JSON.stringify(productData, null, 2));
-    
+
     try {
       setApiStatus({ loading: true, message: "" });
       console.log("Making API call to saveProduct");
@@ -324,10 +335,10 @@ const ProductModal = ({
         submit: errorMessage,
       });
       setApiStatus({ loading: false, message: "error" });
-    }finally {
-    setApiStatus({ loading: false, message: "" });
-    submittingRef.current = false; // reset after API finishes
-  }
+    } finally {
+      setApiStatus({ loading: false, message: "" });
+      submittingRef.current = false; // reset after API finishes
+    }
   }, [name, categoryId, sizes, images, isActive]);
 
   return (
