@@ -1,12 +1,12 @@
 // components/ProductsAdmin.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import ProductTable from "./ProductTable";
 import ProductModal from "./ProductModal";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import SearchAndFilterBar from "./SearchAndFilterBar";
 import { useProductManagement } from "../../CustomHooks/useProductManagement";
 import { filterProducts } from "../ProductSection/productFilters";
-import axios from 'axios';
+import api from '../../Utils/api'; // Import the api utility
 
 // Constants for options
 const BRAND_OPTIONS = ["STYLIUM", "PEARLIX", "DIAMONDX", "GOLDEN"];
@@ -31,11 +31,11 @@ const MATERIAL_OPTIONS = [
   "Platinum",
 ];
 
-const ProductAdmin = () => {
+const ProductAdmin = ({ isMobile }) => {
   const {
     products,
     loading,
-    error, // Destructure the error
+    error,
     searchTerm,
     brandFilter,
     statusFilter,
@@ -61,21 +61,11 @@ const ProductAdmin = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   // Function to handle adding product via API
-  // Add Product with API
   const handleAddProductWithAPI = async (productData) => {
     setIsSaving(true);
     try {
-      const response = await axios.post(
-        "http://localhost:8001/api/saveProduct",
-        productData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
-          },
-        }
-      );
-
+      const response = await api.post('/admin/products', productData);
+      
       if (response.data.success) {
         handleAddProduct(response.data.data); // update state
         alert("Product added successfully!");
@@ -85,11 +75,53 @@ const ProductAdmin = () => {
     } catch (error) {
       console.error("Error saving product:", error);
       alert("Failed to save product. Please try again.");
+      throw error; // Re-throw to handle in the component if needed
     } finally {
       setIsSaving(false);
     }
   };
 
+  // Function to handle editing product via API
+  const handleEditProductWithAPI = async (productData) => {
+    setIsSaving(true);
+    try {
+      const response = await api.put(`/admin/products/${editingProduct.id}`, productData);
+      
+      if (response.data.success) {
+        handleSaveProduct(response.data.data); // update state
+        alert("Product updated successfully!");
+      } else {
+        alert(response.data.message || "Failed to update product");
+      }
+    } catch (error) {
+      console.error("Error updating product:", error);
+      alert("Failed to update product. Please try again.");
+      throw error;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Function to handle deleting product via API
+  const handleDeleteProductWithAPI = async () => {
+    setIsSaving(true);
+    try {
+      const response = await api.delete(`/admin/products/${deleteConfirmModal.productId}`);
+      
+      if (response.data.success) {
+        handleDeleteProduct(); // update state
+        alert("Product deleted successfully!");
+      } else {
+        alert(response.data.message || "Failed to delete product");
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      alert("Failed to delete product. Please try again.");
+      throw error;
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Memoize filtered products to improve performance
   const filteredProducts = useMemo(
@@ -163,22 +195,26 @@ const ProductAdmin = () => {
 
       {/* Edit Product Modal */}
       {isEditModalOpen && (
-  <ProductModal
-    title="Edit Product"
-    initialProduct={editingProduct}
-    onClose={() => setIsEditModalOpen(false)}
-    onSave={handleSaveProduct}
-    sizeOptions={["1 Ratti", "2 Ratti", "3 Ratti", "4 Ratti", "5 Ratti", "6 Ratti"]}
-    isEditing={true}
-  />
-)}
+        <ProductModal
+          title="Edit Product"
+          initialProduct={editingProduct}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={handleEditProductWithAPI}
+          brandOptions={BRAND_OPTIONS}
+          sizeOptions={SIZE_OPTIONS}
+          materialOptions={MATERIAL_OPTIONS}
+          isEditing={true}
+          isLoading={isSaving}
+        />
+      )}
+
       {/* Delete Confirmation Modal */}
       {deleteConfirmModal.isOpen && (
         <DeleteConfirmationModal
           productName={deleteConfirmModal.productName}
           onClose={() => setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" })}
           onConfirm={() => {
-            handleDeleteProduct();
+            handleDeleteProductWithAPI();
             setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
           }}
           isLoading={isSaving}

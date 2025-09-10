@@ -222,7 +222,49 @@ const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "" }) => (
     {badgeCount > 0 && <Badge count={badgeCount} />}
   </NavLink>
 );
+// Add this function to handle authenticated requests
+const makeAuthenticatedRequest = async (url, method = 'GET', data = null) => {
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      setShowLogin(true);
+      return null;
+    }
 
+    const response = await fetch(`${API_URL}${url}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: data ? JSON.stringify(data) : null
+    });
+
+    if (response.status === 401) {
+      // Token expired
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      setIsLoggedIn(false);
+      setUser(null);
+      setShowLogin(true);
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API request failed:', error);
+    return null;
+  }
+};
+
+// Example usage in your component:
+const handleCreateProduct = async (productData) => {
+  const result = await makeAuthenticatedRequest('/admin/products', 'POST', productData);
+  if (result) {
+    // Handle success
+    console.log('Product created:', result);
+  }
+};
 
 
 // ---------- MAIN HEADER ----------
@@ -286,7 +328,7 @@ useEffect(() => {
 };
 
 
-  const isAdmin = isLoggedIn && (user?.role === "admin" || user?.role === "Admin");
+  const isAdmin = isLoggedIn && user?.role?.toLowerCase() === 'admin';
   const menuRef = useRef(null);
   const searchRef = useRef(null);
   const navRef = useRef(null);

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import Input from "../Input/Input";
 import { useNavigate } from "react-router-dom";
+import api from "../../Utils/api";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -45,24 +46,14 @@ const handleLogin = async (e) => {
     }
 
     const res = await api.post("/login", { email, password });
+    console.log("Login API response:", res.data); // Add this line
 
     if (res.data.success) {
-      setIsLogedin(true);
-      
-      if (res.data.token) {
-        localStorage.setItem("authToken", res.data.token);
-      }
-      if (res.data.user) {
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-      }
-
-      if (onClose) onClose();
-    } else {
-      setError(res.data.message || "Login failed");
+      // ... rest of the code
     }
-  } catch (err) {
-    console.error("Login error:", err);
-    setError(err.response?.data?.message || "Something went wrong. Try again.");
+  } catch (error) {
+    console.error("Login error:", error);
+    setError(error.response?.data?.message || "Something went wrong. Try again.");
   } finally {
     setLoading(false);
   }

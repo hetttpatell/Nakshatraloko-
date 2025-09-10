@@ -17,6 +17,7 @@ import Pendant from "./Components/Catagories/Pendant.jsx";
 import CategoryPage from "./Components/Catagories/Catagories.jsx";
 import AuthSuccess from "./Components/Login/AuthSucess.jsx";
 import Admin from "./Admin/Admin.jsx";
+import ProtectedRoute from "./Components/ProtectedRoute.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />} >
@@ -36,7 +37,14 @@ const router = createBrowserRouter(
       </Route>
       <Route path="faqs" element={<FAQs />} />
       <Route path="cart" element={<Cart />} />
-      <Route path="admin" element={<Admin />} />
+      <Route 
+  path="/admin/*" 
+  element={
+    <ProtectedRoute adminOnly={true}>
+      <Admin />
+    </ProtectedRoute>
+  } 
+/>
       <Route path="login" element={<LoginSignup />} />
       <Route path="auth/success" element={<AuthSuccess />} />
 
