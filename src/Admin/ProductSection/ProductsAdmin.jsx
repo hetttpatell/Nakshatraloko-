@@ -63,7 +63,7 @@ const ProductAdmin = () => {
   const handleAddProductWithAPI = async (productData) => {
     setIsSaving(true);
     try {
-      const response = await axios.post('http://localhost:8001/api/saveProduct', productData, {
+      const response = await axios.post('http://localhost:8001/api/getAllProducts', productData, {
         headers: {
           'Content-Type': 'application/json',
         },

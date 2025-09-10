@@ -202,10 +202,15 @@ const ProductModal = ({
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrors({}); // Clear old errors
-    console.log("Form submitted");
+  const submittingRef = React.useRef(false);
+
+  const handleSubmit = React.useCallback(async (e) => {
+  e.preventDefault();
+
+  if (submittingRef.current) return; // prevent multiple calls
+  submittingRef.current = true; 
+    setErrors({}); 
+  setApiStatus({ loading: true, message: "" });
 
     const newErrors = {};
     // --- Validations ---
@@ -221,10 +226,14 @@ const ProductModal = ({
       newErrors.images = "Please upload at least one image";
       console.log("Images validation failed");
     }
-    if (sizes.some((size) => !size.size || !size.price || !size.dummyPrice || !size.stock)) {
-      newErrors.sizes = "Please fill all size details";
-      console.log("Sizes validation failed");
-    }
+    
+    // Validate each size
+    sizes.forEach((size, index) => {
+      if (!size.size) newErrors[`size-${index}`] = "Size is required";
+      if (!size.price || parseFloat(size.price) <= 0) newErrors[`price-${index}`] = "Valid price is required";
+      if (!size.dummyPrice || parseFloat(size.dummyPrice) <= 0) newErrors[`dummyPrice-${index}`] = "Valid dummy price is required";
+      if (!size.stock || parseInt(size.stock) < 0) newErrors[`stock-${index}`] = "Valid stock quantity is required";
+    });
 
     let selectedCategory = null;
     if (categoryId) {
@@ -244,31 +253,31 @@ const ProductModal = ({
     console.log("All validations passed, building payload");
 
     // --- Build request payload ---
-  const productData = {
-  id: isEditing ? (initialProduct?.id || 0) : 0,
-  catogaryId: selectedCategory ? parseInt(categoryId, 10) : 0,
-  name: name.trim(),
-  description: description?.trim() || "",
-  advantages: advantages?.trim() || "",
-  howToWear: howToWear?.trim() || "",
-  isActive,
-  sizes: sizes.map((size) => ({
-    size: parseInt(size.size, 10) || 0,
-    price: parseFloat(size.price) || 0,
-    dummyPrice: parseFloat(size.dummyPrice) || 0,
-    stock: parseInt(size.stock, 10) || 0,
-  })),
-  images: images.map((img) => ({
-    imageData: img.imageData,
-    altText: img.altText?.trim() || "",
-    isPrimary: Boolean(img.isPrimary),
-    isActive: Boolean(img.isActive),
-  })),
-};
-
-
-    console.log("🚀 Submitting productData:", productData);
-
+    const productData = {
+      id: isEditing ? (initialProduct?.id || 0) : 0,
+      categoryId: selectedCategory ? parseInt(categoryId, 10) : 0, // Fixed spelling
+      name: name.trim(),
+      description: description?.trim() || "",
+      advantages: advantages?.trim() || "",
+      howToWear: howToWear?.trim() || "",
+      isActive: Boolean(isActive),
+      createdBy: 1, // This should come from your auth system
+      sizes: sizes.map((size) => ({
+        size: isNaN(parseInt(size.size, 10)) ? size.size : parseInt(size.size, 10),
+        price: parseFloat(size.price) || 0,
+        dummyPrice: parseFloat(size.dummyPrice) || 0,
+        stock: parseInt(size.stock, 10) || 0,
+      })),
+      images: images.map((img) => ({
+        imageData: img.imageData || "",
+        altText: img.altText?.trim() || "",
+        isPrimary: Boolean(img.isPrimary),
+        isActive: Boolean(img.isActive),
+      })),
+    };
+    
+    console.log('Sending product data:', JSON.stringify(productData, null, 2));
+    
     try {
       setApiStatus({ loading: true, message: "" });
       console.log("Making API call to saveProduct");
@@ -300,18 +309,13 @@ const ProductModal = ({
       let errorMessage = "Failed to save product";
 
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
         console.error("Error data:", error.response.data);
         console.error("Error status:", error.response.status);
-        console.error("Error headers:", error.response.headers);
         errorMessage = error.response.data.message || errorMessage;
       } else if (error.request) {
-        // The request was made but no response was received
         console.error("Error request:", error.request);
         errorMessage = "No response received from server. Please check your connection.";
       } else {
-        // Something happened in setting up the request that triggered an Error
         console.error("Error message:", error.message);
         errorMessage = error.message;
       }
@@ -320,8 +324,11 @@ const ProductModal = ({
         submit: errorMessage,
       });
       setApiStatus({ loading: false, message: "error" });
-    }
-  };
+    }finally {
+    setApiStatus({ loading: false, message: "" });
+    submittingRef.current = false; // reset after API finishes
+  }
+  }, [name, categoryId, sizes, images, isActive]);
 
   return (
     <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4">
