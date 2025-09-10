@@ -8,14 +8,12 @@ const ProductModal = ({
   initialProduct = {},
   onClose,
   onSave,
-  categoryOptions = [],
   sizeOptions = [],
   isEditing = false,
   isLoading = false,
 }) => {
   // Individual states for all fields
   const [name, setName] = useState("");
-  const [categoryName, setCategoryName] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [description, setDescription] = useState("");
   const [advantages, setAdvantages] = useState("");
@@ -30,59 +28,52 @@ const ProductModal = ({
   const [apiStatus, setApiStatus] = useState({ loading: false, message: "" });
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken") || localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-
-    axios.post("http://localhost:8001/api/getCategories")
+    axios.post("http://localhost:8001/api/getAllCatogary")
       .then((res) => {
         if (res.data.success) {
           setCategoryData(res.data.data);
         }
       })
       .catch((err) => console.error("Category fetch error:", err));
-
   }, []);
 
   // Populate state when editing
   useEffect(() => {
-    if (initialProduct) {
+    if (initialProduct && Object.keys(initialProduct).length > 0) {
+      // Basic fields
       setName(initialProduct.name || "");
-      setCategoryName(initialProduct.categoryName || "");
-      setCategoryId(initialProduct.categoryId || "");
-      setDescription(initialProduct.description || "");
-      setAdvantages(
-        typeof initialProduct.advantages === "string"
-          ? initialProduct.advantages
-          : (initialProduct.advantages || []).join(", ")
+      setCategoryId(
+        initialProduct.catogaryId !== undefined && initialProduct.catogaryId !== null
+          ? String(initialProduct.catogaryId)
+          : ""
       );
+      setDescription(initialProduct.description || "");
+      setAdvantages(initialProduct.advantages || "");
       setHowToWear(initialProduct.howToWear || "");
       setIsActive(initialProduct.isActive !== undefined ? initialProduct.isActive : true);
 
-      // Set sizes if editing with existing sizes
-      if (initialProduct.sizes && initialProduct.sizes.length > 0) {
-        setSizes(initialProduct.sizes);
+      // Sizes
+      if (Array.isArray(initialProduct.sizes) && initialProduct.sizes.length > 0) {
+        setSizes(
+          initialProduct.sizes.map((size) => ({
+            size: size.size ? String(size.size) : "",
+            price: size.price !== undefined && size.price !== null ? String(size.price) : "",
+            dummyPrice: size.dummyPrice !== undefined && size.dummyPrice !== null ? String(size.dummyPrice) : "",
+            stock: size.stock !== undefined && size.stock !== null ? String(size.stock) : ""
+          }))
+        );
       } else {
         setSizes([{ size: "", price: "", dummyPrice: "", stock: "" }]);
       }
 
-      // Set images if editing with existing images
-      if (initialProduct.images && initialProduct.images.length > 0) {
+      // Images
+      if (Array.isArray(initialProduct.images) && initialProduct.images.length > 0) {
         setImages(initialProduct.images);
+      } else {
+        setImages([]);
       }
     }
   }, [initialProduct]);
-
-  // Handle category selection
-  const handleCategoryChange = (e) => {
-    const selectedCategoryName = e.target.value;
-    setCategoryName(selectedCategoryName);
-    
-    // Find the corresponding category ID
-    const selectedCategory = categoryData.find(cat => cat.CategoryName === selectedCategoryName);
-    if (selectedCategory) {
-      setCategoryId(selectedCategory.id);
-    }
-  };
 
   const validateFile = (file) => {
     const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -130,8 +121,7 @@ const ProductModal = ({
           imageData: base64,
           altText: `${name || "Product"} image`,
           isPrimary: images.length === 0, // Set as primary if it's the first image
-          isActive: true,
-          file: file // Keep reference to original file for potential re-upload
+          isActive: true
         };
 
         setImages(prev => [...prev, newImage]);
@@ -214,81 +204,122 @@ const ProductModal = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setApiStatus({ loading: true, message: "" });
+    setErrors({}); // Clear old errors
+    console.log("Form submitted");
 
-    // Validate at least one image is uploaded
-    if (images.length === 0) {
-      setErrors({ ...errors, images: "At least one image is required" });
-      setApiStatus({ loading: false, message: "Validation failed" });
-      return;
-    }
-
-    // Validate category is selected
+    const newErrors = {};
+    // --- Validations ---
     if (!categoryId) {
-      setErrors({ ...errors, category: "Please select a category" });
-      setApiStatus({ loading: false, message: "Validation failed" });
+      newErrors.categoryId = "Please select a category";
+      console.log("Category validation failed");
+    }
+    if (!name.trim()) {
+      newErrors.name = "Please enter a product name";
+      console.log("Name validation failed");
+    }
+    if (images.length === 0) {
+      newErrors.images = "Please upload at least one image";
+      console.log("Images validation failed");
+    }
+    if (sizes.some((size) => !size.size || !size.price || !size.dummyPrice || !size.stock)) {
+      newErrors.sizes = "Please fill all size details";
+      console.log("Sizes validation failed");
+    }
+
+    let selectedCategory = null;
+    if (categoryId) {
+      selectedCategory = categoryData.find((cat) => cat.ID === parseInt(categoryId, 10));
+      if (!selectedCategory) {
+        newErrors.categoryId = "Invalid category selected";
+        console.log("Invalid category selected");
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      console.log("Validation errors:", newErrors);
+      setErrors(newErrors);
       return;
     }
 
-    // Validate all sizes are filled
-    const sizeErrors = {};
-    sizes.forEach((size, index) => {
-      if (!size.size) sizeErrors[`size-${index}`] = "Size is required";
-      if (!size.price) sizeErrors[`price-${index}`] = "Price is required";
-      if (!size.dummyPrice) sizeErrors[`dummyPrice-${index}`] = "Dummy price is required";
-      if (!size.stock) sizeErrors[`stock-${index}`] = "Stock is required";
-    });
+    console.log("All validations passed, building payload");
 
-    if (Object.keys(sizeErrors).length > 0) {
-      setErrors({ ...errors, ...sizeErrors });
-      setApiStatus({ loading: false, message: "Validation failed" });
-      return;
-    }
+    // --- Build request payload ---
+  const productData = {
+  id: isEditing ? (initialProduct?.id || 0) : 0,
+  catogaryId: selectedCategory ? parseInt(categoryId, 10) : 0,
+  name: name.trim(),
+  description: description?.trim() || "",
+  advantages: advantages?.trim() || "",
+  howToWear: howToWear?.trim() || "",
+  isActive,
+  sizes: sizes.map((size) => ({
+    size: parseInt(size.size, 10) || 0,
+    price: parseFloat(size.price) || 0,
+    dummyPrice: parseFloat(size.dummyPrice) || 0,
+    stock: parseInt(size.stock, 10) || 0,
+  })),
+  images: images.map((img) => ({
+    imageData: img.imageData,
+    altText: img.altText?.trim() || "",
+    isPrimary: Boolean(img.isPrimary),
+    isActive: Boolean(img.isActive),
+  })),
+};
 
-    // Prepare product object in the required API format
-    const productData = {
-      id: isEditing ? initialProduct.id : 0, // API will assign ID for new products
-      categoryId: parseInt(categoryId),
-      name,
-      description,
-      advantages: advantages.split(",").map((adv) => adv.trim()).join(", "),
-      howToWear,
-      isActive,
-      sizes: sizes.map(size => ({
-        size: parseInt(size.size),
-        price: parseFloat(size.price),
-        dummyPrice: parseFloat(size.dummyPrice),
-        stock: parseInt(size.stock)
-      })),
-      images: images.map((img, index) => ({
-        imageData: img.imageData,
-        altText: img.altText,
-        isPrimary: img.isPrimary,
-        isActive: img.isActive
-      }))
-    };
+
+    console.log("🚀 Submitting productData:", productData);
 
     try {
-      // Send data to API
-      const response = await axios.post("http://localhost:8001/api/saveProduct", productData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`
+      setApiStatus({ loading: true, message: "" });
+      console.log("Making API call to saveProduct");
+
+      const response = await axios.post(
+        "http://localhost:8001/api/saveProduct",
+        productData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
+          },
         }
-      });
-      
+      );
+
+      console.log("API response:", response.data);
+
       if (response.data.success) {
         setApiStatus({ loading: false, message: "success" });
-        onSave(response.data); // Pass the response to parent component
+        onSave(response.data);
       } else {
-        console.error("API Error:", response.data.message);
+        setErrors({
+          submit: response.data.message || "Failed to save product",
+        });
         setApiStatus({ loading: false, message: "error" });
-        setErrors({ submit: response.data.message });
       }
     } catch (error) {
-      console.error("API Request Failed:", error);
+      console.error("❌ Save product failed:", error);
+      let errorMessage = "Failed to save product";
+
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("Error data:", error.response.data);
+        console.error("Error status:", error.response.status);
+        console.error("Error headers:", error.response.headers);
+        errorMessage = error.response.data.message || errorMessage;
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("Error request:", error.request);
+        errorMessage = "No response received from server. Please check your connection.";
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Error message:", error.message);
+        errorMessage = error.message;
+      }
+
+      setErrors({
+        submit: errorMessage,
+      });
       setApiStatus({ loading: false, message: "error" });
-      setErrors({ submit: "Failed to save product. Please try again." });
     }
   };
 
@@ -321,32 +352,28 @@ const ProductModal = ({
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
               {/* Category Name */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
                   Category Name *
                 </label>
                 <select
-                  value={categoryName}
-                  onChange={handleCategoryChange}
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm appearance-none bg-chevron-down bg-no-repeat bg-right-4 bg-center pr-10"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' 
-      fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' 
-      stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' 
-      d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`
-                  }}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
                 >
                   <option value="">Select Category</option>
-                  {categoryData.map((cat, index) => (
-                    <option key={index} value={cat.CategoryName}>
-                      {cat.CategoryName}
+                  {categoryData.map((cat) => (
+                    <option key={`cat-${cat.ID}`} value={cat.ID}>
+                      {cat.Name}
                     </option>
                   ))}
                 </select>
-                {errors.category && (
-                  <p className="text-red-500 text-sm">{errors.category}</p>
+
+                {errors.categoryId && (
+                  <p className="text-red-500 text-sm">{errors.categoryId}</p>
                 )}
               </div>
 
@@ -363,6 +390,9 @@ const ProductModal = ({
                   required
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
                 />
+                {errors.name && (
+                  <p className="text-red-500 text-sm">{errors.name}</p>
+                )}
               </div>
 
               {/* Image Upload */}
@@ -525,6 +555,10 @@ const ProductModal = ({
                   Sizes *
                 </label>
 
+                {errors.sizes && (
+                  <p className="text-red-500 text-sm mb-2">{errors.sizes}</p>
+                )}
+
                 {sizes.map((size, index) => (
                   <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border border-gray-200 rounded-lg">
                     <div className="space-y-2">
@@ -575,7 +609,7 @@ const ProductModal = ({
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
                       />
                       {errors[`dummyPrice-${index}`] && (
-                        <p className="textred-500 text-xs">{errors[`dummyPrice-${index}`]}</p>
+                        <p className="text-red-500 text-xs">{errors[`dummyPrice-${index}`]}</p>
                       )}
                     </div>
 
