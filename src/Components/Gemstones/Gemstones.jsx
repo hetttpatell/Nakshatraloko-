@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Star, StarHalf, Filter, X, Sparkles } from "lucide-react";
 import axios from "axios";
@@ -24,105 +24,92 @@ export default function Gemstones() {
 
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
-    setError(null);
+    const abortController = new AbortController();
 
-    axios
-      .post("http://localhost:8001/api/getAllProducts")
-      .then((res) => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const res = await axios.post(
+          "http://localhost:8001/api/getAllProducts",
+          {},
+          { signal: abortController.signal }
+        );
+
         if (!isMounted) return;
 
         let apiProducts = [];
+        
+        // Handle different response structures
         if (Array.isArray(res.data)) {
           apiProducts = res.data;
         } else if (Array.isArray(res.data?.data)) {
           apiProducts = res.data.data;
         } else if (Array.isArray(res.data?.products)) {
           apiProducts = res.data.products;
+        } else {
+          // If response structure is unexpected, try to extract any array
+          const possibleArray = Object.values(res.data).find(
+            (item) => Array.isArray(item) && item.length > 0
+          );
+          if (possibleArray) {
+            apiProducts = possibleArray;
+          }
         }
 
-        const productDetails = apiProducts.map((p, index) => ({
-          id: p.ID || p.id || slugify(p.Name || p.name) || `product-${index}`,
-          category: p.Category || p.category || "Uncategorized",
-          name: p.Name || p.name || "Gemstone Product",
-          description:
-            p.Description || p.description || "Beautiful gemstone jewelry",
-          price: `₹ ${parseFloat(p.Price || p.price || 0).toLocaleString(
-            "en-IN"
-          )}`,
-          dummyPrice: p.DummyPrice || p.dummyPrice || "",
-          discountPercentage: p.DiscountPercentage || p.discountPercentage || 0,
-          stock: p.Stock || p.stock || 0,
-          advantages: p.Advantages || p.advantages || "",
-          howToWear: p.HowToWear || p.howToWear || "",
-          isActive: p.IsActive || p.isActive || true,
-          feature: p.Feature || p.feature || "Energy Booster",
-          img: p.Image || p.image || p.img || "/default-gemstone.jpg",
-          rating: parseFloat(
-            p.Rating || p.rating || (Math.random() * 2 + 3).toFixed(1)
-          ),
-        }));
+        console.log("API Products:", apiProducts);
+        
+        const productDetails = apiProducts.map((p, index) => {
+          // Process image URL to ensure it's valid
+          let imgUrl = p.Image || p.image || p.img || "/default-gemstone.jpg";
+          
+          // Ensure the URL is properly formatted
+          if (imgUrl && !imgUrl.startsWith("http") && !imgUrl.startsWith("/")) {
+            imgUrl = `/${imgUrl}`;
+          }
+          
+          return {
+            id: p.ID || p.id || slugify(p.Name || p.name) || `product-${index}`,
+            category: p.Category || p.category || "Uncategorized",
+            name: p.Name || p.name || "Gemstone Product",
+            description: p.Description || p.description || "Beautiful gemstone jewelry",
+            price: `₹ ${parseFloat(p.Price || p.price || 0).toLocaleString("en-IN")}`,
+            dummyPrice: p.DummyPrice || p.dummyPrice || "",
+            discountPercentage: p.DiscountPercentage || p.discountPercentage || 0,
+            stock: p.Stock || p.stock || 0,
+            advantages: p.Advantages || p.advantages || "",
+            howToWear: p.HowToWear || p.howToWear || "",
+            isActive: p.IsActive ?? true,
+            feature: p.Feature || p.feature || "",
+            img: imgUrl,
+            rating: parseFloat(p.Rating || p.rating || (Math.random() * 2 + 3).toFixed(1)),
+          };
+        });
 
         setProducts(productDetails);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching Gemstone products:", err);
-        if (isMounted) {
-          setError("Failed to load products. Showing demo data.");
-          setLoading(false);
-          setProducts(getDemoProducts());
+      } catch (err) {
+        if (axios.isCancel(err)) {
+          console.log("Request canceled:", err.message);
+        } else {
+          console.error("Error fetching Gemstone products:", err);
+          if (isMounted) {
+            setError("Failed to load products.");
+            setProducts([]);
+          }
         }
-      });
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchProducts();
 
     return () => {
       isMounted = false;
+      abortController.abort("Component unmounted");
     };
   }, []);
-
-  // Demo fallback data
-  const getDemoProducts = () => [
-    {
-      id: "demo-1",
-      name: "Stellar Dainty Diamond Hoop Earrings",
-      category: "Women | Earrings",
-      price: "₹ 4,554.00",
-      feature: "Energy Booster",
-      img: "/s3.jpeg",
-      rating: 4.5,
-      description: "Elegant diamond hoops for women.",
-    },
-    {
-      id: "demo-2",
-      name: "Royal Sapphire Statement Earrings",
-      category: "Men | Earrings",
-      price: "₹ 5,554.00",
-      feature: "Inner Strength",
-      img: "/s2.jpeg",
-      rating: 3.8,
-      description: "Sapphire earrings with royal charm.",
-    },
-    {
-      id: "demo-3",
-      name: "Pearl Elegance Drop Earrings",
-      category: "Women | Earrings",
-      price: "₹ 3,554.00",
-      feature: "Peace & Harmony",
-      img: "/s4.jpeg",
-      rating: 5,
-      description: "Timeless pearl drop earrings.",
-    },
-    {
-      id: "demo-4",
-      name: "Onyx Power Stud Earrings",
-      category: "Men | Earrings",
-      price: "₹ 4,054.00",
-      feature: "Inner Strength",
-      img: "/s1.jpeg",
-      rating: 4.2,
-      description: "Powerful onyx stud earrings.",
-    },
-  ];
 
   // Filter Options
   const optionsfilter = {
@@ -141,54 +128,59 @@ export default function Gemstones() {
     { value: "name-asc", label: "Name: A to Z" },
   ];
 
-  // Filtering
-  const filteredProducts = products.filter((product) => {
-    let matches = true;
+  // Memoized filtering and sorting
+  const filteredAndSortedProducts = useMemo(() => {
+    // Filtering
+    const filtered = products.filter((product) => {
+      let matches = true;
 
-    if (filters.Ratings) {
-      const [min, max] = filters.Ratings.split(" - ").map(Number);
-      const rating = parseFloat(product.rating);
-      if (!(rating >= min && rating <= max)) matches = false;
-    }
+      if (filters.Ratings) {
+        const [min, max] = filters.Ratings.split(" - ").map(Number);
+        const rating = parseFloat(product.rating);
+        if (!(rating >= min && rating <= max)) matches = false;
+      }
 
-    if (filters.Categories && product.category !== filters.Categories) {
-      matches = false;
-    }
+      if (filters.Categories && product.category !== filters.Categories) {
+        matches = false;
+      }
 
-    if (filters.Price) {
-      const [min, max] = filters.Price.split(" - ").map(Number);
-      const price = Number(product.price.replace(/[^\d]/g, ""));
-      if (!(price >= min && price <= max)) matches = false;
-    }
+      if (filters.Price) {
+        const [min, max] = filters.Price.split(" - ").map(Number);
+        const price = Number(product.price.replace(/[^\d]/g, ""));
+        if (!(price >= min && price <= max)) matches = false;
+      }
 
-    if (filters.Features && product.feature !== filters.Features) {
-      matches = false;
-    }
+      if (filters.Features && product.feature !== filters.Features) {
+        matches = false;
+      }
 
-    return matches;
-  });
+      return matches;
+    });
 
-  // Sorting
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (sortBy) {
-      case "price-asc":
-        return (
-          Number(a.price.replace(/[^\d]/g, "")) -
-          Number(b.price.replace(/[^\d]/g, ""))
-        );
-      case "price-desc":
-        return (
-          Number(b.price.replace(/[^\d]/g, "")) -
-          Number(a.price.replace(/[^\d]/g, ""))
-        );
-      case "rating-desc":
-        return b.rating - a.rating;
-      case "name-asc":
-        return a.name.localeCompare(b.name);
-      default:
-        return 0;
-    }
-  });
+    // Sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "price-asc":
+          return (
+            Number(a.price.replace(/[^\d]/g, "")) -
+            Number(b.price.replace(/[^\d]/g, ""))
+          );
+        case "price-desc":
+          return (
+            Number(b.price.replace(/[^\d]/g, "")) -
+            Number(a.price.replace(/[^\d]/g, ""))
+          );
+        case "rating-desc":
+          return b.rating - a.rating;
+        case "name-asc":
+          return a.name.localeCompare(b.name);
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [products, filters, sortBy]);
 
   // Reset Filters
   const resetFilters = () => {
@@ -218,7 +210,7 @@ export default function Gemstones() {
 
   return (
     <>
-      <Imagepreview />
+      {/* <Imagepreview /> */}
 
       <div className="min-h-screen bg-[var(--color-background)]">
         {/* Header */}
@@ -316,7 +308,7 @@ export default function Gemstones() {
             <p className="text-[var(--color-text-light)]">
               Showing{" "}
               <span className="text-[var(--color-primary)] font-semibold">
-                {sortedProducts.length}
+                {filteredAndSortedProducts.length}
               </span>{" "}
               of {products.length} products
             </p>
@@ -324,7 +316,7 @@ export default function Gemstones() {
 
           {/* Products Grid */}
           <div className="pb-16">
-            {sortedProducts.length === 0 ? (
+            {filteredAndSortedProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20">
                 <Sparkles className="w-16 h-16 text-[var(--color-primary)] mb-4" />
                 <h3 className="text-xl font-semibold text-[var(--color-text)] mb-2">
@@ -342,63 +334,65 @@ export default function Gemstones() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {sortedProducts.map((product) => (
-                <Link
-  key={product.id}
-  to={`/product/${product.id}`}
-  state={{ product }} // passing full product object
-  className="group bg-[var(--color-surface)] rounded-2xl overflow-hidden border border-[var(--color-border)] shadow hover:shadow-lg transition"
->
-  {/* Image */}
-  <div className="relative w-full aspect-square overflow-hidden">
-    <img
-      src={product.img}
-      alt={product.name}
-      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-      onError={(e) => (e.target.src = "/default-gemstone.jpg")}
-    />
-    {product.feature && (
-      <span className="absolute top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white text-xs font-semibold px-3 py-2 rounded-r-xl">
-        {product.feature}
-      </span>
-    )}
-  </div>
+                {filteredAndSortedProducts.map((product) => (
+                  <Link
+                    key={product.id}
+                    to={`/product/${product.id}`}
+                    state={{ product }}
+                    className="group bg-[var(--color-surface)] rounded-2xl overflow-hidden border border-[var(--color-border)] shadow hover:shadow-lg transition"
+                  >
+                    {/* Image */}
+                    <div className="relative w-full aspect-square overflow-hidden">
+                      <img
+                        src={product.img}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        onError={(e) => {
+                          e.target.src = "/default-gemstone.jpg";
+                        }}
+                        loading="lazy"
+                      />
+                      {product.feature && (
+                        <span className="absolute top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white text-xs font-semibold px-3 py-2 rounded-r-xl">
+                          {product.feature}
+                        </span>
+                      )}
+                    </div>
 
-  {/* Details */}
-  <div className="p-5">
-    <h3 className="font-semibold text-[var(--color-text)] mb-2 line-clamp-2 group-hover:text-[var(--color-primary)] transition">
-      {product.name}
-    </h3>
-    <p className="text-sm text-[var(--color-text-light)] mb-3">{product.category}</p>
+                    {/* Details */}
+                    <div className="p-5">
+                      <h3 className="font-semibold text-[var(--color-text)] mb-2 line-clamp-2 group-hover:text-[var(--color-primary)] transition">
+                        {product.name}
+                      </h3>
+                      <p className="text-sm text-[var(--color-text-light)] mb-3">{product.category}</p>
 
-    {/* Rating */}
-    <div className="flex items-center gap-2 mb-3">
-      <div className="flex">
-        {Array.from({ length: 5 }).map((_, i) => {
-          const fullStars = Math.floor(product.rating);
-          const hasHalfStar = product.rating % 1 >= 0.5;
-          if (i < fullStars) {
-            return <Star key={i} className="w-4 h-4 text-[var(--color-rating)] fill-[var(--color-rating)]" />;
-          } else if (i === fullStars && hasHalfStar) {
-            return <StarHalf key={i} className="w-4 h-4 text-[var(--color-rating)] fill-[var(--color-rating)]" />;
-          } else {
-            return <Star key={i} className="w-4 h-4 text-gray-300" />;
-          }
-        })}
-      </div>
-      <span className="text-sm text-[var(--color-text-light)]">({product.rating})</span>
-    </div>
+                      {/* Rating */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex">
+                          {Array.from({ length: 5 }).map((_, i) => {
+                            const fullStars = Math.floor(product.rating);
+                            const hasHalfStar = product.rating % 1 >= 0.5;
+                            if (i < fullStars) {
+                              return <Star key={i} className="w-4 h-4 text-[var(--color-rating)] fill-[var(--color-rating)]" />;
+                            } else if (i === fullStars && hasHalfStar) {
+                              return <StarHalf key={i} className="w-4 h-4 text-[var(--color-rating)] fill-[var(--color-rating)]" />;
+                            } else {
+                              return <Star key={i} className="w-4 h-4 text-gray-300" />;
+                            }
+                          })}
+                        </div>
+                        <span className="text-sm text-[var(--color-text-light)]">({product.rating})</span>
+                      </div>
 
-    {/* Price & View Details */}
-    <div className="flex items-center justify-between">
-      <p className="text-lg font-semibold text-[var(--color-primary)]">{product.price}</p>
-      <button className="opacity-0 group-hover:opacity-100 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition">
-        View Details →
-      </button>
-    </div>
-  </div>
-</Link>
-
+                      {/* Price & View Details */}
+                      <div className="flex items-center justify-between">
+                        <p className="text-lg font-semibold text-[var(--color-primary)]">{product.price}</p>
+                        <button className="opacity-0 group-hover:opacity-100 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition">
+                          View Details →
+                        </button>
+                      </div>
+                    </div>
+                  </Link>
                 ))}
               </div>
             )}
