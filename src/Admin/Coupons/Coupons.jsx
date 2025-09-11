@@ -20,15 +20,13 @@ const Coupons = () => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [isAdding, setIsAdding] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-
-  const [newCoupon, setNewCoupon] = useState({
+  const [couponForm, setCouponForm] = useState({
     code: "",
     description: "",
     discountType: "PERCENTAGE",
@@ -40,11 +38,39 @@ const Coupons = () => {
     usageLimit: 100,
     isActive: true,
     coupenType: "GENERAL",
-    productIds: []
+    productIds: [] // Removed applicableCategories
   });
+  //not been used
+  //  const getAuthHeaders = async () => {
+  //   let token = localStorage.getItem('authToken');
+
+  //   // If no token, redirect to login
+  //   if (!token) {
+  //     console.error("No token found. Please log in again.");
+  //     return null;
+  //   }
+
+  //   // Optionally check expiry
+  //   const payload = JSON.parse(atob(token.split('.')[1]));
+  //   const now = Math.floor(Date.now() / 1000);
+  //   if (payload.exp && payload.exp < now) {
+  //     console.warn("Token expired, refreshing...");
+  //     token = await refreshAuthToken(); // <-- implement refresh logic
+  //     localStorage.setItem("authToken", token);
+  //   }
+
+  //   return {
+  //     header: {
+  //       Authorization: `${token}`,
+  //       "Content-Type": "application/json"
+  //     }
+  //   };
+  // };
 
   // Available categories for coupon applicability
-  const categories = ["all", "Kavach", "Rudraksh", "Gemstone", "Pendants", "Bracelets"];
+  // const categories = ["all", "Kavach", "Rudraksh", "Gemstone", "Pendants", "Bracelets"];
+
+
   const couponTypes = ["GENERAL", "NEW_USER", "SPECIAL_OFFER", "SEASONAL"];
 
   // Fetch coupons from API
@@ -53,18 +79,19 @@ const Coupons = () => {
   const fetchCoupons = async () => {
     try {
       setLoading(true);
-      const response = await axios.post("http://localhost:8001/api/getAllCoupons");
+      const response = await axios.post(
+        "http://localhost:8001/api/getAllCoupons",
+        {}
+      );
 
       if (response.status !== 200) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Check if response has the expected structure
       if (!response.data.success || !Array.isArray(response.data.data)) {
         throw new Error("Invalid response format from server");
       }
 
-      // Map the API response to match your component's expected format
       const fetchedCoupons = response.data.data.map(coupon => ({
         id: coupon.ID,
         code: coupon.Code,
@@ -76,7 +103,7 @@ const Coupons = () => {
         startDate: coupon.StartDate,
         endDate: coupon.EndDate,
         usageLimit: coupon.Usage_Limit,
-        usedCount: coupon.totalcount ? parseInt(coupon.totalcount) : 0, // Using totalcount as used count
+        usedCount: coupon.totalcount ? parseInt(coupon.totalcount) : 0,
         isActive: coupon.IsActive,
         coupenType: coupon.CoupenType,
         productIds: coupon.productids || []
@@ -94,39 +121,68 @@ const Coupons = () => {
   };
 
 
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setCouponForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
+  };
+
+  const handleProductIdsChange = (e) => {
+    const inputValue = e.target.value;
+
+    // Parse comma-separated values and convert to numbers
+    const idsArray = inputValue
+      .split(',')
+      .map(id => id.trim()) // Remove whitespace
+      .filter(id => id !== '') // Remove empty strings
+      .map(id => parseInt(id)) // Convert to numbers
+      .filter(id => !isNaN(id)); // Remove any NaN values
+
+    setCouponForm((prev) => ({
+      ...prev,
+      productIds: idsArray
+    }));
+  };
+
   useEffect(() => {
     console.log("Component mounted, fetching coupons...");
     fetchCoupons();
   }, []);
 
   // And after setting coupons:
-  console.log("Coupons set:", coupons.length, "items");
+  // console.log("Coupons set:", coupons.length, "items");
 
   const handleSaveCoupon = async (couponData) => {
     try {
-      // Convert to backend expected format (uppercase field names)
+      // Format data for backend
       const backendCoupon = {
-        ID: couponData.id || 0, // 0 for new coupons
+        ID: couponData.id || 0,
         Code: couponData.code,
         Description: couponData.description,
         DiscountType: couponData.discountType,
-        DiscountValue: couponData.discountValue.toString(),
-        StartDate: new Date(couponData.startDate).toISOString(),
-        EndDate: new Date(couponData.endDate).toISOString(),
+        DiscountValue: parseFloat(couponData.discountValue),
+        StartDate: couponData.startDate ? new Date(couponData.startDate).toISOString() : null,
+        EndDate: couponData.endDate ? new Date(couponData.endDate).toISOString() : null,
         CoupenType: couponData.coupenType,
-        Usage_Limit: couponData.usageLimit,
-        Min_Order_Amount: couponData.minOrderAmount.toString(),
-        Max_Discount_Amount: couponData.maxDiscountAmount ? couponData.maxDiscountAmount.toString() : null,
+        Usage_Limit: parseInt(couponData.usageLimit),
+        Min_Order_Amount: parseFloat(couponData.minOrderAmount),
+        Max_Discount_Amount: couponData.maxDiscountAmount ? parseFloat(couponData.maxDiscountAmount) : null,
         IsActive: couponData.isActive,
-        productids: couponData.productIds || []
+        productids: Array.isArray(couponData.productIds) ? couponData.productIds : []
       };
 
       console.log("Sending coupon data:", backendCoupon);
+      console.log("Code value:", backendCoupon.Code); // Add this debug log
 
-      const response = await axios.post("http://localhost:8001/api/saveCoupon", backendCoupon);
+      const response = await axios.post(
+        "http://localhost:8001/api/saveCoupon",
+        backendCoupon
+      );
 
       if (response.status === 200) {
-        // Refresh the coupons list after saving
         fetchCoupons();
         return true;
       }
@@ -136,6 +192,55 @@ const Coupons = () => {
       return false;
     }
   };
+
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Validate required fields
+      if (!couponForm.code || !couponForm.description || !couponForm.discountValue || !couponForm.endDate) {
+        setError("Please fill all required fields");
+        return;
+      }
+
+      // Prepare payload with correct types
+      const payload = {
+        ...couponForm,
+        discountValue: parseFloat(couponForm.discountValue),
+        minOrderAmount: parseFloat(couponForm.minOrderAmount),
+        maxDiscountAmount: couponForm.maxDiscountAmount ? parseFloat(couponForm.maxDiscountAmount) : null,
+        startDate: new Date(couponForm.startDate).toISOString(),
+        endDate: new Date(couponForm.endDate).toISOString(),
+        usageLimit: parseInt(couponForm.usageLimit),
+        productIds: couponForm.productIds || []
+      };
+
+      const success = await handleSaveCoupon(payload);
+      if (success) {
+        setIsAdding(false);
+        // Reset form
+        setCouponForm({
+          code: "",
+          description: "",
+          discountType: "PERCENTAGE",
+          discountValue: 10,
+          minOrderAmount: 0,
+          maxDiscountAmount: null,
+          startDate: new Date().toISOString().split("T")[0],
+          endDate: "",
+          usageLimit: 100,
+          isActive: true,
+          coupenType: "GENERAL",
+          productIds: []
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to save coupon. Please try again.");
+    }
+  };
+
 
   // Filter coupons based on search and filters
   const filteredCoupons = coupons.filter(coupon => {
@@ -168,38 +273,30 @@ const Coupons = () => {
     for (let i = 0; i < 8; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setNewCoupon({ ...newCoupon, code });
+    setCouponForm((prev) => ({ ...prev, code }));
   };
 
+
   const handleAddCoupon = async () => {
-    if (!newCoupon.code || !newCoupon.description || !newCoupon.discountValue || !newCoupon.endDate) {
+    if (!couponForm.code || !couponForm.description || !couponForm.discountValue || !couponForm.endDate) {
       setError("Please fill all required fields");
       return;
     }
 
     try {
-      // Format dates properly for API
       const couponToAdd = {
-        ...newCoupon,
+        ...couponForm,
         id: 0, // Let the backend generate the ID
-        startDate: new Date(newCoupon.startDate).toISOString(),
-        endDate: new Date(newCoupon.endDate).toISOString(),
-        maxDiscountAmount: newCoupon.maxDiscountAmount || null,
-        // Convert applicableCategories to productIds if needed
-        // This mapping depends on your backend implementation
-        productIds: newCoupon.applicableCategories.filter(cat => cat !== "all").map(cat => {
-          // This is a placeholder - you'll need to map category names to product IDs
-          return 1; // Example product ID
-        })
+        startDate: new Date(couponForm.startDate).toISOString(),
+        endDate: new Date(couponForm.endDate).toISOString(),
+        maxDiscountAmount: couponForm.maxDiscountAmount || null,
+        productIds: couponForm.productIds || []
       };
-
-      // Remove the applicableCategories field as it's not in the API model
-      delete couponToAdd.applicableCategories;
 
       const success = await handleSaveCoupon(couponToAdd);
 
       if (success) {
-        setNewCoupon({
+        setCouponForm({
           code: "",
           description: "",
           discountType: "PERCENTAGE",
@@ -211,8 +308,7 @@ const Coupons = () => {
           usageLimit: 100,
           isActive: true,
           coupenType: "GENERAL",
-          productIds: [],
-          applicableCategories: ["all"]
+          productIds: []
         });
         setIsAdding(false);
       }
@@ -221,6 +317,7 @@ const Coupons = () => {
       setError("Failed to add coupon. Please try again.");
     }
   };
+
 
   const handleEditCoupon = async () => {
     if (!editingCoupon.code || !editingCoupon.description || !editingCoupon.discountValue || !editingCoupon.endDate) {
@@ -249,7 +346,7 @@ const Coupons = () => {
 
   const handleDeleteCoupon = async (id) => {
     try {
-      const response = await axios.post("http://localhost:8001/api/deleteCoupon", { ID: id });
+      const response = await axios.post("http://localhost:8001/api/deleteProduct", { ID: id });
       if (response.status === 200) {
         // Refresh the coupons list after deletion
         fetchCoupons();
@@ -284,14 +381,11 @@ const Coupons = () => {
       ...coupon,
       id: 0, // Let backend generate new ID
       code: coupon.code + "_COPY",
-      usedCount: 0
+      usedCount: 0,
+      startDate: new Date().toISOString().split('T')[0]
     };
-    setNewCoupon({
-      ...duplicatedCoupon,
-      startDate: new Date().toISOString().split('T')[0],
-      applicableCategories: coupon.productIds && coupon.productIds.length > 0 ?
-        ["specific"] : ["all"]
-    });
+
+    setCouponForm(duplicatedCoupon);
     setIsAdding(true);
   };
 
@@ -302,6 +396,8 @@ const Coupons = () => {
   const isCouponExpired = (endDate) => {
     return new Date(endDate) < new Date();
   };
+
+
 
   if (loading) {
     return (
@@ -336,6 +432,7 @@ const Coupons = () => {
         </div>
       </div>
 
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
           <p>{error}</p>
@@ -351,6 +448,7 @@ const Coupons = () => {
           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
+            name="searchTerm" // Corrected name
             placeholder="Search coupons by code or description..."
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={searchTerm}
@@ -393,193 +491,197 @@ const Coupons = () => {
               <FaTimes size={20} />
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code *</label>
-              <div className="flex gap-2">
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code *</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    name="code"
+                    value={couponForm.code}
+                    onChange={handleInputChange}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter coupon code"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={generateCouponCode}
+                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                    title="Generate random code"
+                  >
+                    <FaHashtag />
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                 <input
                   type="text"
-                  value={newCoupon.code}
-                  onChange={(e) => setNewCoupon({ ...newCoupon, code: e.target.value.toUpperCase() })}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter coupon code"
-                  maxLength="20"
-                />
-                <button
-                  onClick={generateCouponCode}
-                  className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-                  title="Generate random code"
-                >
-                  <FaHashtag />
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-              <input
-                type="text"
-                value={newCoupon.description}
-                onChange={(e) => setNewCoupon({ ...newCoupon, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter coupon description"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type *</label>
-              <select
-                value={newCoupon.discountType}
-                onChange={(e) => setNewCoupon({ ...newCoupon, discountType: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="PERCENTAGE">Percentage (%)</option>
-                <option value="FIXED">Fixed Amount (₹)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Discount Value *
-                {newCoupon.discountType === "PERCENTAGE" ? " (%)" : " (₹)"}
-              </label>
-              <div className="relative">
-                {newCoupon.discountType === "PERCENTAGE" ? (
-                  <FaPercent className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                ) : (
-                  <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                )}
-                <input
-                  type="number"
-                  value={newCoupon.discountValue}
-                  onChange={(e) => setNewCoupon({ ...newCoupon, discountValue: parseFloat(e.target.value) })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="0"
-                  step={newCoupon.discountType === "PERCENTAGE" ? "1" : "10"}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Amount (₹)</label>
-              <div className="relative">
-                <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="number"
-                  value={newCoupon.minOrderAmount}
-                  onChange={(e) => setNewCoupon({ ...newCoupon, minOrderAmount: parseFloat(e.target.value) })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="0"
-                  step="50"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Maximum Discount Amount (₹)</label>
-              <div className="relative">
-                <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="number"
-                  value={newCoupon.maxDiscountAmount || ""}
-                  onChange={(e) => setNewCoupon({ ...newCoupon, maxDiscountAmount: e.target.value ? parseFloat(e.target.value) : null })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="0"
-                  step="50"
-                  placeholder="No limit"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Type</label>
-              <select
-                value={newCoupon.coupenType}
-                onChange={(e) => setNewCoupon({ ...newCoupon, coupenType: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {couponTypes.map(type => (
-                  <option key={type} value={type}>
-                    {type.replace('_', ' ')}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-              <div className="relative">
-                <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="date"
-                  value={newCoupon.startDate}
-                  onChange={(e) => setNewCoupon({ ...newCoupon, startDate: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
-              <div className="relative">
-                <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="date"
-                  value={newCoupon.endDate}
-                  onChange={(e) => setNewCoupon({ ...newCoupon, endDate: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  name="description"
+                  value={couponForm.description}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter coupon description"
                   required
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type *</label>
+                <select
+                  name="discountType"
+                  value={couponForm.discountType}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="PERCENTAGE">Percentage (%)</option>
+                  <option value="FIXED">Fixed Amount (₹)</option> {/* Changed from "AMOUNT" to "FIXED" */}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Discount Value *
+                  {couponForm.discountType === "PERCENTAGE" ? " (%)" : " (₹)"}
+                </label>
+                <div className="relative">
+                  {couponForm.discountType === "PERCENTAGE" ? (
+                    <FaPercent className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  ) : (
+                    <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  )}
+                  <input
+                    type="number"
+                    name="discountValue"
+                    value={couponForm.discountValue}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="0"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Amount (₹)</label>
+                <div className="relative">
+                  <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="number"
+                    name="minOrderAmount"
+                    value={couponForm.minOrderAmount}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Maximum Discount Amount (₹)</label>
+                <div className="relative">
+                  <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="number"
+                    name="maxDiscountAmount"
+                    value={couponForm.maxDiscountAmount || ""}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="0"
+                    placeholder="No limit"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Type</label>
+                <select
+                  name="coupenType"
+                  value={couponForm.coupenType}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="GENERAL">General</option>
+                  <option value="NEW_USER">New User</option>
+                  <option value="SPECIAL_OFFER">Special Offer</option>
+                  <option value="SEASONAL">Seasonal</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={couponForm.startDate}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={couponForm.endDate}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Usage Limit *</label>
+                <input
+                  type="number"
+                  name="usageLimit"
+                  value={couponForm.usageLimit}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="1"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Product IDs (comma separated)</label>
+                <input
+                  type="text"
+                  value={couponForm.productIds.join(", ")}
+                  onChange={(e) => handleProductIdsChange(e)} // Pass the event object
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., 1,2,3"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Usage Limit *</label>
-              <input
-                type="number"
-                value={newCoupon.usageLimit}
-                onChange={(e) => setNewCoupon({ ...newCoupon, usageLimit: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                min="1"
-                step="1"
-              />
+            <div className="flex items-center gap-4 mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="isActive"
+                  checked={couponForm.isActive}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Active</span>
+              </label>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Applicable Categories</label>
-              <select
-                multiple
-                value={newCoupon.applicableCategories}
-                onChange={(e) => {
-                  const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                  setNewCoupon({ ...newCoupon, applicableCategories: selectedOptions });
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
+            <div className="flex gap-2">
+              <button
+                type="submit" // Changed to submit
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
               >
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category === "all" ? "All Categories" : category}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple categories</p>
+                Create Coupon
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsAdding(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
             </div>
-          </div>
-          <div className="flex items-center gap-4 mb-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={newCoupon.isActive}
-                onChange={(e) => setNewCoupon({ ...newCoupon, isActive: e.target.checked })}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">Active</span>
-            </label>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleAddCoupon}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            >
-              Create Coupon
-            </button>
-            <button
-              onClick={() => setIsAdding(false)}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
+          </form>
         </div>
       )}
 

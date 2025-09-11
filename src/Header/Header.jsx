@@ -5,9 +5,9 @@ import { useCart } from "../Context/CartContext";
 import { useWishlist } from "../Context/WishlistContext";
 import LoginSignup from "../Components/Login/Login";
 import logo from "/Logo.png";
-import axios from "axios";
+// import axios from "axios";
 
-// ---------- MENU DATA ----------
+// ---------- MENU DATA ---------- 
 const menuItems = [
   { label: "Home", to: "/" },
   { label: "Gemstones", to: "/gemstones" },

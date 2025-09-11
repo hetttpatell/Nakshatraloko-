@@ -292,6 +292,7 @@ const ProductModal = ({
     try {
       setApiStatus({ loading: true, message: "" });
       console.log("Making API call to saveProduct");
+      // "http://localhost:8001/api/saveProduct",
 
       const response = await axios.post(
         "http://localhost:8001/api/saveProduct",
