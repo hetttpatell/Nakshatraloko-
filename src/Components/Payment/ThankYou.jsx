@@ -28,13 +28,13 @@ const OrderItem = React.memo(({ item }) => {
         <div className="flex justify-between items-center">
           <h4 className="font-semibold text-gray-800 text-sm md:text-base">{name}</h4>
           <span className="font-bold text-gray-900 text-sm md:text-base">
-            ₹{(price * quantity).toLocaleString()}
+            ₹{(price * quantity)}
           </span>
         </div>
         <p className="text-gray-500 text-xs mt-1">
           Quantity: <span className="font-medium">x{quantity}</span>
         </p>
-        <p className="text-gray-500 text-xs">Unit Price: ₹{price.toLocaleString()}</p>
+        <p className="text-gray-500 text-xs">Unit Price: ₹{price}</p>
       </div>
     </motion.li>
   );
@@ -113,7 +113,7 @@ const ThankYouPage = ({ estimatedDelivery = "3-5 business days" }) => {
 
               <div className="flex justify-between items-center border-t pt-3 mt-2">
                 <p className="text-lg font-medium text-gray-700">Total:</p>
-                <p className="text-xl font-bold text-gray-900">₹{total.toLocaleString()}</p>
+                <p className="text-xl font-bold text-gray-900">₹{total}</p>
               </div>
             </div>
           </div>

@@ -13,11 +13,50 @@ export function WishlistProvider({ children }) {
             setWishlist(JSON.parse(saved));
         }
     }, []);
+    // const response = await axios.post("http://localhost:8001/api/manageWishlist", wishlistItem, {
+    //             headers: {
+    //                 Authorization: token
+    //             }
+    //         });
+    useEffect(() => {
+  const fetchWishlist = async () => {
+    const token = getAuthToken();
+    if (token) {
+      try {
+      const response = await axios.post(
+  "http://localhost:8001/api/listWishlist",
+  {}, // empty body
+  {
+    headers: {
+      Authorization: token,
+    },
+  }
+);
+
+
+        if (response.data.success) {
+          setWishlist(response.data.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching wishlist:", error);
+      }
+    } else {
+      // Fallback: localStorage for guest users
+      const saved = localStorage.getItem("wishlist");
+      if (saved) setWishlist(JSON.parse(saved));
+    }
+  };
+
+  fetchWishlist();
+}, []);
 
     // Sync with localStorage whenever wishlist changes
-    useEffect(() => {
-        localStorage.setItem("wishlist", JSON.stringify(wishlist));
-    }, [wishlist]);
+   useEffect(() => {
+  if (!getAuthToken()) {
+    localStorage.setItem("wishlist", JSON.stringify(wishlist));
+  }
+}, [wishlist]);
+
 
     // Helper function to get auth token
     const getAuthToken = () => {
@@ -68,35 +107,35 @@ export function WishlistProvider({ children }) {
 
     // Remove from wishlist with API call
     const removeFromWishlist = async (id) => {
-        try {
-            const token = getAuthToken();
-            if (!token) {
-                return { success: false, message: "Please login to manage wishlist" };
-            }
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      return { success: false, message: "Please login to manage wishlist" };
+    }
 
-            // Make the API call to remove item with authorization header
-           const response = await axios.post("http://localhost:8001/api/manageWishlist", wishlistItem, {
-                headers: {
-                    Authorization: token
-                }
-            });
+    const wishlistItem = { productId: id }; // ✅ define properly
 
+    const response = await axios.post(
+      "http://localhost:8001/api/manageWishlist",
+      wishlistItem,
+      { headers: { Authorization: token } }
+    );
 
-            if (response.data.success) {
-                // Remove from local wishlist context
-                setWishlist((prev) => prev.filter((item) => item.id !== id));
-                return { success: true, message: "Item removed from Wishlist" };
-            } else {
-                return { success: false, message: "Failed to remove item from wishlist" };
-            }
-        } catch (error) {
-            console.error("Error removing from wishlist:", error);
-            if (error.response?.status === 401) {
-                return { success: false, message: "Please login to manage wishlist" };
-            }
-            return { success: false, message: "Error removing item from wishlist" };
-        }
-    };
+    if (response.data.success) {
+      setWishlist((prev) => prev.filter((item) => item.id !== id));
+      return { success: true, message: "Item removed from Wishlist" };
+    } else {
+      return { success: false, message: "Failed to remove item from wishlist" };
+    }
+  } catch (error) {
+    console.error("Error removing from wishlist:", error);
+    if (error.response?.status === 401) {
+      return { success: false, message: "Please login to manage wishlist" };
+    }
+    return { success: false, message: "Error removing item from wishlist" };
+  }
+};
+
 
     // Clear wishlist
     const clearWishlist = () => {

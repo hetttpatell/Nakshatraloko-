@@ -3,45 +3,55 @@ import { useCart } from "../../Context/CartContext";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, ShoppingBag, Trash2, Sparkles, Zap } from "lucide-react";
+import { useWishlist } from "../../Context/WishlistContext"; // ✅ import context
+
 
 export default function Wishlist() {
   const { addToCart } = useCart();
 
-  const [wishlist, setWishlist] = useState(() => {
-    const saved = localStorage.getItem("wishlist");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { wishlist, removeFromWishlist, clearWishlist } = useWishlist(); 
 
   useEffect(() => {
     localStorage.setItem("wishlist", JSON.stringify(wishlist));
   }, [wishlist]);
 
-  const handleRemove = (id) => {
-    setWishlist((prev) =>
-      prev
-        .map((item) =>
-          item.id === id ? { ...item, quantity: item.quantity - 1 } : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
+const handleRemove = async (id) => {
+  const res = await removeFromWishlist(id);
+  if (res.success) {
+    toast.success("Item removed from wishlist");
+  } else {
+    toast.error(res.message || "Failed to remove item");
+  }
+};
 
-  const handleClearAll = () => {
-    setWishlist([]);
-  };
 
-  const handleMoveToCart = (id) => {
-    const item = wishlist.find((p) => p.id === id);
-    if (item && item.inStock) {
-      for (let i = 0; i < item.quantity; i++) {
-        addToCart(item);
-      }
-      setWishlist((prev) => prev.filter((p) => p.id !== id));
+  const handleClearAll = async () => {
+  await clearWishlist();
+  toast.success("Wishlist cleared!");
+};
+
+   const handleMoveToCart = async (productId) => {
+  const item = wishlist.find((i) => i.id === productId);
+  if (!item) return;
+
+  // Call cart API (your payload = { productId: id })
+  try {
+    const res = await addToCart({ productId }); 
+    if (res.success) {
+      await removeFromWishlist(productId); // remove from wishlist after adding to cart
+      toast.success(`${item.name} moved to cart`);
+    } else {
+      toast.error(res.message || "Failed to move item");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error("Error moving to cart");
+  }
+};
+
 
   // Background circles component
-  const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
+ const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
     <motion.div 
       className={`absolute ${size} rounded-full ${color}`}
       style={{ top: `${top}%`, left: `${left}%` }}
@@ -57,7 +67,7 @@ export default function Wishlist() {
         delay: delay
       }}
     />
-  );
+ );
 
   return (
     <div className="bg-gradient-to-b from-[var(--color-primary-light)]/30 to-[var(--color-background)] min-h-screen py-14 px-6 relative overflow-hidden">
@@ -83,7 +93,7 @@ export default function Wishlist() {
             <h2 className="text-3xl font-bold text-[var(--color-text)]">
               My Wishlist
             </h2>
-          </div>
+          </div> 
           
           {wishlist.length > 0 && (
             <motion.button
