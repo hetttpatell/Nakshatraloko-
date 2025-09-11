@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Star, StarHalf, Filter, X, Sparkles } from "lucide-react";
+import { Star, StarHalf, Filter, X, Sparkles, Eye, ArrowRight } from "lucide-react";
 import useProducts from "../../CustomHooks/useProducts"
 import axios from "axios";
 
@@ -295,8 +295,6 @@ export default function Gemstones() {
 
   return (
     <>
-      {/* <Imagepreview /> */}
-
       <div className="min-h-screen bg-[var(--color-background)]">
         {/* Header */}
         <div className="container mx-auto px-4 py-8">
@@ -320,7 +318,6 @@ export default function Gemstones() {
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-8 p-6 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow">
             <div className="flex items-center gap-4 relative">
               {/* Filters Button */}
-
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-2 px-6 py-3 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-xl hover:bg-[var(--color-primary)] hover:text-white transition-all"
@@ -332,7 +329,6 @@ export default function Gemstones() {
                 )}
               </button>
 
-
               {/* Clear All Button */}
               {hasActiveFilters && (
                 <button
@@ -343,36 +339,6 @@ export default function Gemstones() {
                   Clear All
                 </button>
               )}
-
-              {/* Dropdown for categories */}
-              {/* {showFilters && (
-            <div className="mb-8 p-6 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {Object.keys(optionsfilter).map((key) => (
-                  <div key={key}>
-                    <label className="block text-sm font-medium mb-2 text-[var(--color-text)]">
-                      {key}
-                    </label>
-                    <select
-                      value={filters[key]}
-                      onChange={(e) =>
-                        setFilters((prev) => ({ ...prev, [key]: e.target.value }))
-                      }
-                      className="w-full px-4 py-3 border border-[var(--color-border)] rounded-xl bg-white text-[var(--color-text)]"
-                    >
-                      <option value="">All {key}</option>
-                      {optionsfilter[key].map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )} */}
-
             </div>
 
             {/* Sorting */}
@@ -393,7 +359,6 @@ export default function Gemstones() {
               </select>
             </div>
           </div>
-
 
           {/* Filters Panel */}
           {showFilters && (
@@ -442,7 +407,6 @@ export default function Gemstones() {
             </div>
           )}
 
-
           {/* Results Count */}
           <div className="mb-8 flex justify-between items-center">
             <p className="text-[var(--color-text-light)]">
@@ -454,7 +418,7 @@ export default function Gemstones() {
             </p>
           </div>
 
-          {/* Products Grid */}
+          {/* Products Grid - IMPROVED UI */}
           <div className="pb-16">
             {filteredAndSortedProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20">
@@ -473,41 +437,54 @@ export default function Gemstones() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {filteredAndSortedProducts.map((product) => (
                   <Link
                     key={product.id}
                     to={`/product/${product.id}`}
                     state={{ product }}
-                    className="group bg-[var(--color-surface)] rounded-2xl overflow-hidden border border-[var(--color-border)] shadow hover:shadow-lg transition"
+                    className="group bg-[var(--color-surface)] rounded-2xl overflow-hidden border border-[var(--color-border)] transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
                   >
-                    {/* Image */}
+                    {/* Image Container */}
                     <div className="relative w-full aspect-square overflow-hidden">
                       <img
                         src={product.img}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => {
                           e.target.src = "/default-gemstone.jpg";
                         }}
                         loading="lazy"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      
                       {product.feature && (
-                        <span className="absolute top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white text-xs font-semibold px-3 py-2 rounded-r-xl">
+                        <span className="absolute top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white text-xs font-semibold px-3 py-2 rounded-r-xl shadow-md">
                           {product.feature}
                         </span>
                       )}
+                      
+                      {/* Quick view button */}
+                      <div className="absolute bottom-4 right-4 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                        <button className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md hover:bg-white transition-colors">
+                          <Eye className="w-4 h-4 text-[var(--color-text)]" />
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Details */}
+                    {/* Product Details */}
                     <div className="p-5">
-                      <h3 className="font-semibold text-[var(--color-text)] mb-2 line-clamp-2 group-hover:text-[var(--color-primary)] transition">
-                        {product.name}
-                      </h3>
-                      <p className="text-sm text-[var(--color-text-light)] mb-3">{product.category}</p>
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-[var(--color-primary)] uppercase tracking-wide mb-1">
+                          {product.category}
+                        </p>
+                        <h3 className="font-semibold text-[var(--color-text)] mb-2 line-clamp-2 group-hover:text-[var(--color-primary)] transition-colors">
+                          {product.name}
+                        </h3>
+                      </div>
 
                       {/* Rating */}
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center gap-2 mb-4">
                         <div className="flex">
                           {Array.from({ length: 5 }).map((_, i) => {
                             const fullStars = Math.floor(product.rating);
@@ -524,11 +501,14 @@ export default function Gemstones() {
                         <span className="text-sm text-[var(--color-text-light)]">({product.rating})</span>
                       </div>
 
-                      {/* Price & View Details */}
-                      <div className="flex items-center justify-between">
-                        <p className="text-lg font-semibold text-[var(--color-primary)]">{product.price}</p>
-                        <button className="opacity-0 group-hover:opacity-100 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition">
-                          View Details →
+                      {/* Price & CTA */}
+                      <div className="flex items-center justify-between pt-3 border-t border-[var(--color-border-light)]">
+                        <div>
+                          <p className="text-lg font-bold text-[var(--color-primary)]">{product.price}</p>
+                        </div>
+                        <button className="flex items-center gap-1 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium text-sm transition-colors">
+                          View Details
+                          <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
                         </button>
                       </div>
                     </div>
@@ -540,5 +520,5 @@ export default function Gemstones() {
         </div>
       </div>
     </>
-  );
+);
 }

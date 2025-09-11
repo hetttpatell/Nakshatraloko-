@@ -8,19 +8,28 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function Cart() {
   // ✅ include getCart here
-  const { cart, removeFromCart, updateQuantity, getCart } = useCart();
+const { cart, addToCart, updateQuantity, getCart, removeFromCart } = useCart();
 
   // ✅ fetch cart on mount
+  
   useEffect(() => {
     getCart();
   }, []);
+
   // Handlers
-   const handleRemove = (id, size, material) =>
-    removeFromCart(id, size, material);
+  
+  // Remove handler using CartContext's removeFromCart
+const handleRemove = async (product) => {
+    try {
+      await removeFromCart(product.id, product.size, product.material);
+      getCart(); // Refresh cart after removal
+    } catch (error) {
+      console.error("Failed to remove item:", error);
+    }
+  };
 
-  const handleQuantityChange = (id, size, material, value) =>
+   const handleQuantityChange = (id, size, material, value) =>
     updateQuantity(id, size, material, Math.max(1, Number(value)));
-
   // Calculations
   const subtotal = cart.reduce(
     (sum, item) => (item.inStock ? sum + item.price * item.quantity : sum),
@@ -106,9 +115,9 @@ export default function Cart() {
                       whileHover={{ scale: 1.05 }}
                       transition={{ type: "spring", stiffness: 400, damping: 10 }}
                     >
-                      <img 
-                      src={product.image}
-                      alt={product.name}
+                      <img
+                        src={product.image}
+                        alt={product.name}
                         className="w-32 h-32 object-cover"
                       />
                       {!product.inStock && (
@@ -194,10 +203,9 @@ export default function Cart() {
                       </div>
 
                       {/* Remove */}
+                     
                       <motion.button
-                        onClick={() =>
-                          handleRemove(product.id, product.size, product.material)
-                        }
+                        onClick={() => handleRemove(product)}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className="flex items-center gap-1 text-sm text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] transition-colors"
@@ -205,6 +213,7 @@ export default function Cart() {
                         <Trash2 size={14} />
                         Remove
                       </motion.button>
+
                     </div>
                   </motion.div>
                 ))}
@@ -247,8 +256,8 @@ export default function Cart() {
                   <Link
                     to="/payment"
                     className={`w-full py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
                       }`}
                   >
                     <Sparkles size={16} />

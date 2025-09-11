@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingBag, Heart, User, ChevronDown, Menu, X, UserCog, Search, Sparkles, LogOut } from "lucide-react";
 import { useCart } from "../Context/CartContext";
 import { useWishlist } from "../Context/WishlistContext";
 import LoginSignup from "../Components/Login/Login";
 import logo from "/Logo.png";
 import axios from "axios";
-// import axios from "axios";
 
 // ---------- MENU DATA ---------- 
 const initialMenuItems = [
@@ -230,25 +229,14 @@ export default function Header() {
   const [userrole, setUserrole] = useState(false);
   const [categoryData, setCategoryData] = useState([]);
   const [menuItems, setMenuItems] = useState(initialMenuItems);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
+  const navigate = useNavigate();
 
   // Initialize menu items
-  // const [menuItems, setMenuItems] = useState([
-  //   { label: "Home", to: "/" },
-  //   { label: "Categories", to: "/", subMenu: [] }, // will be filled from API
-  //   { label: "FAQs", to: "/faqs" },
-  //   { label: "Blogs", to: "/blogs" },
-  // ]);
-
-  // const userMenuItems = [
-  //   { to: "/cart", icon: ShoppingBag, badgeType: "cart" },
-  //   { to: "/wishlist", icon: Heart, badgeType: "wishlist" },
-  //   { to: "/account", icon: User },
-  // ];
-
-  //  const [categoryData, setCategoryData] = useState([]);
-
-useEffect(() => {
+  useEffect(() => {
     axios
       .post("http://localhost:8001/api/getCategories")
       .then((res) => {
@@ -277,13 +265,10 @@ useEffect(() => {
       .catch((err) => console.log(err));
   }, []); 
 
-
-
   // Optional: log menuItems after it updates
   useEffect(() => {
     console.log("Updated menuItems:", menuItems);
   }, [menuItems]);
-
 
   useEffect(() => {
     const token = localStorage.getItem("authToken") || localStorage.getItem("token");
@@ -384,6 +369,8 @@ useEffect(() => {
       }
       if (searchRef.current && !searchRef.current.contains(event.target) && searchOpen) {
         setSearchOpen(false);
+        setSearchQuery("");
+        setSearchResults([]);
       }
     };
 
@@ -408,6 +395,65 @@ useEffect(() => {
 
   const handleMenuLeave = () => {
     setHoverUnderlineStyle(prev => ({ ...prev, opacity: 0 }));
+  };
+
+  // Search functionality
+  const handleSearch = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      // Call your search API endpoint
+      const response = await axios.post("http://localhost:8001/api/search", {
+        query: query,
+      });
+      
+      if (response.data.success) {
+        setSearchResults(response.data.results);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Debounced search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery) {
+        handleSearch(searchQuery);
+      } else {
+        setSearchResults([]);
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  // Handle search result selection
+  const handleSearchResultClick = (result) => {
+    navigate(result.url);
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
+  // Handle search submission
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchOpen(false);
+      setSearchQuery("");
+      setSearchResults([]);
+    }
   };
 
   return (
@@ -487,7 +533,19 @@ useEffect(() => {
             {/* Search icon - only show on pages where search is enabled */}
             {shouldShowSearch && (
               <button
-                onClick={() => setSearchOpen(!searchOpen)}
+                onClick={() => {
+                  setSearchOpen(!searchOpen);
+                  if (!searchOpen) {
+                    // Focus on search input when opening
+                    setTimeout(() => {
+                      const searchInput = document.querySelector('input[type="text"]');
+                      if (searchInput) searchInput.focus();
+                    }, 100);
+                  } else {
+                    setSearchQuery("");
+                    setSearchResults([]);
+                  }
+                }}
                 className={`p-3 rounded-xl transition-all duration-300 ease-out ${searchOpen
                   ? "bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 text-[var(--color-primary)] shadow-lg"
                   : "text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md"
@@ -535,7 +593,6 @@ useEffect(() => {
                   onClick={() => setShowLogin(true)}
                   className="p-3 rounded-xl transition-all duration-300 ease-out text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md"
                 >
-                  {/* <User className="h-5 w-5" /> */}
                   Login
                 </button>
               )}
@@ -618,14 +675,66 @@ useEffect(() => {
               }`}
           >
             <div className="container mx-auto px-4 py-6">
-              <div className="relative max-w-2xl mx-auto">
+              <form onSubmit={handleSearchSubmit} className="relative max-w-2xl mx-auto">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] h-5 w-5" />
                 <input
                   type="text"
                   placeholder="Search for gemstones, categories, or products..."
                   className="w-full pl-12 pr-4 py-3 bg-[var(--color-background)] border border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all duration-300"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              </div>
+                
+                {/* Loading indicator */}
+                {isSearching && (
+                  <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[var(--color-primary)]"></div>
+                  </div>
+                )}
+                
+                {/* Clear search button */}
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSearchResults([]);
+                    }}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
+              </form>
+              
+              {/* Search results dropdown */}
+              {searchResults.length > 0 && (
+                <div className="max-w-2xl mx-auto mt-4 bg-white rounded-xl shadow-lg border border-[var(--color-border)] overflow-hidden">
+                  <div className="py-2">
+                    {searchResults.map((result, index) => (
+                      <div
+                        key={index}
+                        className="px-4 py-3 hover:bg-[var(--color-primary-light)]/20 cursor-pointer transition-colors duration-200"
+                        onClick={() => handleSearchResultClick(result)}
+                      >
+                        <div className="font-medium text-[var(--color-text)]">
+                          {result.name}
+                        </div>
+                        <div className="text-sm text-[var(--color-text-muted)]">
+                          {result.category}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* No results message */}
+              {searchQuery && !isSearching && searchResults.length === 0 && (
+                <div className="max-w-2xl mx-auto mt-4 text-center text-[var(--color-text-muted)]">
+                  No results found for "{searchQuery}"
+                </div>
+              )}
             </div>
           </div>
         )}

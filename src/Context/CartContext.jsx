@@ -81,6 +81,35 @@ export function CartProvider({ children }) {
   }
 };
 
+const removeFromCart = async (id, size, material) => {
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) throw new Error("No auth token found");
+
+    // Correct API endpoint and payload
+    const response = await axios.post(
+      "http://localhost:8001/api/manageCart",
+      { id, size, material, action: "remove" },
+      {
+        headers: {
+          Authorization: `${token}`,
+        },
+      }
+    );
+
+    // Update local cart state
+    setCart((prev) =>
+      prev.filter(
+        (p) => !(p.id === id && p.size === size && p.material === material)
+      )
+    );
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("Error removing from cart:", error);
+    return { success: false, error: error.message };
+  }
+};
 
   // ✅ Update quantity directly with API integration
   const updateQuantity = async (id, size, material, quantity) => {
@@ -175,29 +204,8 @@ export function CartProvider({ children }) {
   };
 
   // Remove one product completely with API integration
-  const removeFromCart = async (id, size, material) => {
-    try {
-      // Send remove request to backend API
-      const response = await axios.post("http://localhost:8001/api/manageCart", {
-        id,
-        size,
-        material,
-        action: "remove"
-      });
+  
 
-      // If API call is successful, update local state
-      setCart((prev) =>
-        prev.filter(
-          (p) => !(p.id === id && p.size === size && p.material === material)
-        )
-      );
-
-      return { success: true, data: response.data };
-    } catch (error) {
-      console.error("Error removing from cart:", error);
-      return { success: false, error: error.message };
-    }
-  };
 
   // Clear entire cart with API integration
   const clearCart = async () => {
