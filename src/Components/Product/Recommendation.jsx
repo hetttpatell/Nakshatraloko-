@@ -1,280 +1,168 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { AiFillStar, AiOutlineStar, AiOutlineHeart, AiFillHeart } from "react-icons/ai";
+import { useWishlist } from "../../Context/WishlistContext";
+import { useCart } from "../../Context/CartContext";
+import axios from "axios";
 
-const Recommendation = ({ 
-  permission = true, 
-  Slogan = "Discover more products curated just for you — blending quality, design, and style.",
-  Text = "You May Also",
-  HighlightText = "Like",
-   products = [
-  {
-    id: 1,
-    name: "14KT Yellow Gold Diamond Hoop Earrings",
-    category: "earrings",
-    subcategory: "Women | Earrings",
-    price: "₹ 4,554.00",
-    originalPrice: "₹ 6,505.00",
-    discount: "-30%",
-    rating: 4.8,
-    reviews: 42,
-    img: "/s1.jpeg",
-    description: "Elegant diamond hoop earrings crafted in 14KT yellow gold, perfect for any occasion.",
-    inStock: true,
-    tags: ["Popular", "New Arrival"],
-    featured: true
-  },
-  {
-    id: 2,
-    name: "14KT Yellow Gold Diamond Hoop Earrings",
-    category: "earrings",
-    subcategory: "Women | Earrings",
-    price: "₹ 4,554.00",
-    originalPrice: "₹ 6,505.00",
-    discount: "-30%",
-    rating: 4.8,
-    reviews: 42,
-    img: "/s2.jpeg",
-    description: "Elegant diamond hoop earrings crafted in 14KT yellow gold, perfect for any occasion.",
-    inStock: true,
-    tags: ["Popular", "New Arrival"],
-    featured: true
-  },
-  {
-    id: 3,
-    name: "14KT Yellow Gold Diamond Hoop Earrings",
-    category: "earrings",
-    subcategory: "Women | Earrings",
-    price: "₹ 4,554.00",
-    originalPrice: "₹ 6,505.00",
-    discount: "-30%",
-    rating: 4.8,
-    reviews: 42,
-    img: "/s3.jpeg",
-    description: "Elegant diamond hoop earrings crafted in 14KT yellow gold, perfect for any occasion.",
-    inStock: true,
-    tags: ["Popular", "New Arrival"],
-    featured: true
-  },
-  {
-    id: 4,
-    name: "14KT Yellow Gold Diamond Hoop Earrings",
-    category: "earrings",
-    subcategory: "Women | Earrings",
-    price: "₹ 4,554.00",
-    originalPrice: "₹ 6,505.00",
-    discount: "-30%",
-    rating: 4.8,
-    reviews: 42,
-    img: "/s1.jpeg",
-    description: "Elegant diamond hoop earrings crafted in 14KT yellow gold, perfect for any occasion.",
-    inStock: true,
-    tags: ["Popular", "New Arrival"],
-    featured: true
-  },
-  {
-    id: 5,
-    name: "14KT Yellow Gold Diamond Hoop Earrings",
-    category: "earrings",
-    subcategory: "Women | Earrings",
-    price: "₹ 4,554.00",
-    originalPrice: "₹ 6,505.00",
-    discount: "-30%",
-    rating: 4.8,
-    reviews: 42,
-    img: "/s1.jpeg",
-    description: "Elegant diamond hoop earrings crafted in 14KT yellow gold, perfect for any occasion.",
-    inStock: true,
-    tags: ["Popular", "New Arrival"],
-    featured: true
-  },
-  {
-    id: 6,
-    name: "14KT Yellow Gold Diamond Hoop Earrings",
-    category: "earrings",
-    subcategory: "Women | Earrings",
-    price: "₹ 4,554.00",
-    originalPrice: "₹ 6,505.00",
-    discount: "-30%",
-    rating: 4.8,
-    reviews: 42,
-    img: "/s1.jpeg",
-    description: "Elegant diamond hoop earrings crafted in 14KT yellow gold, perfect for any occasion.",
-    inStock: true,
-    tags: ["Popular", "New Arrival"],
-    featured: true
-  },
-  {
-    id: 7,
-    name: "14KT Yellow Gold Diamond Hoop Earrings",
-    category: "earrings",
-    subcategory: "Women | Earrings",
-    price: "₹ 4,554.00",
-    originalPrice: "₹ 6,505.00",
-    discount: "-30%",
-    rating: 4.8,
-    reviews: 42,
-    img: "/s1.jpeg",
-    description: "Elegant diamond hoop earrings crafted in 14KT yellow gold, perfect for any occasion.",
-    inStock: true,
-    tags: ["Popular", "New Arrival"],
-    featured: true
-  },
-  
-]
-}) => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+const Recommendation = () => {
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { addToWishlist, removeFromWishlist, wishlist } = useWishlist();
+  const { addToCart } = useCart();
+
+  // Helper function to map product data to consistent format
+  const mapProductData = (product) => {
+  return {
+    id: product.ID || product.id,
+    name: product.Name || product.name,
+    price: typeof product.Price === 'string' 
+      ? parseFloat(product.Price.replace(/[^\d.]/g, "")) 
+      : product.Price || product.price,
+    image: product.Image || product.image || "/placeholder.jpg",  // fallback image
+    rating: product.Rating || product.rating || 4.5,
+    brand: product.Brand || product.brand || "STYLIUM"
+  };
+};
+
+
+  // Fetch all products and select 4 random ones
+  const fetchRecommendedProducts = async () => {
+  try {
+    const res = await axios.post("http://localhost:8001/api/getAllProducts");
+
+    const apiProducts = Array.isArray(res.data?.data) ? res.data.data : [];
+
+    const mappedProducts = apiProducts.map(p => mapProductData(p));
+
+    const shuffled = [...mappedProducts].sort(() => 0.5 - Math.random());
+    setRecommendedProducts(shuffled.slice(0, 4));
+
+    setLoading(false);
+  } catch (err) {
+    console.error("Error fetching recommended products:", err);
+    setLoading(false);
+  }
+};
+
+
+  useEffect(() => {
+    fetchRecommendedProducts();
+  }, []);
+
+  const isWishlisted = (productId) => 
+    wishlist.some((item) => item.id === productId);
+
+  const handleWishlistClick = async (product) => {
+    if (isWishlisted(product.id)) {
+      await removeFromWishlist(product.id);
+    } else {
+      await addToWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        mainImage: product.image,
+        brand: product.brand
+      });
     }
   };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100
-      }
-    }
+  const handleAddToCart = (product) => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      mainImage: product.image,
+      brand: product.brand
+    }, 1, "", "");
   };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, index) => (
+          <div key={index} className="animate-pulse">
+            <div className="bg-gray-200 h-64 rounded-lg mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <section className="py-16 bg-[var(--color-background)]">
-      <div className="container mx-auto px-4 sm:px-6">
-        {/* Section Header */}
-        <motion.div 
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-        >
-          {permission && (
-            <div className="inline-flex items-center gap-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-4 py-2 rounded-full mb-4">
-              <span className="text-sm font-medium">Curated Selection</span>
-            </div>
-          )}
-          
-          <h2 className="text-3xl md:text-4xl font-bold text-[var(--color-text)] mb-4">
-            {Text} <span className="text-[var(--color-primary)]">{HighlightText}</span>
-          </h2>
-          
-          <p className="text-[var(--color-text-light)] max-w-2xl mx-auto">
-            {Slogan}
-          </p>
-        </motion.div>
-
-        {/* Products Grid - Matching Featured Products style */}
-        <motion.div 
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-        >
-          {products.map((product) => (
-            <motion.div
-              key={product.id}
-              variants={itemVariants}
-              className="group bg-white rounded-xl overflow-hidden shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-300 border border-[var(--color-border)] hover:border-[var(--color-primary)]/20"
-            >
-              <Link to={`/product/${product.id}`} className="block">
-                {/* Image Container */}
-                <div className="relative aspect-square overflow-hidden">
-                  <img
-                    src={product.images?.[0]?.src || product.mainImage || "/fallback.jpg"}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-                  
-                  {/* Badges */}
-                  {product.discount && (
-                    <div className="absolute top-2 left-2">
-                      <span className="bg-[var(--color-primary)] text-white text-xs font-semibold px-2 py-1 rounded">
-                        {product.discount}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Product Details */}
-                <div className="p-4">
-                  <h3 className="font-medium text-[var(--color-text)] line-clamp-2 mb-2 group-hover:text-[var(--color-primary)] transition-colors text-sm">
-                    {product.name}
-                  </h3>
-                  
-                  <p className="text-xs text-[var(--color-text-light)] mb-2">{product.brand}</p>
-                  
-                  {/* Rating */}
-                  <div className="flex items-center gap-1 mb-2">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <span
-                          key={i}
-                          className={
-                            i < Math.floor(product.rating) 
-                              ? "text-amber-500" 
-                              : "text-gray-300"
-                          }
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                    <span className="text-xs text-[var(--color-text-light)]">({product.reviews})</span>
-                  </div>
-                  
-                  {/* Price */}
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-[var(--color-primary)]">
-                      ₹{product.price?.toLocaleString()}
-                    </p>
-                    {product.originalPrice && (
-                      <p className="text-xs text-[var(--color-text-light)] line-through">
-                        ₹{product.originalPrice}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* View All Button */}
-        {permission && products.length > 0 && (
-          <motion.div 
-            className="text-center mt-12"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {recommendedProducts.map((product) => {
+        return (
+          <div key={product.id} className="group relative bg-color-surface rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
             <Link 
-              to="/collections" 
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-primary)] text-white font-medium rounded-lg hover:bg-[var(--color-primary-dark)] transition-all shadow-md hover:shadow-lg"
+              to={`/product/${product.id}`} 
+              state={{ product }}
+              className="block"
             >
-              View All Products
-              <ArrowRight size={16} />
+              <div className="relative overflow-hidden">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute top-3 left-3 bg-color-primary text-color-surface text-xs font-semibold px-2 py-1 rounded">
+                  NEW
+                </div>
+              </div>
             </Link>
-          </motion.div>
-        )}
-      </div>
-    </section>
+
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="text-sm font-medium text-color-text-muted mb-1">{product.brand}</h3>
+                  <Link 
+                    to={`/product/${product.id}`} 
+                    state={{ product }}
+                    className="font-normal text-color-text hover:text-color-primary transition-colors line-clamp-1"
+                  >
+                    {product.name}
+                  </Link>
+                </div>
+                <button
+                  onClick={() => handleWishlistClick(product)}
+                  className="text-lg hover:text-color-primary transition-colors"
+                >
+                  {isWishlisted(product.id) ? (
+                    <AiFillHeart className="text-color-primary" />
+                  ) : (
+                    <AiOutlineHeart />
+                  )}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1 mb-2">
+                <div className="flex text-color-rating">
+                  {[...Array(5)].map((_, i) => (
+                    i < Math.floor(product.rating) ?
+                      <AiFillStar key={i} className="text-sm" /> :
+                      <AiOutlineStar key={i} className="text-sm" />
+                  ))}
+                </div>
+                <span className="text-xs text-color-text-muted">({product.rating})</span>
+              </div>
+
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-lg font-light text-color-text">₹ {product.price.toLocaleString('en-IN')}</span>
+                <button
+                  onClick={() => handleAddToCart(product)}
+                  className="text-xs font-medium bg-color-primary text-color-surface px-3 py-2 rounded hover:bg-color-primary-dark transition-colors"
+                >
+                  ADD TO BAG
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
 export default Recommendation;
-
-

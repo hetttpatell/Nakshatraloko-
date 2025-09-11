@@ -1,50 +1,21 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useCart } from "../../Context/CartContext";
 import Recommendations from "../Product/Recommendation";
 import { Minus, Plus, Trash2, ShoppingBag, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
+
 export default function Cart() {
-  const { cart, removeFromCart, updateQuantity } = useCart();
+  // ✅ include getCart here
+  const { cart, removeFromCart, updateQuantity, getCart } = useCart();
 
-  // Dummy recommendations
-  const recommendationProducts = [
-    {
-      id: 1,
-      name: "Stellar Dainty Diamond Hoop",
-      brand: "STYLIUM",
-      rating: 4.5,
-      reviews: 22,
-      price: 9000,
-      inStock: true,
-      size: ["5 Ratti", "6 Ratti", "7 Ratti"],
-      images: [{ src: "/s1.jpeg", alt: "Product Image 1" }],
-    },
-    {
-      id: 2,
-      name: "Elegant Pearl Necklace",
-      brand: "PEARLIX",
-      rating: 3.8,
-      reviews: 12,
-      price: 1200,
-      inStock: false,
-      images: [{ src: "/s2.jpeg", alt: "Product Image 1" }],
-    },
-    {
-      id: 3,
-      name: "Classic Gold Pendant",
-      brand: "PEARLIX",
-      rating: 4.2,
-      reviews: 18,
-      price: 2500,
-      inStock: true,
-      images: [{ src: "/s3.jpeg", alt: "Product Image 1" }],
-    },
-  ];
-
+  // ✅ fetch cart on mount
+  useEffect(() => {
+    getCart();
+  }, []);
   // Handlers
-  const handleRemove = (id, size, material) =>
+   const handleRemove = (id, size, material) =>
     removeFromCart(id, size, material);
 
   const handleQuantityChange = (id, size, material, value) =>
@@ -60,7 +31,7 @@ export default function Cart() {
 
   // Background circles component
   const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
-    <motion.div 
+    <motion.div
       className={`absolute ${size} rounded-full ${color}`}
       style={{ top: `${top}%`, left: `${left}%` }}
       animate={{
@@ -83,16 +54,16 @@ export default function Cart() {
       <BackgroundCircle top={10} left={5} size="w-16 h-16" color="bg-[var(--color-primary)]/10" delay={0} duration={8} yMovement={15} />
       <BackgroundCircle top={80} left={90} size="w-20 h-20" color="bg-[var(--color-primary)]/10" delay={1} duration={7} yMovement={-12} />
       <BackgroundCircle top={30} left={85} size="w-12 h-12" color="bg-[var(--color-primary)]/10" delay={2} duration={9} yMovement={10} />
-      
+
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Title */}
-        <motion.div 
+        <motion.div
           className="text-center mb-14"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <motion.div 
+          <motion.div
             className="inline-flex items-center gap-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-4 py-2 rounded-full mb-5"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -111,7 +82,7 @@ export default function Cart() {
 
         <AnimatePresence>
           {cart.length > 0 ? (
-            <motion.div 
+            <motion.div
               className="grid grid-cols-1 lg:grid-cols-3 gap-10"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -130,14 +101,14 @@ export default function Cart() {
                     className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-lg transition-all"
                   >
                     {/* Product Image */}
-                    <motion.div 
+                    <motion.div
                       className="relative overflow-hidden rounded-xl"
                       whileHover={{ scale: 1.05 }}
                       transition={{ type: "spring", stiffness: 400, damping: 10 }}
                     >
-                      <img
-                        src={product.mainImage}
-                        alt={product.name}
+                      <img 
+                      src={product.image}
+                      alt={product.name}
                         className="w-32 h-32 object-cover"
                       />
                       {!product.inStock && (
@@ -240,7 +211,7 @@ export default function Cart() {
               </div>
 
               {/* Summary */}
-              <motion.div 
+              <motion.div
                 className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md p-6 h-fit lg:sticky lg:top-24"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -275,11 +246,10 @@ export default function Cart() {
                   </Link>
                   <Link
                     to="/payment"
-                    className={`w-full py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${
-                      subtotal === 0
+                    className={`w-full py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                         : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
-                    }`}
+                      }`}
                   >
                     <Sparkles size={16} />
                     Proceed to Checkout
@@ -289,14 +259,14 @@ export default function Cart() {
             </motion.div>
           ) : (
             // Empty Cart
-            <motion.div 
+            <motion.div
               className="text-center py-20"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
               <motion.div
-                animate={{ 
+                animate={{
                   scale: [1, 1.1, 1],
                   rotate: [0, 5, 0]
                 }}
@@ -324,21 +294,13 @@ export default function Cart() {
 
         {/* Recommendations */}
         {cart.length > 0 && (
-          <motion.div 
+          <motion.div
             className="mt-20"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Recommendations
-              permission={false}
-              text="Based On Your Cart"
-              Slogan="Here are some picks you should try"
-              products={recommendationProducts
-                .filter((p) => !cart.find((c) => c.id === p.id))
-                .sort(() => 0.5 - Math.random())
-                .slice(0, 4)}
-            />
+            <Recommendations />
           </motion.div>
         )}
       </div>

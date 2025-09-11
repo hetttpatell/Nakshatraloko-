@@ -16,11 +16,13 @@ export default function Gemstones() {
     Price: "",
     Features: "",
   });
+  
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [id, setid] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -41,7 +43,7 @@ export default function Gemstones() {
 
         let apiProducts = [];
         
-        // Handle different response structures
+        // Handle different response structures more carefully
         if (Array.isArray(res.data)) {
           apiProducts = res.data;
         } else if (Array.isArray(res.data?.data)) {
@@ -50,17 +52,27 @@ export default function Gemstones() {
           apiProducts = res.data.products;
         } else {
           // If response structure is unexpected, try to extract any array
-          const possibleArray = Object.values(res.data).find(
+          const possibleArrays = Object.values(res.data).filter(
             (item) => Array.isArray(item) && item.length > 0
           );
-          if (possibleArray) {
-            apiProducts = possibleArray;
+          if (possibleArrays.length > 0) {
+            // Take the first array that seems to contain products
+            apiProducts = possibleArrays[0];
           }
         }
 
         console.log("API Products:", apiProducts);
         
-        const productDetails = apiProducts.map((p, index) => {
+        // Use a Set to track unique product IDs to avoid duplicates
+        const uniqueProducts = new Map();
+        
+        apiProducts.forEach((p, index) => {
+          // Generate a unique ID for the product
+          const productId = p.ID || p.id || slugify(p.Name || p.name) || `product-${index}`;
+          
+          // Skip if we've already processed this product
+          if (uniqueProducts.has(productId)) return;
+          
           // Process image URL to ensure it's valid
           let imgUrl = p.Image || p.image || p.img || "/default-gemstone.jpg";
           
@@ -69,8 +81,8 @@ export default function Gemstones() {
             imgUrl = `/${imgUrl}`;
           }
           
-          return {
-            id: p.ID || p.id || slugify(p.Name || p.name) || `product-${index}`,
+          uniqueProducts.set(productId, {
+            id: productId,
             category: p.Category || p.category || "Uncategorized",
             name: p.Name || p.name || "Gemstone Product",
             description: p.Description || p.description || "Beautiful gemstone jewelry",
@@ -84,10 +96,11 @@ export default function Gemstones() {
             feature: p.Feature || p.feature || "",
             img: imgUrl,
             rating: parseFloat(p.Rating || p.rating || (Math.random() * 2 + 3).toFixed(1)),
-          };
+          });
         });
 
-        setProducts(productDetails);
+        // Convert Map values back to array
+        setProducts(Array.from(uniqueProducts.values()));
       } catch (err) {
         if (axios.isCancel(err)) {
           console.log("Request canceled:", err.message);
@@ -109,7 +122,7 @@ export default function Gemstones() {
       isMounted = false;
       abortController.abort("Component unmounted");
     };
-  }, []);
+  }, [id]);
 
   // Filter Options
   const optionsfilter = {
@@ -337,7 +350,7 @@ export default function Gemstones() {
                 {filteredAndSortedProducts.map((product) => (
                   <Link
                     key={product.id}
-                    to={`/product/${product.id}`}
+                     to={`/product/${product.id}`} 
                     state={{ product }}
                     className="group bg-[var(--color-surface)] rounded-2xl overflow-hidden border border-[var(--color-border)] shadow hover:shadow-lg transition"
                   >

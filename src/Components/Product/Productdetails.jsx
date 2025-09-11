@@ -16,10 +16,6 @@ const productquestions = [
     content: "We offer a 30-day return policy for all unworn items in their original packaging with proof of purchase."
   },
   {
-    title: "How do I care for my gemstone jewelry?",
-    content: "Clean with a soft, dry cloth. Avoid contact with chemicals, perfumes, and water. Store in a soft pouch separately from other jewelry."
-  },
-  {
     title: "Are the gemstones authentic?",
     content: "Yes, all our gemstones are 100% authentic and come with a certificate of authenticity."
   },
@@ -64,50 +60,58 @@ const ProductDetails = () => {
   const { addToCart } = useCart();
 
   // Helper function to map product data from API to our expected format
-  const mapProductData = (data) => ({
-    id: data.ID || data.id || id,
-    name: data.Name || data.name || "Gemstone Product",
-    brand: data.Brand || data.brand || "STYLIUM",
-    rating: data.Rating || data.rating || 4.5,
-    reviews: data.Reviews || data.reviews || 0,
-    price: typeof data.price === "string"
-      ? parseFloat(data.price.replace(/[^\d.]/g, ""))
-      : parseFloat(data.Price || data.price || 0),
-    inStock: data.InStock !== undefined ? data.InStock : true,
-    mainImage: data.Image || data.image || data.mainImage || data.img || "/s2.jpeg",
-    size: Array.isArray(data.Size) ? data.Size : ["5 Ratti", "6 Ratti"],  
-    material: Array.isArray(data.Material) ? data.Material : ["Gemstone", "Pendant", "Necklace"],
-    images: Array.isArray(data.Images)
-      ? data.Images.map((img) => ({ src: img, alt: "Product Image" }))
-      : [
-          {
-            src: data.Image || data.image || "/s1.jpeg",
-            alt: "Product Image",
-          },
-        ],
-    description: data.Description || data.description || "Beautiful gemstone jewelry",
-    advantages: Array.isArray(data.Advantages)
-      ? data.Advantages
-      : typeof data.Advantages === "string"
-      ? [data.Advantages]
-      : ["Feature 1", "Feature 2", "Feature 3"],
-    shipping: data.Shipping || "Free standard shipping on orders over ₹5,000",
-    reviewList: Array.isArray(data.ReviewList) ? data.ReviewList : [],
-  });
+  const mapProductData = (data) => {
+    console.log("Raw API data:", data); // Debug log
 
-  // Fetch recommended products
-  const fetchRecommendedProducts = async () => {
-    try {
-      const res = await axios.post("http://localhost:8001/api/getAllProducts");
-      const apiProducts = Array.isArray(res.data) ? res.data : res.data?.products || [];
-      const filtered = apiProducts.filter(p => (p.ID || p.id) !== id);
-      const recommended = filtered.map(p => mapProductData(p));
-      setRecommendedProducts(recommended.slice(0, 4)); // pick first 4
-    } catch (err) {
-      console.error("Error fetching recommended products:", err);
-    }
+    return {
+      id: data.id || data.ID || data._id || id,
+      name: data.name || data.Name || data.productName || "Gemstone Product",
+      brand: data.brand || data.Brand || data.seller || "STYLIUM",
+      rating: parseFloat(data.rating || data.Rating || data.avgRating || 4.5),
+      reviews: data.reviews || data.Reviews || data.reviewCount || 0,
+      price: typeof data.price === 'string'
+        ? parseFloat(data.price.replace(/[^\d.]/g, ""))
+        : parseFloat(data.price || data.Price || data.amount || 0),
+      inStock: data.inStock !== undefined ? data.inStock :
+        (data.InStock !== undefined ? data.InStock :
+          (data.stock !== undefined ? data.stock > 0 : true)),
+      mainImage: data.mainImage || data.image || data.Image || data.img || data.imageUrl || "/default-gemstone.jpg",
+      size: Array.isArray(data.size) ? data.size :
+        (Array.isArray(data.Size) ? data.Size :
+          (data.size ? [data.size] : ["5 Ratti", "15 Ratti", "6 Ratti"])),
+      material: Array.isArray(data.material) ? data.material :
+        (Array.isArray(data.Material) ? data.Material :
+          (data.material ? [data.material] : ["Gemstone", "Pendant", "Necklace"])),
+      images: Array.isArray(data.images) ? data.images.map((img) =>
+        (typeof img === 'string' ? { src: img, alt: "Product Image" } : img)) :
+        (Array.isArray(data.Images) ? data.Images.map((img) =>
+          (typeof img === 'string' ? { src: img, alt: "Product Image" } : img)) :
+          [{ src: data.mainImage || data.image || data.Image || "/s1.jpeg", alt: "Product Image" }]),
+      description: data.description || data.Description || data.productDescription || "Lightweight and comfortable",
+      advantages: Array.isArray(data.advantages) ? data.advantages :
+        (Array.isArray(data.Advantages) ? data.Advantages :
+          (typeof data.Advantages === 'string' ? [data.Advantages] :
+            (data.features ? data.features : ["Feature 1", "Feature 2", "Feature 3"]))),
+      shipping: data.shipping || data.Shipping || data.shippingInfo || "Free standard shipping on orders over ₹5,000",
+      reviewList: Array.isArray(data.reviewList) ? data.reviewList :
+        (Array.isArray(data.ReviewList) ? data.ReviewList :
+          (data.reviewsList ? data.reviewsList : [])),
+    };
   };
 
+  // Fetch recommended products
+  // const fetchRecommendedProducts = async () => {
+  //   try {
+  //     const res = await axios.post("http://localhost:8001/api/getAllProducts");
+  //     const apiProducts = Array.isArray(res.data) ? res.data : res.data?.products || [];
+  //     const filtered = apiProducts.filter(p => (p.ID || p.id) !== id);
+  //     const recommended = filtered.map(p => mapProductData(p));
+  //     setRecommendedProducts(recommended.slice(0, 4)); // pick first 4
+  //   } catch (err) {
+  //     console.error("Error fetching recommended products:", err);
+  //   }
+  // };
+ 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -115,23 +119,40 @@ const ProductDetails = () => {
 
     const loadProduct = async () => {
       try {
-        let productData = passedProduct;
+        const res = await axios.post(`http://localhost:8001/api/getProductById/${id}`);
+        const productData = res.data?.data?.product;
 
-        if (!productData) {
-          const res = await axios.get(`http://localhost:8001/api/getProductById/${id}`);
-          productData = res.data;
-        }
+        if (!isMounted || !productData) return;
 
-        if (!isMounted) return;
-
-        const mapped = mapProductData(productData);
+        // Map API response to UI-friendly structure
+        const mapped = {
+          id: productData.id,
+          name: productData.name,
+          description: productData.description,
+          howToWear: productData.howToWear || "",
+          brand: "Unknown Brand", // if not coming from API
+          rating: productData.rating || 4.5, // fallback rating
+          reviews: productData.reviews || 0,
+          reviewList: productData.reviewList || [],
+          images: productData.images.map((img, i) => ({
+            src: img.src || "/placeholder.png",
+            alt: img.alt || `${productData.name} ${i + 1}`,
+          })),
+          size: productData.sizes.map((s) => s.size), // extract just size
+          sizeDetails: productData.sizes, // keep full details
+          material: ["Leather", "Synthetic"], // fallback until API provides
+          advantages: productData.advantages
+            ? productData.advantages.split(",").map((a) => a.trim())
+            : [],
+          shipping: "Delivered in 5-7 business days",
+          mainImage: productData.images[0]?.src || "/placeholder.png",
+        };
+        console.log(productData);
         setProduct(mapped);
         setMainImage(mapped.mainImage);
         setSelectedSize(mapped.size[0] || "");
         setSelectedMaterial(mapped.material[0] || "");
         setLoading(false);
-
-        fetchRecommendedProducts();
       } catch (err) {
         console.error("Error loading product:", err);
         if (isMounted) {
@@ -146,7 +167,11 @@ const ProductDetails = () => {
     return () => {
       isMounted = false;
     };
-  }, [id, passedProduct]);
+  }, [id]);
+
+
+
+
 
   const isWishlisted = wishlist.some((item) => item.id === product?.id);
 
@@ -162,13 +187,24 @@ const ProductDetails = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  const getAdjustedPrice = () => {
-    if (!product || typeof product.price !== "number") return 0;
-    let extra = 0;
-    if (selectedMaterial === "Necklace") extra = 1000;
-    else if (selectedMaterial === "Pendant") extra = 1500;
-    return (product.price + extra) * quantity;
+
+  const getOriginalPrice = () => {
+    const selected = product?.sizeDetails?.find((s) => s.size === selectedSize);
+    return selected ? selected.dummyPrice : 0;
   };
+
+
+  const getAdjustedPrice = () => {
+    if (!product || !product.sizeDetails) return 0;
+
+    // Find the size object that matches the selected size
+    const selected = product.sizeDetails.find((s) => s.size === selectedSize);
+
+    if (!selected) return 0;
+
+    return selected.price * quantity;
+  };
+
 
   const handleImageZoom = (e) => {
     if (!isImageZoomed) return;
@@ -190,15 +226,23 @@ const ProductDetails = () => {
       </div>
     );
 
-  if (error || !product)
+  if (error || !product) {
     return (
       <div className="text-center mt-20 text-xl text-color-text-muted font-light">
         {error || "Product not found!"}
+        <div className="mt-4">
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-color-primary text-white px-4 py-2 rounded"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
-
+  }
   return (
-    <div className="bg-color-background min-h-screen">  
+    <div className="bg-color-background min-h-screen">
       <div className="w-full max-w-[1400px] mx-auto px-5 md:px-12 py-10">
         {/* Breadcrumb */}
         <nav className="text-sm text-color-text-muted mb-6 flex items-center">
@@ -281,8 +325,13 @@ const ProductDetails = () => {
                 <span className="text-sm text-color-text-muted">({product.reviews} reviews)</span>
                 <span className="text-sm font-medium text-color-accent-green ml-4">In Stock</span>
               </div>
+              <div className="text-2xl font-light text-color-text mb-2">
+                <span className="line-through text-color-text-muted mr-2">₹ {getOriginalPrice()}</span>
+                ₹ {getAdjustedPrice()}
+              </div>
 
-              <div className="text-2xl font-light text-color-text mb-2">₹ {getAdjustedPrice().toLocaleString('en-IN')}</div>
+
+
             </div>
 
             {/* Size Picker */}
@@ -346,23 +395,25 @@ const ProductDetails = () => {
                   +
                 </button>
               </div>
+
               <div>
                 <span className="text-xs text-color-text-muted block mb-1">TOTAL PRICE</span>
-                <div className="text-xl font-semibold text-color-primary">₹ {getAdjustedPrice().toLocaleString('en-IN')}</div>
+                <div className="text-xl font-semibold text-color-primary">₹ {getAdjustedPrice()}</div>
               </div>
             </div>
 
             {/* Buttons */}
             <div className="flex gap-4 mb-8">
-              <Button
-                onClick={() => {
-                  addToCart(product);
-                  showToast(`${product.name} added to Bag`, "success");
-                }}
-                className="bg-color-primary text-color-surface px-10 py-3.5 font-medium text-sm hover:bg-color-primary-dark transition-all duration-300 shadow-md hover:shadow-lg flex-1"
-              >
-                ADD TO BAG
-              </Button>
+             <Button
+  onClick={() => {
+    addToCart(product, quantity, selectedSize, selectedMaterial);
+    showToast(`${product.name} added to Bag`, "success");
+  }}
+  className="bg-color-primary text-color-surface px-10 py-3.5 font-medium text-sm hover:bg-color-primary-dark transition-all duration-300 shadow-md hover:shadow-lg flex-1"
+>
+  ADD TO BAG
+</Button>
+
 
               <Button
                 onClick={() => {
@@ -432,198 +483,64 @@ const ProductDetails = () => {
           </div>
         </div>
 
-        {/* Tabs Section */}
-        <div className="mt-16 w-full">
-          <div className="flex gap-10 border-b border-color-border text-lg font-medium mb-8">
-            <button
-              className={`${activeTab === "description" ? "border-b-2 border-color-primary text-color-text" : "text-color-text-muted"} pb-3 transition-all duration-300 font-serif`}
-              onClick={() => setActiveTab("description")}
-            >
-              DESCRIPTION
-            </button>
-            <button
-              className={`${activeTab === "reviews" ? "border-b-2 border-color-primary text-color-text" : "text-color-text-muted"} pb-3 transition-all duration-300 font-serif`}
-              onClick={() => setActiveTab("reviews")}
-            >
-              REVIEWS ({product.reviews})
-            </button>
-          </div>
+        {activeTab === "description" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 py-8">
+            {/* Left Column: About & Advantages */}
+            <div>
+              {/* About This Masterpiece */}
+              <h3 className="text-xl font-serif font-normal text-color-text mb-6">About This Masterpiece</h3>
+              <p className="text-color-text-light mb-4 leading-relaxed">{product.description}</p>
 
-          {activeTab === "description" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 py-8">
-              <div>
-                <h3 className="text-xl font-serif font-normal text-color-text mb-6">About This Masterpiece</h3>
-                <p className="text-color-text-light mb-6 leading-relaxed">{product.description}</p>
-                <h4 className="text-xl font-serif font-normal text-color-text mb-6">Craftsmanship & Advantages</h4>
-                <ul className="text-color-text-light space-y-3">
-                  {product.advantages.map((adv, idx) => (
-                    <li key={idx} className="flex items-start">
-                      <span className="text-color-primary mr-3">•</span>
-                      {adv}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-xl font-serif font-normal text-color-text mb-6">Shipping & Care</h3>
-                <p className="text-color-text-light mb-6 leading-relaxed">{product.shipping}</p>
-
-                <div className="bg-color-background-alt p-6 border border-color-border rounded-sm">
-                  <h4 className="font-serif font-normal text-color-text mb-3">Jewelry Care Instructions</h4>
-                  <ul className="text-sm text-color-text-light space-y-2">
-                    <li className="flex items-start">
-                      <span className="text-color-primary mr-2">•</span>
-                      Store in a soft pouch to prevent scratches
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-color-primary mr-2">•</span>
-                      Avoid contact with perfumes and chemicals
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-color-primary mr-2">•</span>
-                      Clean with a soft, dry cloth after wear
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "reviews" && (
-            <div className="space-y-8 py-8">
-              <h3 className="text-2xl font-serif font-normal text-color-text mb-8">Customer Experiences</h3>
-
-              {/* Review List */}
-              {product.reviewList.length > 0 ? (
-                <div className="space-y-8">
-                  {product.reviewList.map((rev, idx) => (
-                    <div key={idx} className="border-b border-color-border pb-8 last:border-b-0">
-                      {/* User Info */}
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-full bg-color-primary flex items-center justify-center text-color-surface font-bold text-lg">
-                          {rev.user.charAt(0)}
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-color-text">{rev.user}</h4>
-                          <span className="text-xs text-color-text-muted">Verified Purchase • 3 days ago</span>
-                        </div>
-                      </div>
-
-                      {/* Rating */}
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-color-rating text-md">
-                          {[...Array(5)].map((_, i) => (
-                            i < rev.rating ?
-                              <AiFillStar key={i} className="inline" /> :
-                              <AiOutlineStar key={i} className="inline" />
-                          ))}
-                        </span>
-                      </div>
-
-                      {/* Content */}
-                      <p className="text-color-text-light leading-relaxed">{rev.comment}</p>
-
-                      {/* Actions */}
-                      <div className="flex gap-5 text-sm text-color-text-muted mt-4">
-                        <button
-                          className="flex items-center gap-1 hover:text-color-primary transition-colors duration-200"
-                          onClick={() => toggleLike(idx)}
-                        >
-                          {likedReviews.includes(idx) ? (
-                            <AiFillLike className="text-color-primary text-lg" />
-                          ) : (
-                            <AiOutlineLike className="text-lg hover:text-color-primary" />
-                          )}
-                          <span>{likedReviews.includes(idx) ? "Liked" : "Helpful"}</span>
-                        </button>
-                        <button className="hover:text-color-primary transition-colors duration-200">
-                          Reply
-                        </button>
-                        <button className="hover:text-color-primary transition-colors duration-200">
-                          Report
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-color-text-muted italic text-center py-10">No reviews yet. Be the first to share your experience with this exquisite piece.</p>
+              {/* How to Wear */}
+              {product.howToWear && (
+                <>
+                  <h4 className="text-lg font-serif font-medium text-color-text mb-2">How to Wear</h4>
+                  <p className="text-color-text-light mb-6 leading-relaxed">{product.howToWear}</p>
+                </>
               )}
 
-              {/* Write Review Form */}
-              <div className="mt-12 p-8 border border-color-border rounded-sm bg-color-surface">
-                <h4 className="font-serif text-xl font-normal text-color-text mb-6">Share Your Experience</h4>
-
-                {/* Rating */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-color-text mb-3">
-                    Your Rating
-                  </label>
-                  <div className="flex text-color-rating text-2xl cursor-pointer">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span
-                        key={star}
-                        onClick={() => setRating(star)}
-                        onMouseEnter={() => setHover(star)}
-                        onMouseLeave={() => setHover(0)}
-                        className="transition-transform duration-200 hover:scale-110 mr-1"
-                      >
-                        {star <= (hover || rating) ? <AiFillStar /> : <AiOutlineStar />}
-                      </span>
+              {/* Craftsmanship & Advantages */}
+              {product.advantages.length > 0 && (
+                <>
+                  <h4 className="text-xl font-serif font-normal text-color-text mb-4">Craftsmanship & Advantages</h4>
+                  <ul className="text-color-text-light space-y-3">
+                    {product.advantages.map((adv, idx) => (
+                      <li key={idx} className="flex items-start">
+                        <span className="text-color-primary mr-3">•</span>
+                        {adv}
+                      </li>
                     ))}
-                  </div>
-                </div>
+                  </ul>
+                </>
+              )}
+            </div>
 
-                {/* Title */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-color-text mb-3">
-                    Review Title
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Share your overall impression"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-4 py-3 border border-color-border rounded-sm focus:outline-none focus:ring-1 focus:ring-color-primary transition-all duration-200"
-                  />
-                </div>
+            {/* Right Column: Shipping & Care */}
+            <div>
+              <h3 className="text-xl font-serif font-normal text-color-text mb-6">Shipping & Care</h3>
+              <p className="text-color-text-light mb-6 leading-relaxed">{product.shipping}</p>
 
-                {/* Content */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-color-text mb-3">
-                    Your Review
-                  </label>
-                  <textarea
-                    rows={5}
-                    placeholder="Tell others about your experience with this product..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="w-full px-4 py-3 border border-color-border rounded-sm focus:outline-none focus:ring-1 focus:ring-color-primary transition-all duration-200 resize-none"
-                  />
-                </div>
-
-                <button
-                  onClick={() => {
-                    if (rating === 0 || !comment.trim()) {
-                      showToast("Please give a rating and write your review!", "error");
-                      return;
-                    }
-                    const newReview = {
-                      user: "You",
-                      rating,
-                      comment: `${title ? title + " - " : ""}${comment}`,
-                    };
-                    console.log("Submitted Review:", newReview);
-                    showToast("Thank you for your review!", "success");
-                  }}
-                  className="bg-color-primary text-color-surface px-8 py-3.5 rounded-sm font-medium hover:bg-color-primary-dark transition-all duration-300 shadow-md hover:shadow-lg"
-                >
-                  Share Your Review
-                </button>
+              <div className="bg-color-background-alt p-6 border border-color-border rounded-sm">
+                <h4 className="font-serif font-normal text-color-text mb-3">Jewelry Care Instructions</h4>
+                <ul className="text-sm text-color-text-light space-y-2">
+                  <li className="flex items-start">
+                    <span className="text-color-primary mr-2">•</span>
+                    Store in a soft pouch to prevent scratches
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-color-primary mr-2">•</span>
+                    Avoid contact with perfumes and chemicals
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-color-primary mr-2">•</span>
+                    Clean with a soft, dry cloth after wear
+                  </li>
+                </ul>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
 
         {/* Recommendations */}
         <div className="mt-20">
@@ -640,6 +557,13 @@ const ProductDetails = () => {
           onClose={() => setToast({ ...toast, visible: false })}
         />
       )}
+      {/* // Add this near the end of your return statement, before the closing div
+      {product && (
+        <div className="mt-8 p-4 bg-gray-100 rounded">
+          <h3>Debug Info (remove in production):</h3>
+          <pre>{JSON.stringify(product, null, 2)}</pre>
+        </div>
+      )} */}
     </div>
   );
 };
