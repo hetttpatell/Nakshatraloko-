@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Star, StarHalf, Filter, X, Sparkles } from "lucide-react";
 import useProducts from "../../CustomHooks/useProducts"
+import axios from "axios";
 
 // Helper to create slug/ID
 const slugify = (str) =>
@@ -18,8 +19,45 @@ export default function Gemstones() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("");
   const { products, loading, error } = useProducts();
+  const [categoryData, setCategoryData] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState([]);
 
+  useEffect(() => {
+    axios
+      .post("http://localhost:8001/api/getCategories")
+      .then((res) => {
+        if (res.data.success) {
+          const transformedData = res.data.data.map((category) => ({
+            CategoryName: category.CategoryName,
+            Image: category.Image || "/abot.jpg",
+          }));
+          setCategoryData(transformedData);
 
+          // Update the Categories menu item with subMenu data
+          setMenuItems(prevItems =>
+            prevItems.map(item =>
+              item.label === "Categories"
+                ? {
+                  ...item,
+                  subMenu: transformedData.map(cat => ({
+                    label: cat.CategoryName,
+                    to: `/category/${cat.CategoryName.toLowerCase().replace(/\s+/g, '-')}`
+                  }))
+                }
+                : item
+            )
+          );
+        }
+      })
+      .catch((err) => console.log(err));
+  }, []);
+  const toggleFilter = (category) => {
+    setSelectedFilters((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    );
+  };
   // useEffect(() => {
   //   let isMounted = true;
   //   // const abortController = new AbortController();
@@ -180,9 +218,10 @@ export default function Gemstones() {
         if (!(rating >= min && rating <= max)) matches = false;
       }
 
-      if (filters.Categories && product.category !== filters.Categories) {
+      if (selectedFilters.length > 0 && !selectedFilters.includes(product.category)) {
         matches = false;
       }
+
 
       if (filters.Price) {
         const [min, max] = filters.Price.split(" - ").map(Number);
@@ -230,11 +269,17 @@ export default function Gemstones() {
       Price: "",
       Features: "",
     });
+    setSelectedFilters([]);
     setSortBy("");
   };
 
+
   const hasActiveFilters =
-    Object.values(filters).some((v) => v !== "") || sortBy !== "";
+    Object.values(filters).some((v) => v !== "") ||
+    sortBy !== "" ||
+    selectedFilters.length > 0;
+
+
 
   // Loading State
   if (loading) {
@@ -273,7 +318,9 @@ export default function Gemstones() {
 
           {/* Controls Bar */}
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-8 p-6 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 relative">
+              {/* Filters Button */}
+
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-2 px-6 py-3 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-xl hover:bg-[var(--color-primary)] hover:text-white transition-all"
@@ -284,6 +331,9 @@ export default function Gemstones() {
                   <span className="w-2 h-2 bg-[var(--color-primary)] rounded-full"></span>
                 )}
               </button>
+
+
+              {/* Clear All Button */}
               {hasActiveFilters && (
                 <button
                   onClick={resetFilters}
@@ -293,29 +343,9 @@ export default function Gemstones() {
                   Clear All
                 </button>
               )}
-            </div>
 
-            {/* Sorting */}
-            <div className="flex items-center gap-3">
-              <span className="text-[var(--color-text-light)] text-sm">
-                Sort by:
-              </span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-[var(--color-border)] rounded-xl bg-white text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)]/50"
-              >
-                {sortOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Filters Panel */}
-          {showFilters && (
+              {/* Dropdown for categories */}
+              {/* {showFilters && (
             <div className="mb-8 p-6 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {Object.keys(optionsfilter).map((key) => (
@@ -341,7 +371,77 @@ export default function Gemstones() {
                 ))}
               </div>
             </div>
+          )} */}
+
+            </div>
+
+            {/* Sorting */}
+            <div className="flex items-center gap-3">
+              <span className="text-[var(--color-text-light)] text-sm">
+                Sort by:
+              </span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-2 border border-[var(--color-border)] rounded-xl bg-white text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)]/50"
+              >
+                {sortOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="mb-8 p-6 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {Object.keys(optionsfilter).map((key) => (
+                  <div key={key}>
+                    <label className="block text-sm font-medium mb-2 text-[var(--color-text)]">
+                      {key}
+                    </label>
+
+                    {key === "Categories" ? (
+                      <select
+                        value={filters[key]}
+                        onChange={(e) =>
+                          setFilters((prev) => ({ ...prev, [key]: e.target.value }))
+                        }
+                        className="w-full px-4 py-3 border border-[var(--color-border)] rounded-xl bg-white text-[var(--color-text)]"
+                      >
+                        <option value="">All Categories</option>
+                        {categoryData.map((cat) => (
+                          <option key={cat.CategoryName} value={cat.CategoryName}>
+                            {cat.CategoryName}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <select
+                        value={filters[key]}
+                        onChange={(e) =>
+                          setFilters((prev) => ({ ...prev, [key]: e.target.value }))
+                        }
+                        className="w-full px-4 py-3 border border-[var(--color-border)] rounded-xl bg-white text-[var(--color-text)]"
+                      >
+                        <option value="">All {key}</option>
+                        {optionsfilter[key].map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
+
 
           {/* Results Count */}
           <div className="mb-8 flex justify-between items-center">
