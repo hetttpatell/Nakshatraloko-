@@ -255,7 +255,7 @@ const Coupons = () => {
       setError("Please fill all required fields");
       return;
     }
-    
+
     // Validate dates
     if (new Date(editingCoupon.endDate) < new Date(editingCoupon.startDate)) {
       setError("End date cannot be before start date");
@@ -283,29 +283,34 @@ const Coupons = () => {
 
 const handleDeleteCoupon = async (id) => {
   try {
-    // Get token from localStorage (keep this for future use)
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("authToken"); // get token
 
-    // Send DELETE request to backend
-    const response = await axios.delete(
-      `http://localhost:8001/api/deleteCoupon/${id}`,
+    console.log(token);
+    const response = await axios.post(
+      `http://localhost:8001/api/deleteCoupon/${id}`, // API endpoint
+      {}, // body can be empty if backend doesn't expect data
       {
         headers: {
-          Authorization: token ? `Bearer ${token}` : "" // send token if available
-        }
+          Authorization: token ? `${token}` : "", // correct header
+        },
       }
     );
+    console.log(token);
+    console.log("Delete response:", response.data);
 
-    if (response.status === 200) {
-      // Refresh coupons list after deletion
+    if (response.status === 200 && response.data.success) {
       fetchCoupons();
       setDeleteConfirm(null);
+    } else {
+      setError(response.data.message || "Failed to delete coupon.");
     }
   } catch (err) {
     console.error("Error deleting coupon:", err.response?.data || err);
     setError(err.response?.data?.error || "Failed to delete coupon. Please try again.");
   }
 };
+
+
 
 
   const toggleCouponStatus = async (id) => {
