@@ -433,7 +433,7 @@ useEffect(() => {
               <div className="relative">
                 <img
                   src={logo}
-                  alt="Nakshatraloko Logo"
+                  alt="Nakshatraloka Logo"
                   className={`transition-all duration-500 ease-out ${scrolled ? "h-10" : "h-12"} filter invert relative z-10`}
                 />
                 {/* Glow effect behind logo */}
@@ -445,7 +445,7 @@ useEffect(() => {
               </div>
 
               <span className={`ml-3 text-[var(--color-text)] font-bold transition-all duration-500 ease-out hidden sm:block ${scrolled ? "text-lg" : "text-xl"}`}>
-                Nakshatra<span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)]">Loko</span>
+                Nakshatra<span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)]">Loka</span>
               </span>
             </div>
           </NavLink>

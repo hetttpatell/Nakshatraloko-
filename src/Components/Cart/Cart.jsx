@@ -92,7 +92,7 @@ export default function Cart() {
               <div className="lg:col-span-2 space-y-6">
                 {cart.map((product) => (
                   <motion.div
-                    key={`${product.id}-${product.size}-${product.material}`}
+                    key={`${product.id ?? Math.random()}-${product.size ?? "default"}-${product.material ?? "default"}`}
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Star, StarHalf, Filter, X, Sparkles } from "lucide-react";
-import axios from "axios";
-import Imagepreview from "./Imagepreview";
+import useProducts from "../../CustomHooks/useProducts"
 
 // Helper to create slug/ID
 const slugify = (str) =>
@@ -16,121 +15,149 @@ export default function Gemstones() {
     Price: "",
     Features: "",
   });
-  
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("");
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [id, setid] = useState("");
+  const { products, loading, error } = useProducts();
 
-  useEffect(() => {
-    let isMounted = true;
-    const abortController = new AbortController();
 
-    const fetchProducts = async () => {
-      setLoading(true);
-      setError(null);
+  // useEffect(() => {
+  //   let isMounted = true;
+  //   // const abortController = new AbortController();
 
-      try {
-        const res = await axios.post(
-          "http://localhost:8001/api/getAllProducts",
-          {},
-          { signal: abortController.signal }
-        );
+  //   const fetchProducts = async () => {
+  //     setLoading(true);
+  //     setError(null);
 
-        if (!isMounted) return;
+  //     try {
+  //       const res = await axios.post(
+  //         "http://localhost:8001/api/getAllProducts",
+  //         // {},
+  //         // { signal: abortController.signal }
+  //       );
 
-        let apiProducts = [];
-        
-        // Handle different response structures more carefully
-        if (Array.isArray(res.data)) {
-          apiProducts = res.data;
-        } else if (Array.isArray(res.data?.data)) {
-          apiProducts = res.data.data;
-        } else if (Array.isArray(res.data?.products)) {
-          apiProducts = res.data.products;
-        } else {
-          // If response structure is unexpected, try to extract any array
-          const possibleArrays = Object.values(res.data).filter(
-            (item) => Array.isArray(item) && item.length > 0
-          );
-          if (possibleArrays.length > 0) {
-            // Take the first array that seems to contain products
-            apiProducts = possibleArrays[0];
-          }
-        }
+  //       if (!isMounted) return;
 
-        console.log("API Products:", apiProducts);
-        
-        // Use a Set to track unique product IDs to avoid duplicates
-        const uniqueProducts = new Map();
-        
-        apiProducts.forEach((p, index) => {
-          // Generate a unique ID for the product
-          const productId = p.ID || p.id || slugify(p.Name || p.name) || `product-${index}`;
-          
-          // Skip if we've already processed this product
-          if (uniqueProducts.has(productId)) return;
-          
-          // Process image URL to ensure it's valid
-          let imgUrl = p.Image || p.image || p.img || "/default-gemstone.jpg";
-          
-          // Ensure the URL is properly formatted
-          if (imgUrl && !imgUrl.startsWith("http") && !imgUrl.startsWith("/")) {
-            imgUrl = `/${imgUrl}`;
-          }
-          
-          uniqueProducts.set(productId, {
-            id: productId,
-            category: p.Category || p.category || "Uncategorized",
-            name: p.Name || p.name || "Gemstone Product",
-            description: p.Description || p.description || "Beautiful gemstone jewelry",
-            price: `₹ ${parseFloat(p.Price || p.price || 0).toLocaleString("en-IN")}`,
-            dummyPrice: p.DummyPrice || p.dummyPrice || "",
-            discountPercentage: p.DiscountPercentage || p.discountPercentage || 0,
-            stock: p.Stock || p.stock || 0,
-            advantages: p.Advantages || p.advantages || "",
-            howToWear: p.HowToWear || p.howToWear || "",
-            isActive: p.IsActive ?? true,
-            feature: p.Feature || p.feature || "",
-            img: imgUrl,
-            rating: parseFloat(p.Rating || p.rating || (Math.random() * 2 + 3).toFixed(1)),
-          });
-        });
+  //       let apiProducts = [];
 
-        // Convert Map values back to array
-        setProducts(Array.from(uniqueProducts.values()));
-      } catch (err) {
-        if (axios.isCancel(err)) {
-          console.log("Request canceled:", err.message);
-        } else {
-          console.error("Error fetching Gemstone products:", err);
-          if (isMounted) {
-            setError("Failed to load products.");
-            setProducts([]);
-          }
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
+  //       // Handle different response structures more carefully
+  //       if (Array.isArray(res.data)) {
+  //         apiProducts = res.data;
+  //       } else if (Array.isArray(res.data?.data)) {
+  //         apiProducts = res.data.data;
+  //       } else if (Array.isArray(res.data?.products)) {
+  //         apiProducts = res.data.products;
+  //       } else {
+  //         // If response structure is unexpected, try to extract any array
+  //         const possibleArrays = Object.values(res.data).filter(
+  //           (item) => Array.isArray(item) && item.length > 0
+  //         );
+  //         if (possibleArrays.length > 0) {
+  //           // Take the first array that seems to contain products
+  //           apiProducts = possibleArrays[0];
+  //         }
+  //       }
 
-    fetchProducts();
+  //       console.log("API Products:", apiProducts);
 
-    return () => {
-      isMounted = false;
-      abortController.abort("Component unmounted");
-    };
-  }, [id]);
+  //       // Use a Set to track unique product IDs to avoid duplicates
+  //       const uniqueProducts = new Map();
+
+  //       apiProducts.forEach((p, index) => {
+  //         // Generate a unique ID for the product
+  //         const productId = p.ID || p.id || slugify(p.Name || p.name) || `product-${index}`;
+
+  //         // Skip if we've already processed this product
+  //         if (uniqueProducts.has(productId)) return;
+
+  //         // Process image URL to ensure it's valid
+  //         let imgUrl = p.Image || p.image || p.img || "/default-gemstone.jpg";
+
+  //         // Ensure the URL is properly formatted
+  //         if (imgUrl && !imgUrl.startsWith("http") && !imgUrl.startsWith("/")) {
+  //           imgUrl = `/${imgUrl}`;
+  //         }
+
+  //         uniqueProducts.set(productId, {
+  //           id: productId,
+  //           category: p.Category || p.category || "Uncategorized",
+  //           name: p.Name || p.name || "Gemstone Product",
+  //           description: p.Description || p.description || "Beautiful gemstone jewelry",
+  //           price: `₹ ${parseFloat(p.Price || p.price || 0).toLocaleString("en-IN")}`,
+  //           dummyPrice: p.DummyPrice || p.dummyPrice || "",
+  //           discountPercentage: p.DiscountPercentage || p.discountPercentage || 0,
+  //           stock: p.Stock || p.stock || 0,
+  //           advantages: p.Advantages || p.advantages || "",
+  //           howToWear: p.HowToWear || p.howToWear || "",
+  //           isActive: p.IsActive ?? true,
+  //           feature: p.Feature || p.feature || "",
+  //           img: imgUrl,
+  //           rating: parseFloat(p.Rating || p.rating || (Math.random() * 2 + 3).toFixed(1)),
+  //         });
+  //       });
+
+  //       // Convert Map values back to array
+  //       setProducts(Array.from(uniqueProducts.values()));
+  //     } catch (err) {
+  //       if (axios.isCancel(err)) {
+  //         console.log("Request canceled:", err.message);
+  //       } else {
+  //         console.error("Error fetching Gemstone products:", err);
+  //         if (isMounted) {
+  //           setError("Failed to load products.");
+  //           setProducts([]);
+  //         }
+  //       }
+  //     } finally {
+  //       if (isMounted) setLoading(false);
+  //     }
+  //   };
+
+  //   fetchProducts();
+
+  //   // return () => {
+  //   //   isMounted = false;
+  //   //   abortController.abort("Component unmounted");
+  //   // };
+  // }, []);
 
   // Filter Options
-  const optionsfilter = {
-    Ratings: ["1 - 2", "2 - 3", "3 - 4", "4 - 5"],
-    Categories: ["Men | Earrings", "Women | Earrings", "Unisex | Earrings"],
-    Price: ["999 - 1999", "1999 - 2999", "2999 - 3999", "3999 - 4999", "4999 - 5999"],
-    Features: ["Inner Strength", "Peace & Harmony", "Energy Booster"],
-  };
+  const optionsfilter = useMemo(() => {
+    if (!products || products.length === 0) return { Ratings: [], Categories: [], Price: [], Features: [] };
+
+    const ratingsSet = new Set();
+    const categoriesSet = new Set();
+    const featuresSet = new Set();
+    const priceRangesSet = new Set();
+
+    products.forEach((p) => {
+      // Ratings ranges
+      const r = Math.floor(p.rating);
+      ratingsSet.add(`${r} - ${r + 1}`);
+
+      // Categories
+      if (p.category) categoriesSet.add(p.category);
+
+      // Features
+      if (p.feature) featuresSet.add(p.feature);
+
+      // Price ranges (rounded to nearest 1000)
+      const price = Number(p.price.replace(/[^\d]/g, ""));
+      const min = Math.floor(price / 1000) * 1000;
+      const max = min + 999;
+      priceRangesSet.add(`${min} - ${max}`);
+    });
+
+    return {
+      Ratings: Array.from(ratingsSet).sort(),
+      Categories: Array.from(categoriesSet).sort(),
+      Price: Array.from(priceRangesSet).sort((a, b) => {
+        const aMin = Number(a.split(" - ")[0]);
+        const bMin = Number(b.split(" - ")[0]);
+        return aMin - bMin;
+      }),
+      Features: Array.from(featuresSet).sort(),
+    };
+  }, [products]);
 
   // Sorting Options
   const sortOptions = [
@@ -350,7 +377,7 @@ export default function Gemstones() {
                 {filteredAndSortedProducts.map((product) => (
                   <Link
                     key={product.id}
-                     to={`/product/${product.id}`} 
+                    to={`/product/${product.id}`}
                     state={{ product }}
                     className="group bg-[var(--color-surface)] rounded-2xl overflow-hidden border border-[var(--color-border)] shadow hover:shadow-lg transition"
                   >
