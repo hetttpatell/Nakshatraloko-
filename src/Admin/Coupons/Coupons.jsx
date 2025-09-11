@@ -281,19 +281,17 @@ const Coupons = () => {
     }
   };
 
-  const handleDeleteCoupon = async (id) => {
-    try {
-      const response = await axios.post("http://localhost:8001/api/deleteCoupon", { ID: id });
-      if (response.status === 200) {
-        // Refresh the coupons list after deletion
-        fetchCoupons();
-        setDeleteConfirm(null);
-      }
-    } catch (err) {
-      console.error("Error deleting coupon:", err);
-      setError("Failed to delete coupon. Please try again.");
-    }
-  };
+ const handleDeleteCoupon = async (id) => {
+  try {
+    await axios.post(`http://localhost:8001/api/deleteCoupon/${id}`);
+    fetchCoupons();
+    setDeleteConfirm(null);
+  } catch (err) {
+    console.error("Error deleting coupon:", err);
+    setError("Failed to delete coupon. Please try again.");
+  }
+};
+
 
   const toggleCouponStatus = async (id) => {
     try {
