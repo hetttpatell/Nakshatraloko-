@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
 const slides = [
   {
     id: 1,
-    image: "/testing.jpeg",
+    image: "/d.jpeg",
     title: "Dive into Brilliance",
     description: "Discover the sparkle of handpicked gemstones crafted in 925 Silver.",
     buttons: [
@@ -15,7 +15,7 @@ const slides = [
   },
   {
     id: 2,
-    image: "/testing.jpeg",
+    image: "/d1.jpeg",
     title: "Luxury Beyond Time",
     description: "Experience timeless elegance with our exclusive signature designs.",
     buttons: [
@@ -25,7 +25,7 @@ const slides = [
   },
   {
     id: 3,
-    image: "/testing.jpeg",
+    image: "/d.jpeg",
     title: "Ocean Blue Gemstone",
     description: "Our signature ocean blue gemstone brings beauty to every moment.",
     buttons: [
@@ -35,7 +35,7 @@ const slides = [
   },
   {
     id: 4,
-    image: "/testing.jpeg",
+    image: "/d1.jpeg",
     title: "Elegance Redefined",
     description: "Crafted with precision, made for those who value true beauty.",
     buttons: [
