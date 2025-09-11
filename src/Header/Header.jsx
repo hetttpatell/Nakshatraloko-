@@ -535,7 +535,8 @@ useEffect(() => {
                   onClick={() => setShowLogin(true)}
                   className="p-3 rounded-xl transition-all duration-300 ease-out text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md"
                 >
-                  <User className="h-5 w-5" />
+                  {/* <User className="h-5 w-5" /> */}
+                  Login
                 </button>
               )}
             </div>
