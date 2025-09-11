@@ -5,21 +5,17 @@ import { useCart } from "../Context/CartContext";
 import { useWishlist } from "../Context/WishlistContext";
 import LoginSignup from "../Components/Login/Login";
 import logo from "/Logo.png";
+import axios from "axios";
 // import axios from "axios";
 
 // ---------- MENU DATA ---------- 
-const menuItems = [
+const initialMenuItems = [
   { label: "Home", to: "/" },
   { label: "Gemstones", to: "/gemstones" },
   {
     label: "Categories",
     to: "/",
-    subMenu: [
-      { label: "Pendant", to: "/categories/pendant" },
-      { label: "Necklace", to: "/categories/necklace" },
-      { label: "Jewellery", to: "/categories/jewellery" },
-      { label: "Rudraksh", to: "/categories/rudraksh" },
-    ],
+    subMenu: [],
   },
   { label: "FAQs", to: "/faqs" },
   { label: "Blogs", to: "/blogs" },
@@ -170,38 +166,37 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 -z-10" />
       </NavLink>
 
-      {item.subMenu && (
-        <ul
-          className={`bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)] ${isMobile
-            ? `pl-6 transition-all duration-300 ease-out ${dropdownOpen ? "max-h-96 mt-2" : "max-h-0"
-            }`
-            : `absolute left-0 mt-2 min-w-[280px] transform transition-all duration-300 ease-out z-50 ${dropdownOpen
-              ? "opacity-100 translate-y-0 scale-100"
-              : "opacity-0 -translate-y-2 scale-95 pointer-events-none"
-            }`
+   
+{item.subMenu && (
+  <ul
+    className={`bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)] ${isMobile
+      ? `pl-6 transition-all duration-300 ease-out ${dropdownOpen ? "max-h-96 mt-2" : "max-h-0"
+      }`
+      : `absolute left-0 mt-2 min-w-[280px] transform transition-all duration-300 ease-out z-50 ${dropdownOpen
+        ? "opacity-100 translate-y-0 scale-100"
+        : "opacity-0 -translate-y-2 scale-95 pointer-events-none"
+      }`
+      }`}
+  >
+    {item.subMenu.map((subItem, index) => (
+      <li key={subItem.label}>
+        <NavLink
+          to={subItem.to}
+          onClick={closeMenu}
+          className={({ isActive }) =>
+            `group/sub block px-6 py-4 text-sm transition-all duration-300 border-b [var(--color-border)] last:border-b-0 relative overflow-hidden ${isActive
+              ? "bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 text-[var(--color-primary)] font-semibold"
+              : "text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/50 hover:to-[var(--color-primary-light)]/30 hover:text-[var(--color-primary)]"
             }`}
+          style={{ animationDelay: `${index * 50}ms` }}
         >
-          {categoryData && categoryData.map((cat, index) => (
-            <li key={cat.CategoryName}>
-              <NavLink
-                to={`/category/${cat.CategoryName}`}
-                onClick={closeMenu}
-                className={({ isActive }) =>
-                  `group/sub block px-6 py-4 text-sm transition-all duration-300 border-b [var(--color-border)] last:border-b-0 relative overflow-hidden ${isActive
-                    ? "bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 text-[var(--color-primary)] font-semibold"
-                    : "text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/50 hover:to-[var(--color-primary-light)]/30 hover:text-[var(--color-primary)]"
-                  }`}
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className="font-medium">{cat.CategoryName}</div>
-
-                {/* Slide in effect */}
-                <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-[var(--color-primary)] to-[var(--color-primary-dark)] transform -translate-x-full group-hover/sub:translate-x-0 transition-transform duration-300" />
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      )}
+          <div className="font-medium">{subItem.label}</div>
+          <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-[var(--color-primary)] to-[var(--color-primary-dark)] transform -translate-x-full group-hover/sub:translate-x-0 transition-transform duration-300" />
+        </NavLink>
+      </li>
+    ))}
+  </ul>
+)}
     </li>
   );
 };
@@ -223,16 +218,72 @@ const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "" }) => (
 );
 
 // ---------- MAIN HEADER ----------
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [hoverUnderlineStyle, setHoverUnderlineStyle] = useState({});
-  const [categoryData, setCategoryData] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [userrole, setUserrole] = useState(false);
+  const [categoryData, setCategoryData] = useState([]);
+  const [menuItems, setMenuItems] = useState(initialMenuItems);
+
+
+  // Initialize menu items
+  // const [menuItems, setMenuItems] = useState([
+  //   { label: "Home", to: "/" },
+  //   { label: "Categories", to: "/", subMenu: [] }, // will be filled from API
+  //   { label: "FAQs", to: "/faqs" },
+  //   { label: "Blogs", to: "/blogs" },
+  // ]);
+
+  // const userMenuItems = [
+  //   { to: "/cart", icon: ShoppingBag, badgeType: "cart" },
+  //   { to: "/wishlist", icon: Heart, badgeType: "wishlist" },
+  //   { to: "/account", icon: User },
+  // ];
+
+  //  const [categoryData, setCategoryData] = useState([]);
+
+useEffect(() => {
+    axios
+      .post("http://localhost:8001/api/getCategories")
+      .then((res) => {
+        if (res.data.success) {
+          const transformedData = res.data.data.map((category) => ({
+            CategoryName: category.CategoryName,
+            Image: category.Image || "/abot.jpg",
+          }));
+          setCategoryData(transformedData);
+          
+          // Update the Categories menu item with subMenu data
+          setMenuItems(prevItems => 
+            prevItems.map(item => 
+              item.label === "Categories" 
+                ? { 
+                    ...item, 
+                    subMenu: transformedData.map(cat => ({
+                      label: cat.CategoryName,
+                      to: `/category/${cat.CategoryName.toLowerCase().replace(/\s+/g, '-')}`
+                    }))
+                  }
+                : item
+            )
+          );
+        }})
+      .catch((err) => console.log(err));
+  }, []);
+
+
+
+  // Optional: log menuItems after it updates
+  useEffect(() => {
+    console.log("Updated menuItems:", menuItems);
+  }, [menuItems]);
+
 
   useEffect(() => {
     const token = localStorage.getItem("authToken") || localStorage.getItem("token");
@@ -411,251 +462,198 @@ export default function Header() {
                   key={item.label}
                   item={item}
                   location={location}
-                  navRef={navRef}
                   onItemHover={handleItemHover}
                   categoryData={categoryData}
                 />
               ))}
             </ul>
+
+            {/* Enhanced animated underline */}
             <AnimatedUnderline
               menuItems={menuItems}
               navRef={navRef}
               location={location}
             />
-            {/* Enhanced hover underline effect */}
+
+            {/* Hover underline effect */}
             <div
-              className="absolute bottom-0 h-1 bg-gradient-to-r from-[var(--color-primary)]/50 to-[var(--color-primary)]/30 rounded-full transition-all duration-300 ease-out"
+              className="absolute bottom-0 h-1 bg-gradient-to-r from-[var(--color-primary)]/30 via-[var(--color-primary)]/20 to-[var(--color-primary-dark)]/30 rounded-full transition-all duration-300"
               style={hoverUnderlineStyle}
             />
           </div>
 
-          {/* Enhanced Search Bar - Conditionally Rendered */}
-          {shouldShowSearch && (
-            <div ref={searchRef} className="hidden md:flex relative">
-              <div className={`relative overflow-hidden transition-all duration-500 ease-out ${searchOpen ? "w-80 opacity-100" : "w-0 opacity-0"}`}>
-                <input
-                  type="text"
-                  placeholder="Discover exquisite jewelry..."
-                  className="w-full px-5 py-3 pl-12 rounded-2xl border-2 border-[var(--color-border)] bg-gradient-to-r from-[var(--color-primary-light)] to-white text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all duration-300 ease-out placeholder-[var(--color-text-muted)]"
-                />
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--color-primary)]/70" />
-              </div>
-              <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className={`p-3 rounded-2xl ml-3 transition-all duration-300 ease-out ${searchOpen
-                  ? "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white shadow-lg shadow-[var(--color-primary)]/30"
-                  : "text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)] hover:to-[var(--color-primary-light)]/80 hover:text-[var(--color-primary)]"
-                  }`}
-              >
-                <Search className="h-5 w-5 transition-transform duration-300 hover:scale-110" />
-              </button>
-            </div>
-          )}
-
-          {/* Enhanced Desktop User Icons / Login */}
-          <div className="hidden lg:flex items-center space-x-2 flex-shrink-0">
-            {isLoggedIn ? (
-              <>
-                {userMenuItems.map(({ to, icon: Icon, badgeType }, idx) => (
-                  <UserMenuIcon
-                    key={idx}
-                    to={to}
-                    Icon={Icon}
-                    badgeCount={
-                      badgeType === "cart" ? cartCount : badgeType === "wishlist" ? wishlistCount : 0
-                    }
-                  />
-                ))}
-
-                {/* Admin Panel Icon - Only show if user is admin */}
-                {userrole && (
-                  <UserMenuIcon
-                    to="/admin"
-                    Icon={UserCog}
-                    badgeCount={0}
-                    closeMenu={closeMenu}
-                    className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                  />
-                )}
-
-                {/* Logout Button - Separated from other icons */}
-                <button
-                  onClick={handleLogout}
-                  className="p-3 rounded-xl text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md transition-all duration-300 ease-out ml-2"
-                  title="Logout"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setShowLogin(true)}
-                className="ml-4 px-8 py-3 rounded-2xl bg-gradient-to-r from-[var(--color-primary)] via-[var(--color-primary)]/90 to-[var(--color-primary-dark)] text-white font-semibold hover:from-[var(--color-primary)]/90 hover:via-[var(--color-primary)]/80 hover:to-[var(--color-primary-dark)] transition-all duration-300 ease-out shadow-xl hover:shadow-[var(--color-primary)]/30 relative overflow-hidden group transform hover:scale-105"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Login
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary)]/90 via-[var(--color-primary)]/80 to-[var(--color-primary-dark)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out"></div>
-              </button>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center space-x-3">
-            {/* Mobile Login Button for non-logged-in users */}
-            {!isLoggedIn && (
-              <button
-                onClick={() => setShowLogin(true)}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white font-semibold transition-all duration-300 ease-out flex items-center gap-1"
-              >
-                <User className="h-4 w-4" />
-                Login
-              </button>
-            )}
-
-            {/* Mobile Search - Conditionally Rendered */}
+          {/* Right side icons */}
+          <div className="flex items-center gap-2">
+            {/* Search icon - only show on pages where search is enabled */}
             {shouldShowSearch && (
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2.5 rounded-xl text-[var(--color-text)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] transition-colors duration-300 ease-out md:hidden"
+                className={`p-3 rounded-xl transition-all duration-300 ease-out ${searchOpen
+                  ? "bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 text-[var(--color-primary)] shadow-lg"
+                  : "text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md"
+                  }`}
               >
-                <Search className="h-5 w-5 transition-transform duration-300 hover:scale-110" />
+                <Search className="h-5 w-5" />
               </button>
             )}
 
-            {/* Mobile Icons - Show cart and wishlist if logged in */}
-            {isLoggedIn && (
-              <div className="flex items-center space-x-1 mr-2">
+            {/* User menu icons */}
+            <div className="flex items-center gap-2">
+              {userMenuItems.map((item) => (
                 <UserMenuIcon
-                  to="/cart"
-                  Icon={ShoppingBag}
-                  badgeCount={cartCount}
+                  key={item.to}
+                  to={item.to}
+                  Icon={item.icon}
+                  badgeCount={
+                    item.badgeType === "cart"
+                      ? cartCount
+                      : item.badgeType === "wishlist"
+                        ? wishlistCount
+                        : 0
+                  }
                   closeMenu={closeMenu}
                 />
-                <UserMenuIcon
-                  to="/wishlist"
-                  Icon={Heart}
-                  badgeCount={wishlistCount}
-                  closeMenu={closeMenu}
-                />
-                {/* Admin Panel Icon for Mobile - Only show if user is admin */}
-                {userrole && (
-                  <UserMenuIcon
-                    to="/admin"
-                    Icon={UserCog}
-                    badgeCount={0}
-                    closeMenu={closeMenu}
-                    className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                  />
-                )}
-              </div>
-            )}
+              ))}
 
+              {userrole && (
+                <UserMenuIcon
+                  to="/admin"
+                  Icon={UserCog}
+                  closeMenu={closeMenu}
+                />
+              )}
+
+              {isLoggedIn ? (
+                <button
+                  onClick={handleLogout}
+                  className="p-3 rounded-xl transition-all duration-300 ease-out text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="p-3 rounded-xl transition-all duration-300 ease-out text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md"
+                >
+                  <User className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+
+            {/* Mobile menu button */}
             <button
-              aria-label="Toggle Menu"
-              className={`p-3 rounded-xl transition-all duration-300 ease-out ${menuOpen
-                ? "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white rotate-180"
-                : "text-[var(--color-text)] bg-gradient-to-r from-[var(--color-background)] to-[var(--color-background-alt)] hover:from-[var(--color-primary)] hover:to-[var(--color-primary-dark)] hover:text-white"
-                }`}
               onClick={() => setMenuOpen(!menuOpen)}
+              className="lg:hidden p-3 rounded-xl transition-all duration-300 ease-out text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md ml-2"
             >
-              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </nav>
 
-        {/* Mobile Search Panel - Conditionally Rendered */}
-        {searchOpen && shouldShowSearch && (
-          <div className="md:hidden container mx-auto px-4 py-4 border-t border-[var(--color-border)] bg-gradient-to-r from-[var(--color-primary-light)] to-white transition-all duration-500 ease-out">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Discover exquisite jewelry..."
-                className="w-full px-5 py-3 pl-12 rounded-2xl border-2 border-[var(--color-border)] bg-white text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all duration-300 ease-out placeholder-[var(--color-text-muted)]"
-              />
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--color-primary)]/70" />
-            </div>
-          </div>
-        )}
-
         {/* Enhanced Mobile Menu */}
         <div
           ref={menuRef}
-          className={`lg:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-xl shadow-2xl transform transition-all duration-500 ease-out border-t border-[var(--color-border)] ${menuOpen
+          className={`lg:hidden fixed top-full left-0 w-full bg-white/95 backdrop-blur-xl shadow-2xl border-t border-[var(--color-border)] transform transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-40 overflow-y-auto ${menuOpen
             ? "translate-y-0 opacity-100"
-            : "-translate-y-4 opacity-0 pointer-events-none"
+            : "-translate-y-full opacity-0 pointer-events-none"
             }`}
+          style={{ maxHeight: "calc(100vh - 100%)" }}
         >
-          <div className="container mx-auto px-4 py-6">
-            <ul className="space-y-1">
-              {menuItems.map((item, index) => (
-                <div key={item.label} style={{ animationDelay: `${index * 100}ms` }} className="animate-slide-in-left">
-                  <NavItem
-                    item={item}
-                    location={location}
-                    isMobile={true}
+          <ul className="py-4">
+            {menuItems.map((item) => (
+              <NavItem
+                key={item.label}
+                item={item}
+                location={location}
+                isMobile={true}
+                closeMenu={closeMenu}
+                navRef={navRef}
+                categoryData={categoryData}
+              />
+            ))}
+
+            {/* Mobile user menu */}
+            <li className="px-6 py-4 border-b border-[var(--color-border)]">
+              <div className="flex items-center gap-4">
+                {userrole && (
+                  <UserMenuIcon
+                    to="/admin"
+                    Icon={UserCog}
                     closeMenu={closeMenu}
-                    navRef={navRef}
-                    categoryData={categoryData}
+                    className="flex-1 justify-center"
                   />
-                </div>
-              ))}
-            </ul>
+                )}
 
-            {/* Enhanced Mobile User Section - Only show if logged in */}
-            {isLoggedIn && (
-              <div className="pt-6 mt-6 border-t border-[var(--color-border)] transition-all duration-300 ease-out">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-around bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 p-4 rounded-2xl">
-                    {userMenuItems.map(({ to, icon: Icon, badgeType }, idx) => (
-                      <UserMenuIcon
-                        key={idx}
-                        to={to}
-                        Icon={Icon}
-                        badgeCount={
-                          badgeType === "cart"
-                            ? cartCount
-                            : badgeType === "wishlist"
-                              ? wishlistCount
-                              : 0
-                        }
-                        closeMenu={closeMenu}
-                      />
-                    ))}
-
-                    {/* Admin Panel Icon for Mobile Menu - Only show if user is admin */}
-                    {userrole && (
-                      <UserMenuIcon
-                        to="/admin"
-                        Icon={UserCog}
-                        badgeCount={0}
-                        closeMenu={closeMenu}
-                        className="bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                      />
-                    )}
-                  </div>
-
-                  {/* Logout Button in Mobile - Separated from icons */}
+                {isLoggedIn ? (
                   <button
                     onClick={handleLogout}
-                    className="w-full py-3 rounded-2xl bg-[var(--color-primary)] text-white font-semibold transition-all duration-300 ease-out flex items-center justify-center gap-2 mt-4"
+                    className="flex-1 p-3 rounded-xl transition-all duration-300 ease-out text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md flex items-center justify-center"
                   >
                     <LogOut className="h-5 w-5" />
-                    Logout
                   </button>
-                </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowLogin(true);
+                      closeMenu();
+                    }}
+                    className="flex-1 p-3 rounded-xl transition-all duration-300 ease-out text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md flex items-center justify-center"
+                  >
+                    <User className="h-5 w-5" />
+                  </button>
+                )}
               </div>
-            )}
-          </div>
+            </li>
+          </ul>
         </div>
+
+        {/* Enhanced Search Panel */}
+        {shouldShowSearch && (
+          <div
+            ref={searchRef}
+            className={`absolute top-full left-0 w-full bg-white/95 backdrop-blur-xl shadow-xl border-t border-[var(--color-border)] transform transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-40 ${searchOpen
+              ? "translate-y-0 opacity-100"
+              : "-translate-y-4 opacity-0 pointer-events-none"
+              }`}
+          >
+            <div className="container mx-auto px-4 py-6">
+              <div className="relative max-w-2xl mx-auto">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] h-5 w-5" />
+                <input
+                  type="text"
+                  placeholder="Search for gemstones, categories, or products..."
+                  className="w-full pl-12 pr-4 py-3 bg-[var(--color-background)] border border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all duration-300"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* Add spacing for fixed header */}
-      <div className={`transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${scrolled ? "h-20" : "h-24"}`}></div>
+      {/* Login/Signup Modal */}
+      {showLogin && (
+        <LoginSignup
+          onClose={() => setShowLogin(false)}
+          onLoginSuccess={() => {
+            setShowLogin(false);
+            const token = localStorage.getItem("authToken") || localStorage.getItem("token");
+            const userData = localStorage.getItem("user");
+            if (token) {
+              setIsLoggedIn(true);
+              if (userData) {
+                const parsedUser = JSON.parse(userData);
+                setUser(parsedUser);
+                if (parsedUser?.role) {
+                  setUserrole(parsedUser.role.toLowerCase() === "admin");
+                }
+              }
+            }
+          }}
+        />
+      )}
 
-      {/* Login Modal */}
-      {showLogin && <LoginSignup onClose={() => setShowLogin(false)} />}
+      {/* Spacer to prevent content from being hidden behind fixed header */}
+      <div className={`h-24 transition-all duration-500 ease-out ${scrolled ? "h-20" : "h-24"}`}></div>
     </>
   );
 }
