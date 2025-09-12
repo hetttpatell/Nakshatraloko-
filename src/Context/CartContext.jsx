@@ -51,7 +51,7 @@ export function CartProvider({ children }) {
           },
         ];
       }
-
+      getCart()
       return [
         ...prev,
         {
@@ -76,56 +76,6 @@ export function CartProvider({ children }) {
     return { success: false, error: error.message };
   }
 };
-
-
-
-  // ✅ Toggle add/remove (matches backend /saveCart)
-  const toggleCartItem = async (productId) => {
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) throw new Error("No auth token found");
-
-      const response = await axios.post(
-        "http://localhost:8001/api/saveCart",
-        { productId },
-        { headers: { Authorization: `${token}` } }
-      );
-
-      // Update frontend state
-      const updatedItem = response.data.cartItem;
-
-      setCart((prev) => {
-  const exists = prev.find((p) => p.id === (updatedItem.ProductID || updatedItem.id));
-
-  if (exists) {
-    if (!updatedItem.IsActive) {
-      return prev.filter((p) => p.id !== (updatedItem.ProductID || updatedItem.id));
-    }
-
-    return prev.map((p) =>
-      p.id === (updatedItem.ProductID || updatedItem.id)
-        ? { ...p, inStock: updatedItem.IsActive }
-        : p
-    );
-  }
-
-  return [
-    ...prev,
-    {
-      id: updatedItem.ProductID || updatedItem.id, // ✅ normalize here too
-      inStock: updatedItem.IsActive,
-      quantity: 1,
-    },
-  ];
-});
-
-
-      return { success: true, data: response.data };
-    } catch (error) {
-      console.error("Error toggling cart:", error);
-      return { success: false, error: error.message };
-    }
-  };
 
   // ✅ Get cart from backend
   const getCart = async () => {
@@ -165,28 +115,13 @@ export function CartProvider({ children }) {
     }
   };
 
-  // ✅ Clear entire cart
-  const clearCart = async () => {
-    try {
-      const response = await axios.post("http://localhost:8001/api/manageCart", {
-        action: "clear"
-      });
 
-      setCart([]);
-      return { success: true, data: response.data };
-    } catch (error) {
-      console.error("Error clearing cart:", error);
-      return { success: false, error: error.message };
-    }
-  };
 
   return (
     <CartContext.Provider
       value={{
         cart,
         addToCart,
-        toggleCartItem,
-        clearCart,
         getCart,
       }}
     >

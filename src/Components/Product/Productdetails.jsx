@@ -413,32 +413,34 @@ const ProductDetails = () => {
               {/* //   addToCart(product, quantity, selectedSize, selectedMaterial); */}
               {/* //   showToast(`${product.name} added to Bag`, "success"); */}
               {/* // }} */}
-             <Button
-  onClick={() => {
-    addToCart({ productid: product.id }); // wrap in object
-    showToast(`${product.name} added to Bag`, "success");
-  }}
-  className="bg-color-primary text-color-surface px-10 py-3.5 font-medium text-sm hover:bg-color-primary-dark transition-all duration-300 shadow-md hover:shadow-lg flex-1"
->
-  ADD TO BAG
-</Button>
-
               <Button
                 onClick={() => {
-                  addToWishlist(product);
-                  showToast(`${product.name} ${isWishlisted ? 'removed from' : 'added to'} Wishlist`, "success");
+                  addToCart({ productid: product.id }); // wrap in object
+                  showToast(`${product.name} added to Bag`, "success");
+                }}
+                className="bg-color-primary text-color-surface px-10 py-3.5 font-medium text-sm hover:bg-color-primary-dark transition-all duration-300 shadow-md hover:shadow-lg flex-1"
+              >
+                ADD TO BAG
+              </Button>
+
+              <Button
+                onClick={async () => {
+                  const res = await addToWishlist(product);
+                  showToast(res.message, res.success ? "success" : "error");
                 }}
                 className={`px-6 py-3.5 font-medium text-sm transition-all duration-300 shadow-md hover:shadow-lg border ${isWishlisted
-                  ? "bg-color-primary border-color-primary text-color-surface"
-                  : "border-color-primary text-color-primary hover:bg-color-primary hover:text-color-surface"
+                    ? "bg-color-primary border-color-primary text-color-surface"
+                    : "border-color-primary text-color-primary hover:bg-color-primary hover:text-color-surface"
                   }`}
               >
-                {isWishlisted ?
-                  <AiFillHeart className="inline mr-2 text-lg" /> :
+                {isWishlisted ? (
+                  <AiFillHeart className="inline mr-2 text-lg" />
+                ) : (
                   <AiOutlineHeart className="inline mr-2 text-lg" />
-                }
+                )}
                 Wishlist
               </Button>
+
             </div>
 
             {/* Delivery Section */}

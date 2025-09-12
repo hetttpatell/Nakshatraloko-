@@ -7,26 +7,13 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function Cart() {
   // ✅ Include toggleCartItem from context
-  const { cart, addToCart, getCart, toggleCartItem } = useCart();
+  const { cart, addToCart, getCart } = useCart();
 
   // ✅ Fetch cart on mount
   useEffect(() => {
     getCart();
   }, []);
 
-  // ✅ Handle remove item
-  const handleRemove = async (product) => {
-    console.log("Product received in remove:", product);
-    console.log("Resolved id:", product.id || product.ProductID);
-
-    const productId = product.id || product.ProductID;
-
-    if (!productId) {
-      console.error("Invalid product id for remove:", product);
-      return;
-    }
-    await toggleCartItem(productId);
-  };
 
 
   // Calculations
@@ -185,7 +172,7 @@ export default function Cart() {
 
                     </div>
                   </motion.div>
-                ))} /
+                ))} 
                 {/* //fewfewfegw */}
               </div>
 
