@@ -3,52 +3,178 @@ import { useCart } from "../../Context/CartContext";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, ShoppingBag, Trash2, Sparkles, Zap } from "lucide-react";
-import { useWishlist } from "../../Context/WishlistContext"; // ✅ import context
-
+import { useWishlist } from "../../Context/WishlistContext";
+import { toast } from "react-toastify"; // Make sure to import toast
 
 export default function Wishlist() {
   const { addToCart } = useCart();
+  const { wishlist, removeFromWishlist, addToWishlist, clearWishlist, fetchWishlist } = useWishlist();
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState({});
 
-  const { wishlist, removeFromWishlist, addToWishlist, clearWishlist } = useWishlist();
-
+  // Fetch wishlist on component mount
   useEffect(() => {
-    localStorage.setItem("wishlist", JSON.stringify(wishlist));
-  }, [wishlist]);
+    const loadWishlist = async () => {
+      setLoading(true);
+      try {
+        await fetchWishlist();
+      } catch (error) {
+        console.error("Failed to fetch wishlist:", error);
+        toast.error("Failed to load wishlist");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadWishlist();
+  }, []);
 
-  const handleRemove = async (id) => {
-    const res = await removeFromWishlist(id);
-    if (res.success) {
-      toast.success("Item removed from wishlist");
-    } else {
-      toast.error(res.message || "Failed to remove item");
-    }
+  // Transform wishlist data if needed (similar to cart)
+  const transformWishlistData = (apiData) => {
+    if (!Array.isArray(apiData)) return [];
+    
+    return apiData.map(item => ({
+      id: item.productid || item._id || item.ID,
+      wishlistId: item.wishlistid || item.id,
+      name: item.name || item.productName,
+      description: item.description,
+      price: parseFloat(item.firstsizeprice || item.price || 0),
+      oldPrice: item.firstdummyprice ? parseFloat(item.firstdummyprice) : null,
+      discount: item.discount ? parseFloat(item.discount) : 0,
+      discountPercentage: item.discountpercentage ? parseFloat(item.discountpercentage) : 0,
+      mainImage: item.primaryimage ? `data:image/jpeg;base64,${item.primaryimage}` : 
+                 item.mainImage || item.image || '/s1.jpeg',
+      category: item.catogaryname || item.category,
+      brand: item.brand || item.catogaryname || 'Unknown',
+      material: item.material || item.catogaryname || 'Standard',
+      inStock: item.stock > 0,
+      stock: item.stock || 0,
+      rating: parseFloat(item.avgrating || item.rating || 0),
+      reviews: item.reviewcount || item.reviews || 0,
+      quantity: item.quantity || 1,
+      isActive: item.isActive !== false // Default to true unless explicitly false
+    }));
   };
 
+  const transformedWishlist = transformWishlistData(wishlist);
+
+  const setItemLoading = (itemId, isLoading) => {
+    setActionLoading(prev => ({
+      ...prev,
+      [itemId]: isLoading
+    }));
+  };
+
+  const handleRemove = async (item) => {
+    const itemId = item.id || item._id || item.ID;
+    if (!itemId) {
+      toast.error("Invalid item");
+      return;
+    }
+
+    setItemLoading(itemId, true);
+    try {
+      const res = await removeFromWishlist(itemId);
+      if (res.success) {
+        toast.success(`${item.name} removed from wishlist`);
+      } else {
+        toast.error(res.message || "Failed to remove item");
+      }
+    } catch (error) {
+      console.error("Error removing from wishlist:", error);
+      toast.error("Failed to remove item");
+    } finally {
+      setItemLoading(itemId, false);
+    }
+  };
 
   const handleClearAll = async () => {
-    await clearWishlist();
-    toast.success("Wishlist cleared!");
-  };
-
-  const handleMoveToCart = async (productId) => {
-    const item = wishlist.find((i) => (i._id || i.ID) === productId);
-    if (!item) return;
+    if (!window.confirm("Are you sure you want to clear your entire wishlist?")) {
+      return;
+    }
 
     try {
-      const res = await addToCart({ productId });
-      if (res.success) {
-        await removeFromWishlist(productId);
-        toast.success(`${item.name} moved to cart`);
+      const res = await clearWishlist();
+      if (res && res.success) {
+        toast.success("Wishlist cleared!");
       } else {
-        toast.error(res.message || "Failed to move item");
+        toast.success("Wishlist cleared!");
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Error moving to cart");
+    } catch (error) {
+      console.error("Error clearing wishlist:", error);
+      toast.error("Failed to clear wishlist");
     }
   };
 
+  const handleMoveToCart = async (item) => {
+    const productId = item.id || item._id || item.ID;
+    if (!productId) {
+      toast.error("Invalid product");
+      return;
+    }
 
+    if (!item.inStock) {
+      toast.error("Item is out of stock");
+      return;
+    }
+
+    setItemLoading(productId, true);
+    try {
+      // Add to cart
+      const addRes = await addToCart({ 
+        productId,
+        quantity: item.quantity || 1,
+        size: item.size,
+        material: item.material
+      });
+      
+      if (addRes.success) {
+        // Remove from wishlist after successful cart addition
+        const removeRes = await removeFromWishlist(productId);
+        if (removeRes.success) {
+          toast.success(`${item.name} moved to cart`);
+        } else {
+          toast.success(`${item.name} added to cart`);
+        }
+      } else {
+        toast.error(addRes.message || "Failed to add to cart");
+      }
+    } catch (error) {
+      console.error("Error moving to cart:", error);
+      toast.error("Error moving to cart");
+    } finally {
+      setItemLoading(productId, false);
+    }
+  };
+
+  const handleToggleWishlist = async (item) => {
+    const productId = item.id || item._id || item.ID;
+    if (!productId) {
+      toast.error("Invalid product");
+      return;
+    }
+
+    setItemLoading(productId, true);
+    try {
+      const product = { 
+        _id: productId, 
+        id: productId,
+        name: item.name 
+      };
+      
+      const res = await addToWishlist(product);
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message || "Failed to update wishlist");
+      }
+    } catch (error) {
+      console.error("Error toggling wishlist:", error);
+      toast.error("Error updating wishlist");
+    } finally {
+      setItemLoading(productId, false);
+    }
+  };
 
   // Background circles component
   const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
@@ -68,6 +194,19 @@ export default function Wishlist() {
       }}
     />
   );
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-b from-[var(--color-primary-light)]/30 to-[var(--color-background)] min-h-screen flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-2 border-[var(--color-primary)] border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-b from-[var(--color-primary-light)]/30 to-[var(--color-background)] min-h-screen py-14 px-6 relative overflow-hidden">
@@ -90,17 +229,24 @@ export default function Wishlist() {
             <div className="p-2 bg-[var(--color-primary)]/10 rounded-full">
               <Heart className="text-[var(--color-primary)]" size={24} />
             </div>
-            <h2 className="text-3xl font-bold text-[var(--color-text)]">
-              My Wishlist
-            </h2>
+            <div>
+              <h2 className="text-3xl font-bold text-[var(--color-text)]">
+                My Wishlist
+              </h2>
+              {transformedWishlist.length > 0 && (
+                <p className="text-sm text-[var(--color-text-light)] mt-1">
+                  {transformedWishlist.length} item{transformedWishlist.length !== 1 ? 's' : ''} saved
+                </p>
+              )}
+            </div>
           </div>
 
-          {wishlist.length > 0 && (
+          {transformedWishlist.length > 0 && (
             <motion.button
               onClick={handleClearAll}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-1 text-sm text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] transition-colors"
+              className="flex items-center gap-1 text-sm text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] transition-colors px-3 py-2 rounded-lg hover:bg-red-50"
             >
               <Trash2 size={16} />
               Clear All
@@ -109,119 +255,150 @@ export default function Wishlist() {
         </motion.div>
 
         <AnimatePresence>
-          {wishlist.length > 0 ? (
+          {transformedWishlist.length > 0 ? (
             <motion.div
               className="space-y-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ staggerChildren: 0.1 }}
             >
-              {wishlist.map((item) => (
-                <motion.div
-                  key={item.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-lg transition-all"
-                >
-                  {/* Product Image */}
+              {transformedWishlist.map((item) => {
+                const isItemLoading = actionLoading[item.id];
+                
+                return (
                   <motion.div
-                    className="relative overflow-hidden rounded-xl"
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-lg transition-all"
                   >
-                    <img
-                      src={item.mainImage}
-                      alt={item.name}
-                      className="w-32 h-32 object-cover"
-                    />
-                    {!item.inStock && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">Out of Stock</span>
-                      </div>
-                    )}
-                  </motion.div>
-
-                  {/* Product Info */}
-                  <div className="flex-1 text-center sm:text-left space-y-2">
-                    <h3 className="text-lg font-semibold text-[var(--color-text)]">
-                      {item.name}
-                    </h3>
-                    <p className="text-xs text-[var(--color-text-light)] uppercase tracking-wide">
-                      {item.brand} · {item.material}
-                    </p>
-                    <div className="flex items-center gap-1 text-sm">
-                      <div className="flex text-[var(--color-rating)]">
-                        {"★".repeat(Math.floor(item.rating))}
-                        {"☆".repeat(5 - Math.floor(item.rating))}
-                      </div>
-                      <span className="text-[var(--color-text-light)]">
-                        ({item.reviews} reviews)
-                      </span>
-                    </div>
-
-                    {/* Price */}
-                    <div className="mt-2">
-                      {item.oldPrice && (
-                        <span className="text-sm text-[var(--color-text-muted)] line-through mr-2">
-                          ₹{item.oldPrice}
-                        </span>
+                    {/* Product Image */}
+                    <motion.div
+                      className="relative overflow-hidden rounded-xl"
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                    >
+                      <img
+                        src={item.mainImage}
+                        alt={item.name}
+                        className="w-32 h-32 object-cover"
+                        onError={(e) => {
+                          e.target.src = '/s1.jpeg';
+                        }}
+                      />
+                      {!item.inStock && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-white text-sm font-medium">Out of Stock</span>
+                        </div>
                       )}
-                      <span className="text-lg font-semibold text-[var(--color-text)]">
-                        ₹{item.price}
-                      </span>
-                    </div>
+                      {item.discountPercentage > 0 && (
+                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                          {item.discountPercentage.toFixed(0)}% OFF
+                        </div>
+                      )}
+                    </motion.div>
 
-                    {/* Quantity & Stock */}
-                    <div className="flex items-center gap-4 mt-3">
-                      <p className="text-sm text-[var(--color-text-light)]">
-                        Quantity: <b>{item.quantity}</b>
+                    {/* Product Info */}
+                    <div className="flex-1 text-center sm:text-left space-y-2">
+                      <h3 className="text-lg font-semibold text-[var(--color-text)] line-clamp-2">
+                        {item.name}
+                      </h3>
+                      <p className="text-xs text-[var(--color-text-light)] uppercase tracking-wide">
+                        {item.brand} · {item.material}
                       </p>
-                      <div className={`text-xs px-2 py-1 rounded-full ${item.inStock ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                        {item.inStock ? "In Stock" : "Out of Stock"}
+                      
+                      {item.rating > 0 && (
+                        <div className="flex items-center gap-1 text-sm justify-center sm:justify-start">
+                          <div className="flex text-[var(--color-rating)]">
+                            {"★".repeat(Math.floor(item.rating))}
+                            {"☆".repeat(5 - Math.floor(item.rating))}
+                          </div>
+                          <span className="text-[var(--color-text-light)]">
+                            ({item.reviews} reviews)
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Price */}
+                      <div className="flex items-center gap-2 justify-center sm:justify-start">
+                        <span className="text-lg font-semibold text-[var(--color-text)]">
+                          ₹{item.price.toFixed(2)}
+                        </span>
+                        {item.oldPrice && item.oldPrice > item.price && (
+                          <span className="text-sm text-gray-500 line-through">
+                            ₹{item.oldPrice.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Stock Status */}
+                      <div className="flex items-center gap-4 justify-center sm:justify-start">
+                        <div className={`text-xs px-3 py-1 rounded-full font-medium ${
+                          item.inStock 
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-red-100 text-red-800"
+                        }`}>
+                          {item.inStock ? `In Stock (${item.stock} available)` : "Out of Stock"}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col items-center sm:items-end gap-3">
-                    <motion.button
-                      onClick={() => handleMoveToCart(item.id)}
-                      disabled={!item.inStock}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all flex items-center gap-2 ${item.inStock
-                        ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
-                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    {/* Actions */}
+                    <div className="flex flex-col items-center sm:items-end gap-3">
+                      <motion.button
+                        onClick={() => handleMoveToCart(item)}
+                        disabled={!item.inStock || isItemLoading}
+                        whileHover={{ scale: item.inStock && !isItemLoading ? 1.05 : 1 }}
+                        whileTap={{ scale: item.inStock && !isItemLoading ? 0.95 : 1 }}
+                        className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all flex items-center gap-2 min-w-[140px] justify-center ${
+                          item.inStock && !isItemLoading
+                            ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+                            : "bg-gray-200 text-gray-500 cursor-not-allowed"
                         }`}
-                    >
-                      <ShoppingBag size={16} />
-                      Move to Cart
-                    </motion.button>
-                    <motion.button
-                      onClick={async () => {
-                        const product = { _id: item._id || item.ID, name: item.name };
-                        const res = await addToWishlist(product); // toggles IsActive
-                        if (res.success) {
-                          toast.success(res.message);
-                        } else {
-                          toast.error(res.message);
-                        }
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="text-sm text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] transition-colors flex items-center gap-1 pointer-events-auto"
-                    >
-                      <Trash2 size={14} />
-                      Remove
-                    </motion.button>
-
-
-                  </div>
-                </motion.div>
-              ))}
+                      >
+                        {isItemLoading ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"
+                          />
+                        ) : (
+                          <>
+                            <ShoppingBag size={16} />
+                            Move to Cart
+                          </>
+                        )}
+                      </motion.button>
+                      
+                      <motion.button
+                        onClick={() => handleRemove(item)}
+                        disabled={isItemLoading}
+                        whileHover={{ scale: !isItemLoading ? 1.05 : 1 }}
+                        whileTap={{ scale: !isItemLoading ? 0.95 : 1 }}
+                        className={`text-sm transition-colors flex items-center gap-1 px-3 py-2 rounded-lg ${
+                          isItemLoading 
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] hover:bg-red-50"
+                        }`}
+                      >
+                        {isItemLoading ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full"
+                          />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                        Remove
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </motion.div>
           ) : (
             // Empty Wishlist

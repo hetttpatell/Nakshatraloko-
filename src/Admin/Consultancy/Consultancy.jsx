@@ -1,442 +1,498 @@
-// ConsultationForm.jsx - Mobile-optimized version
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Phone, Calendar, Clock, User, MessageCircle } from "lucide-react";
+// components/Consultancy.jsx
+import React, { useState, useEffect, useContext } from "react";import {
+  FaEye,
+  FaEdit,
+  FaTrash,
+  FaSearch,
+  FaFilter,
+  FaWhatsapp,
+  FaPhone,
+  FaCalendarAlt,
+  FaUser,
+  FaClock,
+  FaMapMarkerAlt,
+  FaVenusMars
+} from "react-icons/fa";
+import  ConsultancyContext  from "../../Context/ConsultancyContext";
 
-export default function ConsultationForm() {
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    date: "",
-    time: "09:00"
+const Consultancy = () => {
+  // Sample data - in a real app, this would come from your backend
+  const { submissions, updateSubmission, deleteSubmission } = useContext(ConsultancyContext);
+  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [formTypeFilter, setFormTypeFilter] = useState("all");
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [editingSubmission, setEditingSubmission] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  // Filter submissions based on search and filters
+  const filteredSubmissions = submissions.filter(submission => {
+    // Search filter
+    if (searchTerm && 
+        !submission.username.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !submission.phone.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    // Status filter
+    if (statusFilter !== "all" && submission.status !== statusFilter) {
+      return false;
+    }
+    
+    // Form type filter
+    if (formTypeFilter !== "all" && submission.formType !== formTypeFilter) {
+      return false;
+    }
+    
+    return true;
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Form submission logic
-    console.log("Form submitted:", formData);
+  const handleEditSubmission = () => {
+    if (!editingSubmission) return;
+    
+    updateSubmission(editingSubmission.id, editingSubmission);
+    setEditingSubmission(null);
   };
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
+  const handleDeleteSubmission = (id) => {
+    deleteSubmission(id);
+    setDeleteConfirm(null);
+  };
+
+  const updateSubmissionStatus = (id, newStatus) => {
+    updateSubmission(id, { status: newStatus });
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case "new": return "bg-blue-100 text-blue-800";
+      case "contacted": return "bg-yellow-100 text-yellow-800";
+      case "scheduled": return "bg-purple-100 text-purple-800";
+      case "completed": return "bg-green-100 text-green-800";
+      case "cancelled": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case "new": return "New";
+      case "contacted": return "Contacted";
+      case "scheduled": return "Scheduled";
+      case "completed": return "Completed";
+      case "cancelled": return "Cancelled";
+      default: return status;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatTime = (timeString) => {
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
     });
   };
 
   return (
-    <section className="py-12 md:py-20 bg-[var(--color-background-alt)]">
-      <div className="container mx-auto px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto">
-          <motion.div 
-            className="text-center mb-8 md:mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            viewport={{ once: true }}
-          >
-            <div className="inline-flex items-center gap-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-4 py-2 rounded-full mb-4">
-              <MessageCircle size={16} />
-              <span className="text-sm font-medium">Personal Consultation</span>
-            </div>
-            
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[var(--color-text)] mb-4">
-              Need Guidance? <span className="text-[var(--color-primary)]">We're Here</span>
-            </h2>
-            
-            <p className="text-base md:text-lg text-[var(--color-text-light)] max-w-2xl mx-auto">
-              Our jewelry experts are ready to help you find the perfect piece that matches your style and needs.
-            </p>
-          </motion.div>
+    <div className="bg-white rounded-lg shadow-md p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Consultancy Requests</h2>
+        <div className="text-sm text-gray-500">
+          Total: {submissions.length} | Showing: {filteredSubmissions.length}
+        </div>
+      </div>
 
-          <motion.div 
-            className="bg-white rounded-xl md:rounded-2xl shadow-lg overflow-hidden"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            viewport={{ once: true }}
+      {/* Search and Filters */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by name or phone number..."
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2">
+          <select
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <div className="flex flex-col md:flex-row">
-              {/* Benefits Section - Now above form on mobile */}
-              <div className="md:w-2/5 bg-[var(--color-primary)]/5 p-6 md:p-8 lg:p-12">
-                <h3 className="text-xl md:text-2xl font-bold text-[var(--color-text)] mb-4 md:mb-6">Why Book a Consultation?</h3>
+            <option value="all">All Status</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <select
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={formTypeFilter}
+            onChange={(e) => setFormTypeFilter(e.target.value)}
+          >
+            <option value="all">All Forms</option>
+            <option value="HelpingForm">Helping Form</option>
+            <option value="ExpertCall">Expert Call</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Submissions Table */}
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="p-3 font-semibold text-gray-700">User</th>
+              <th className="p-3 font-semibold text-gray-700">Contact</th>
+              <th className="p-3 font-semibold text-gray-700">Form Type</th>
+              <th className="p-3 font-semibold text-gray-700">Preferred Time</th>
+              <th className="p-3 font-semibold text-gray-700">Status</th>
+              <th className="p-3 font-semibold text-gray-700">Submitted</th>
+              <th className="p-3 font-semibold text-gray-700 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSubmissions.map(submission => (
+              <tr key={submission.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                <td className="p-3">
+                  <div className="font-medium text-gray-800">{submission.username}</div>
+                  {submission.formType === "ExpertCall" && submission.gender && (
+                    <div className="text-xs text-gray-500 flex items-center">
+                      <FaVenusMars className="mr-1" />
+                      {submission.gender}
+                    </div>
+                  )}
+                </td>
+                <td className="p-3">
+                  <div className="text-gray-800">{submission.phone}</div>
+                  <div className="flex gap-2 mt-1">
+                    <a
+                      href={`tel:${submission.phone}`}
+                      className="text-blue-500 hover:text-blue-700"
+                      title="Call"
+                    >
+                      <FaPhone size={14} />
+                    </a>
+                    <a
+                      href={`https://wa.me/${submission.phone.replace(/\D/g, '')}`}
+                      className="text-green-500 hover:text-green-700"
+                      title="WhatsApp"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <FaWhatsapp size={14} />
+                    </a>
+                  </div>
+                </td>
+                <td className="p-3">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    submission.formType === "HelpingForm" 
+                      ? "bg-blue-100 text-blue-800" 
+                      : "bg-purple-100 text-purple-800"
+                  }`}>
+                    {submission.formType === "HelpingForm" ? "Helping Form" : "Expert Call"}
+                  </span>
+                </td>
+                <td className="p-3">
+                  <div className="text-sm">
+                    <div className="flex items-center">
+                      <FaCalendarAlt className="mr-1 text-gray-500" size={12} />
+                      {formatDate(submission.date)}
+                    </div>
+                    <div className="flex items-center">
+                      <FaClock className="mr-1 text-gray-500" size={12} />
+                      {formatTime(submission.time)}
+                    </div>
+                  </div>
+                </td>
+                <td className="p-3">
+                  <select
+                    value={submission.status}
+                    onChange={(e) => updateSubmissionStatus(submission.id, e.target.value)}
+                    className={`text-xs font-medium px-2 py-1 rounded-full border-0 focus:ring-2 focus:ring-blue-500 ${getStatusBadgeClass(submission.status)}`}
+                  >
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="scheduled">Scheduled</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </td>
+                <td className="p-3">
+                  <div className="text-xs text-gray-500">
+                    {formatDate(submission.createdAt)}
+                  </div>
+                </td>
+                <td className="p-3">
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setSelectedSubmission(submission)}
+                      className="p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors"
+                      title="View details"
+                    >
+                      <FaEye />
+                    </button>
+                    <button
+                      onClick={() => setEditingSubmission({...submission})}
+                      className="p-2 text-green-500 hover:bg-green-50 rounded transition-colors"
+                      title="Edit"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(submission)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
+                      title="Delete"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {filteredSubmissions.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No consultancy requests found matching your criteria.
+        </div>
+      )}
+
+      {/* View Details Modal */}
+      {selectedSubmission && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Consultation Request Details</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-2">User Information</h4>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Name:</span> {selectedSubmission.username}</p>
+                    <p><span className="font-medium">Phone:</span> {selectedSubmission.phone}</p>
+                    {selectedSubmission.formType === "ExpertCall" && (
+                      <>
+                        {selectedSubmission.gender && (
+                          <p><span className="font-medium">Gender:</span> {selectedSubmission.gender}</p>
+                        )}
+                        {selectedSubmission.birthDate && (
+                          <p><span className="font-medium">Birth Date:</span> {formatDate(selectedSubmission.birthDate)}</p>
+                        )}
+                        {selectedSubmission.birthTime && (
+                          <p><span className="font-medium">Birth Time:</span> {formatTime(selectedSubmission.birthTime)}</p>
+                        )}
+                        {selectedSubmission.birthPlace && (
+                          <p><span className="font-medium">Birth Place:</span> {selectedSubmission.birthPlace}</p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
                 
-                <div className="space-y-4 md:space-y-6">
-                  <div className="flex items-start gap-3 md:gap-4">
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-[var(--color-primary)]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <User size={16} className="text-[var(--color-primary)]" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-[var(--color-text)] mb-1 text-sm md:text-base">Personalized Advice</h4>
-                      <p className="text-[var(--color-text-light)] text-xs md:text-sm">Get recommendations based on your unique style.</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3 md:gap-4">
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-[var(--color-primary)]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Phone size={16} className="text-[var(--color-primary)]" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-[var(--color-text)] mb-1 text-sm md:text-base">Direct Expert Access</h4>
-                      <p className="text-[var(--color-text-light)] text-xs md:text-sm">Speak directly with our certified specialists.</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3 md:gap-4">
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-[var(--color-primary)]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <MessageCircle size={16} className="text-[var(--color-primary)]" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-[var(--color-text)] mb-1 text-sm md:text-base">No Obligation</h4>
-                      <p className="text-[var(--color-text-light)] text-xs md:text-sm">Completely free with no pressure to purchase.</p>
-                    </div>
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-2">Appointment Details</h4>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Form Type:</span> {selectedSubmission.formType === "HelpingForm" ? "Helping Form" : "Expert Call"}</p>
+                    <p><span className="font-medium">Preferred Date:</span> {formatDate(selectedSubmission.date)}</p>
+                    <p><span className="font-medium">Preferred Time:</span> {formatTime(selectedSubmission.time)}</p>
+                    <p><span className="font-medium">Status:</span> 
+                      <span className={`ml-2 px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(selectedSubmission.status)}`}>
+                        {getStatusText(selectedSubmission.status)}
+                      </span>
+                    </p>
+                    <p><span className="font-medium">Submitted:</span> {formatDate(selectedSubmission.createdAt)}</p>
                   </div>
                 </div>
               </div>
               
-              {/* Form Section */}
-              <div className="md:w-3/5 p-6 md:p-8 lg:p-12">
-                <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" size={18} />
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Enter your full name"
-                        className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition text-sm md:text-base"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                      Phone Number
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" size={18} />
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        placeholder="Enter your phone number"
-                        className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition text-sm md:text-base"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setSelectedSubmission(null)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingSubmission && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Edit Consultation Request</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <input
+                    type="text"
+                    value={editingSubmission.username}
+                    onChange={(e) => setEditingSubmission({...editingSubmission, username: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input
+                    type="text"
+                    value={editingSubmission.phone}
+                    onChange={(e) => setEditingSubmission({...editingSubmission, phone: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Date</label>
+                  <input
+                    type="date"
+                    value={editingSubmission.date}
+                    onChange={(e) => setEditingSubmission({...editingSubmission, date: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Time</label>
+                  <input
+                    type="time"
+                    value={editingSubmission.time}
+                    onChange={(e) => setEditingSubmission({...editingSubmission, time: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                {editingSubmission.formType === "ExpertCall" && (
+                  <>
                     <div>
-                      <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                        Preferred Date
-                      </label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" size={18} />
-                        <input
-                          type="date"
-                          name="date"
-                          value={formData.date}
-                          onChange={handleChange}
-                          className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition text-sm md:text-base"
-                          required
-                        />
-                      </div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Birth Date</label>
+                      <input
+                        type="date"
+                        value={editingSubmission.birthDate || ""}
+                        onChange={(e) => setEditingSubmission({...editingSubmission, birthDate: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                        Preferred Time
-                      </label>
-                      <div className="relative">
-                        <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" size={18} />
-                        <select
-                          name="time"
-                          value={formData.time}
-                          onChange={handleChange}
-                          className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition text-sm md:text-base appearance-none"
-                          required
-                        >
-                          <option value="09:00">9:00 AM</option>
-                          <option value="10:00">10:00 AM</option>
-                          <option value="11:00">11:00 AM</option>
-                          <option value="13:00">1:00 PM</option>
-                          <option value="14:00">2:00 PM</option>
-                          <option value="15:00">3:00 PM</option>
-                          <option value="16:00">4:00 PM</option>
-                        </select>
-                      </div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Birth Time</label>
+                      <input
+                        type="time"
+                        value={editingSubmission.birthTime || ""}
+                        onChange={(e) => setEditingSubmission({...editingSubmission, birthTime: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
                     </div>
-                  </div>
-                  
-                  <button
-                    type="submit"
-                    className="w-full py-3 bg-[var(--color-primary)] text-white font-medium rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors shadow-md hover:shadow-lg text-sm md:text-base"
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Birth Place</label>
+                      <input
+                        type="text"
+                        value={editingSubmission.birthPlace || ""}
+                        onChange={(e) => setEditingSubmission({...editingSubmission, birthPlace: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                      <select
+                        value={editingSubmission.gender || ""}
+                        onChange={(e) => setEditingSubmission({...editingSubmission, gender: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    value={editingSubmission.status}
+                    onChange={(e) => setEditingSubmission({...editingSubmission, status: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    Schedule Free Consultation
-                  </button>
-                  
-                  <p className="text-center text-xs md:text-sm text-[var(--color-text-light)]">
-                    We'll contact you within 24 hours to confirm your appointment.
-                  </p>
-                </form>
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="scheduled">Scheduled</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setEditingSubmission(null)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSubmission}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Save Changes
+                </button>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
-      </div>
-    </section>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-6">
+              <h3 className="text-xl font-semibold mb-2">Confirm Deletion</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete the consultation request from {deleteConfirm.username}? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteSubmission(deleteConfirm.id)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
-}
+};
 
-// // ConsultationForm.jsx - Mobile-optimized version
-// import React, { useState } from "react";
-// import axios from "axios";
-// import { motion } from "framer-motion";
-// import { Phone, Calendar, Clock, User, MessageCircle } from "lucide-react";
-
-// export default function ConsultationForm() {
-//   const [formData, setFormData] = useState({
-//     name: "",
-//     phone: "",
-//     date: "",
-//     time: "09:00"
-//   });
-
-//   const handleChange = (e) => {
-//     setFormData({
-//       ...formData,
-//       [e.target.name]: e.target.value
-//     });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     try {
-//       const token = localStorage.getItem("authToken"); // use if your API needs authentication
-
-//       const data = {
-//         bookingDate: formData.date,
-//         bookingTime: formData.time,
-//         fullName: formData.name,
-//         phoneNumber: formData.phone,
-//         consultationType: "Trouble Buying",
-//         status: "Pending",
-//         updatedBy: 2,      // default value, replace if needed
-//         isActive: true,    // default value
-//         dateOfBirth: null, // not from form
-//         birthTime: null,   // not from form
-//         gender: null       // not from form
-//       };
-
-//       const response = await axios.post(
-//         "http://localhost:8001/api/saveConsultation",
-//         data,
-//         {
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: token ? `${token}` : ""
-//           }
-//         }
-//       );
-
-//       if (response.data.success) {
-//         console.log("Consultation saved successfully!");
-//         alert("Consultation scheduled successfully!");
-//         // Reset form if desired
-//         setFormData({
-//           name: "",
-//           phone: "",
-//           date: "",
-//           time: "09:00"
-//         });
-//       } else {
-//         console.error("Failed to save consultation:", response.data.message);
-//         alert("Failed to schedule consultation.");
-//       }
-//     } catch (error) {
-//       console.error("Error saving consultation:", error);
-//       alert("An error occurred while scheduling.");
-//     }
-//   };
-
-//   return (
-//     <section className="py-12 md:py-20 bg-[var(--color-background-alt)]">
-//       <div className="container mx-auto px-4 sm:px-6">
-//         <div className="max-w-4xl mx-auto">
-//           <motion.div
-//             className="text-center mb-8 md:mb-12"
-//             initial={{ opacity: 0, y: 20 }}
-//             whileInView={{ opacity: 1, y: 0 }}
-//             transition={{ duration: 0.7 }}
-//             viewport={{ once: true }}
-//           >
-//             <div className="inline-flex items-center gap-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-4 py-2 rounded-full mb-4">
-//               <MessageCircle size={16} />
-//               <span className="text-sm font-medium">Personal Consultation</span>
-//             </div>
-
-//             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[var(--color-text)] mb-4">
-//               Need Guidance?{" "}
-//               <span className="text-[var(--color-primary)]">We're Here</span>
-//             </h2>
-
-//             <p className="text-base md:text-lg text-[var(--color-text-light)] max-w-2xl mx-auto">
-//               Our jewelry experts are ready to help you find the perfect piece that matches your style and needs.
-//             </p>
-//           </motion.div>
-
-//           <motion.div
-//             className="bg-white rounded-xl md:rounded-2xl shadow-lg overflow-hidden"
-//             initial={{ opacity: 0, y: 30 }}
-//             whileInView={{ opacity: 1, y: 0 }}
-//             transition={{ duration: 0.5, delay: 0.2 }}
-//             viewport={{ once: true }}
-//           >
-//             <div className="flex flex-col md:flex-row">
-//               {/* Benefits Section */}
-//               <div className="md:w-2/5 bg-[var(--color-primary)]/5 p-6 md:p-8 lg:p-12">
-//                 <h3 className="text-xl md:text-2xl font-bold text-[var(--color-text)] mb-4 md:mb-6">Why Book a Consultation?</h3>
-
-//                 <div className="space-y-4 md:space-y-6">
-//                   <div className="flex items-start gap-3 md:gap-4">
-//                     <div className="w-8 h-8 md:w-10 md:h-10 bg-[var(--color-primary)]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-//                       <User size={16} className="text-[var(--color-primary)]" />
-//                     </div>
-//                     <div>
-//                       <h4 className="font-semibold text-[var(--color-text)] mb-1 text-sm md:text-base">Personalized Advice</h4>
-//                       <p className="text-[var(--color-text-light)] text-xs md:text-sm">Get recommendations based on your unique style.</p>
-//                     </div>
-//                   </div>
-
-//                   <div className="flex items-start gap-3 md:gap-4">
-//                     <div className="w-8 h-8 md:w-10 md:h-10 bg-[var(--color-primary)]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-//                       <Phone size={16} className="text-[var(--color-primary)]" />
-//                     </div>
-//                     <div>
-//                       <h4 className="font-semibold text-[var(--color-text)] mb-1 text-sm md:text-base">Direct Expert Access</h4>
-//                       <p className="text-[var(--color-text-light)] text-xs md:text-sm">Speak directly with our certified specialists.</p>
-//                     </div>
-//                   </div>
-
-//                   <div className="flex items-start gap-3 md:gap-4">
-//                     <div className="w-8 h-8 md:w-10 md:h-10 bg-[var(--color-primary)]/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-//                       <MessageCircle size={16} className="text-[var(--color-primary)]" />
-//                     </div>
-//                     <div>
-//                       <h4 className="font-semibold text-[var(--color-text)] mb-1 text-sm md:text-base">No Obligation</h4>
-//                       <p className="text-[var(--color-text-light)] text-xs md:text-sm">Completely free with no pressure to purchase.</p>
-//                     </div>
-//                   </div>
-//                 </div>
-//               </div>
-
-//               {/* Form Section */}
-//               <div className="md:w-3/5 p-6 md:p-8 lg:p-12">
-//                 <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-//                   <div>
-//                     <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-//                       Full Name
-//                     </label>
-//                     <div className="relative">
-//                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" size={18} />
-//                       <input
-//                         type="text"
-//                         name="name"
-//                         value={formData.name}
-//                         onChange={handleChange}
-//                         placeholder="Enter your full name"
-//                         className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition text-sm md:text-base"
-//                         required
-//                       />
-//                     </div>
-//                   </div>
-
-//                   <div>
-//                     <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-//                       Phone Number
-//                     </label>
-//                     <div className="relative">
-//                       <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" size={18} />
-//                       <input
-//                         type="tel"
-//                         name="phone"
-//                         value={formData.phone}
-//                         onChange={handleChange}
-//                         placeholder="Enter your phone number"
-//                         className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition text-sm md:text-base"
-//                         required
-//                       />
-//                     </div>
-//                   </div>
-
-//                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-//                     <div>
-//                       <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-//                         Preferred Date
-//                       </label>
-//                       <div className="relative">
-//                         <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" size={18} />
-//                         <input
-//                           type="date"
-//                           name="date"
-//                           value={formData.date}
-//                           onChange={handleChange}
-//                           className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition text-sm md:text-base"
-//                           required
-//                         />
-//                       </div>
-//                     </div>
-
-//                     <div>
-//                       <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-//                         Preferred Time
-//                       </label>
-//                       <div className="relative">
-//                         <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" size={18} />
-//                         <select
-//                           name="time"
-//                           value={formData.time}
-//                           onChange={handleChange}
-//                           className="w-full pl-10 pr-4 py-2.5 md:py-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition text-sm md:text-base appearance-none"
-//                           required
-//                         >
-//                           <option value="09:00">9:00 AM</option>
-//                           <option value="10:00">10:00 AM</option>
-//                           <option value="11:00">11:00 AM</option>
-//                           <option value="13:00">1:00 PM</option>
-//                           <option value="14:00">2:00 PM</option>
-//                           <option value="15:00">3:00 PM</option>
-//                           <option value="16:00">4:00 PM</option>
-//                         </select>
-//                       </div>
-//                     </div>
-//                   </div>
-
-//                   <button
-//                     type="submit"
-//                     className="w-full py-3 bg-[var(--color-primary)] text-white font-medium rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors shadow-md hover:shadow-lg text-sm md:text-base"
-//                   >
-//                     Schedule Free Consultation
-//                   </button>
-
-//                   <p className="text-center text-xs md:text-sm text-[var(--color-text-light)]">
-//                     We'll contact you within 24 hours to confirm your appointment.
-//                   </p>
-//                 </form>
-//               </div>
-//             </div>
-//           </motion.div>
-//         </div>
-//       </div>
-//     </section>
-//   );
-// }
+export default Consultancy;

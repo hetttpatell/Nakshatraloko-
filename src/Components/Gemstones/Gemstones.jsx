@@ -244,7 +244,7 @@ const filteredAndSortedProducts = useMemo(() => {
         {error && <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6"><p className="text-yellow-800">{error}</p></div>}
 
         {/* Controls */}
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-8 p-6 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow">
+        {/* <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-8 p-6 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow"> */}
           <div className="flex items-center gap-4 relative">
             <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2 px-6 py-3 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-xl hover:bg-[var(--color-primary)] hover:text-white transition-all">
               <Filter size={18} /> Filters
@@ -256,13 +256,13 @@ const filteredAndSortedProducts = useMemo(() => {
               </button>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <span className="text-[var(--color-text-light)] text-sm">Sort by:</span>
             <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="px-4 py-2 border border-[var(--color-border)] rounded-xl bg-white text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)]/50">
               {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
 
         {/* Filters Panel */}
         {showFilters && (

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useCart } from "../../Context/CartContext";
 import Recommendations from "../Product/Recommendation";
 import { Minus, Plus, Trash2, ShoppingBag, Sparkles, Zap } from "lucide-react";
@@ -6,23 +6,80 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Cart() {
-  // ✅ Include toggleCartItem from context
-  const { cart, addToCart, getCart } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity, getCart } = useCart();
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch cart on mount
+  // Fetch cart on mount
   useEffect(() => {
-    getCart();
+    const fetchCartData = async () => {
+      setLoading(true);
+      try {
+        await getCart();
+      } catch (error) {
+        console.error('Failed to fetch cart:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCartData();
   }, []);
 
+  // Transform API data to component format
+  const transformCartData = (apiData) => {
+    return apiData.map(item => ({
+      id: item.productid,
+      cartId: item.cartid,
+      name: item.name,
+      description: item.description,
+      price: parseFloat(item.firstsizeprice),
+      originalPrice: parseFloat(item.firstdummyprice),
+      discount: parseFloat(item.discount),
+      discountPercentage: parseFloat(item.discountpercentage),
+      image: item.primaryimage ? `data:image/jpeg;base64,${item.primaryimage}` : '/s1.jpeg',
+      category: item.catogaryname,
+      inStock: item.stock > 0,
+      stock: item.stock,
+      rating: parseFloat(item.avgrating) || 0,
+      reviews: item.reviewcount || 0,
+      quantity: item.quantity || 1, // Default quantity if not provided
+      size: item.size || 'Standard',
+      material: item.material || item.catogaryname
+    }));
+  };
 
+  // Get transformed cart data
+  const transformedCart = transformCartData(cart);
 
   // Calculations
-  const subtotal = cart.reduce(
+  const subtotal = transformedCart.reduce(
     (sum, item) => (item.inStock ? sum + item.price * item.quantity : sum),
     0
   );
   const shipping = subtotal > 5000 ? 0 : 199;
   const total = subtotal + (subtotal > 0 ? shipping : 0);
+
+  // Handle quantity change
+  const handleQuantityChange = (item, newQuantity) => {
+    if (newQuantity <= 0) {
+      handleRemoveItem(item);
+      return;
+    }
+    
+    if (newQuantity <= item.stock) {
+      updateQuantity(item.cartId, newQuantity);
+    } else {
+      // Show toast or alert that quantity exceeds stock
+      console.warn(`Cannot add more than ${item.stock} items`);
+    }
+  };
+
+  // Handle remove item
+  const handleRemoveItem = (item) => {
+    removeFromCart(item.cartId);
+    // You can add toast notification here
+    console.log(`${item.name} removed from cart`);
+  };
 
   // Background circles component
   const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
@@ -42,6 +99,19 @@ export default function Cart() {
       }}
     />
   );
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-b from-[var(--color-primary-light)]/30 to-[var(--color-background)] min-h-screen flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-2 border-[var(--color-primary)] border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-b from-[var(--color-primary-light)]/30 to-[var(--color-background)] min-h-screen py-14 px-4 sm:px-6 lg:px-12 relative overflow-hidden">
@@ -76,7 +146,7 @@ export default function Cart() {
         </motion.div>
 
         <AnimatePresence>
-          {cart.length > 0 ? (
+          {transformedCart.length > 0 ? (
             <motion.div
               className="grid grid-cols-1 lg:grid-cols-3 gap-10"
               initial={{ opacity: 0 }}
@@ -85,14 +155,9 @@ export default function Cart() {
             >
               {/* Cart Items */}
               <div className="lg:col-span-2 space-y-6">
-                {cart.map((product) => (
-                  // console.log()
+                {transformedCart.map((product) => (
                   <motion.div
-                    key={
-                      product.id
-                        ? `${product.id}-${product.size || "default"}-${product.material || "default"}`
-                        : `fallback-${Math.random()}`
-                    }
+                    key={`${product.cartId}-${product.id}`}
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -110,70 +175,107 @@ export default function Cart() {
                         src={product.image}
                         alt={product.name}
                         className="w-32 h-32 object-cover"
+                        onError={(e) => {
+                          e.target.src = '/s1.jpeg'; // Fallback image
+                        }}
                       />
                       {!product.inStock && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                           <span className="text-white text-sm font-medium">Out of Stock</span>
                         </div>
                       )}
+                      {product.discountPercentage > 0 && (
+                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                          {product.discountPercentage.toFixed(0)}% OFF
+                        </div>
+                      )}
                     </motion.div>
 
                     {/* Product Info */}
                     <div className="flex-1 text-center sm:text-left space-y-2">
-                      <h3 className="text-lg font-semibold text-[var(--color-text)] line-clamp-1">
+                      <h3 className="text-lg font-semibold text-[var(--color-text)] line-clamp-2">
                         {product.name}
                       </h3>
                       <p className="text-xs text-[var(--color-text-light)] uppercase tracking-wide">
-                        {product.material} • {product.size}
+                        {product.category}
                       </p>
-                      <div className="flex items-center gap-1 text-sm">
-                        <div className="flex text-[var(--color-rating)]">
-                          {"★".repeat(Math.floor(product.rating || 0))}
-                          {"☆".repeat(5 - Math.floor(product.rating || 0))}
+                      
+                      {product.rating > 0 && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <div className="flex text-[var(--color-rating)]">
+                            {"★".repeat(Math.floor(product.rating))}
+                            {"☆".repeat(5 - Math.floor(product.rating))}
+                          </div>
+                          <span className="text-[var(--color-text-light)]">
+                            ({product.reviews} reviews)
+                          </span>
                         </div>
-                        <span className="text-[var(--color-text-light)]">
-                          ({product.reviews || 0} reviews)
-                        </span>
-                      </div>
-
-                      {product.inStock ? (
-                        <p className="text-green-600 text-sm font-medium bg-green-100 px-2 py-1 rounded-full inline-block">
-                          In Stock
-                        </p>
-                      ) : (
-                        <p className="text-red-600 text-sm font-medium bg-red-100 px-2 py-1 rounded-full inline-block">
-                          Out of Stock
-                        </p>
                       )}
 
-                      <div className="text-[var(--color-text)] font-bold text-lg">
-                        ₹{product.price * product.quantity}
+                      <div className="flex items-center gap-2">
+                        {product.inStock ? (
+                          <p className="text-green-600 text-sm font-medium bg-green-100 px-2 py-1 rounded-full">
+                            In Stock ({product.stock} left)
+                          </p>
+                        ) : (
+                          <p className="text-red-600 text-sm font-medium bg-red-100 px-2 py-1 rounded-full">
+                            Out of Stock
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="text-[var(--color-text)] font-bold text-lg">
+                          ₹{(product.price * product.quantity).toFixed(2)}
+                        </div>
+                        {product.originalPrice > product.price && (
+                          <div className="text-sm text-gray-500 line-through">
+                            ₹{(product.originalPrice * product.quantity).toFixed(2)}
+                          </div>
+                        )}
                       </div>
                       <div className="text-xs text-[var(--color-text-light)]">
-                        (₹{product.price} × {product.quantity})
+                        (₹{product.price.toFixed(2)} × {product.quantity})
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex flex-col items-center sm:items-end gap-4">
+                      {/* Quantity Controls */}
+                      {product.inStock && (
+                        <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleQuantityChange(product, product.quantity - 1)}
+                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
+                            disabled={product.quantity <= 1}
+                          >
+                            <Minus size={14} />
+                          </motion.button>
+                          <span className="w-8 text-center font-medium">{product.quantity}</span>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleQuantityChange(product, product.quantity + 1)}
+                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
+                            disabled={product.quantity >= product.stock}
+                          >
+                            <Plus size={14} />
+                          </motion.button>
+                        </div>
+                      )}
+
                       {/* Remove button */}
                       <motion.button
-                        onClick={() => {
-                          addToCart(product);
-                          showToast(`${product.name} added to Bag`, "success");
-                        }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleRemoveItem(product)}
                         className="flex items-center gap-1 text-sm text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] transition-colors"
                       >
                         <Trash2 size={14} />
                         Remove
                       </motion.button>
-
-
-
                     </div>
                   </motion.div>
-                ))} 
-                {/* //fewfewfegw */}
+                ))}
               </div>
 
               {/* Summary */}
@@ -186,8 +288,8 @@ export default function Cart() {
                 <h3 className="text-xl font-semibold mb-6 text-[var(--color-text)]">Order Summary</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between text-[var(--color-text)]">
-                    <span>Subtotal</span>
-                    <span>₹{subtotal}</span>
+                    <span>Subtotal ({transformedCart.length} items)</span>
+                    <span>₹{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[var(--color-text-light)]">Shipping</span>
@@ -195,10 +297,15 @@ export default function Cart() {
                       {shipping === 0 ? "Free" : `₹${shipping}`}
                     </span>
                   </div>
+                  {subtotal > 0 && subtotal < 5000 && (
+                    <div className="text-xs text-[var(--color-text-light)] bg-blue-50 p-2 rounded">
+                      Add ₹{(5000 - subtotal).toFixed(2)} more for free shipping!
+                    </div>
+                  )}
                   <div className="border-t border-[var(--color-border)] pt-4 mt-4">
                     <div className="flex justify-between font-bold text-xl text-[var(--color-text)]">
                       <span>Total</span>
-                      <span>₹{total}</span>
+                      <span>₹{total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -259,7 +366,7 @@ export default function Cart() {
         </AnimatePresence>
 
         {/* Recommendations */}
-        {cart.length > 0 && (
+        {transformedCart.length > 0 && (
           <motion.div
             className="mt-20"
             initial={{ opacity: 0, y: 20 }}
