@@ -29,13 +29,25 @@ const OrdersManagement = ({ isMobile }) => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:8001/api/listAllOrders");
-        if (!response.ok) throw new Error("Failed to fetch orders");
-        const data = await response.json();
-        setOrders(data);
-        setFilteredOrders(data);
+        const token = localStorage.getItem("authToken");
+
+        const res = await axios.post(
+          "http://localhost:8001/api/listAllOrders",
+          {}, // body (empty if not required)
+          {
+            headers: {
+              Authorization: token ? token : "",
+            },
+          }
+        );
+
+        // Ensure data is an array
+        const ordersArray = Array.isArray(res.data) ? res.data : res.data.orders || [];
+        setOrders(ordersArray);
+        setFilteredOrders(ordersArray); // important!
       } catch (err) {
-        setError(err.message);
+        console.error("Error fetching orders:", err);
+        setError(err.response?.data?.message || err.message);
       } finally {
         setLoading(false);
       }
@@ -44,13 +56,16 @@ const OrdersManagement = ({ isMobile }) => {
     fetchOrders();
   }, []);
 
+
+
+
   // Filter orders based on search term and status
   useEffect(() => {
     let result = orders;
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(order => 
+      result = result.filter(order =>
         order.id.toLowerCase().includes(term) ||
         order.customer.toLowerCase().includes(term) ||
         order.email.toLowerCase().includes(term)
@@ -63,14 +78,14 @@ const OrdersManagement = ({ isMobile }) => {
 
     setFilteredOrders(result);
     setCurrentPage(1); // Reset to first page when filters change
-  }, [searchTerm, statusFilter, orders]); 
+  }, [searchTerm, statusFilter, orders]);
 
 
 
   // const statusOptions = ["all", "Pending", "Completed", "Processing", "Cancelled"];
 
-  
-   const handleStatusChange = async (orderId, newStatus) => {
+
+  const handleStatusChange = async (orderId, newStatus) => {
     try {
       const response = await axios.post(`http://localhost:8001/api/updateOrderStatus/${orderId}/${newStatus}`, {
         method: "PUT",
@@ -78,7 +93,7 @@ const OrdersManagement = ({ isMobile }) => {
       if (!response.ok) throw new Error("Failed to update order status");
 
       // Update local state
-      setOrders(prev => prev.map(order => 
+      setOrders(prev => prev.map(order =>
         order.id === orderId ? { ...order, status: newStatus } : order
       ));
     } catch (err) {
@@ -86,7 +101,7 @@ const OrdersManagement = ({ isMobile }) => {
     }
   };
 
-   
+
 
   const handleDeleteOrder = () => {
     if (deleteConfirmModal.orderId) {
@@ -104,7 +119,7 @@ const OrdersManagement = ({ isMobile }) => {
     setIsEditModalOpen(true);
   };
 
-   
+
 
   const handleSaveOrder = async () => {
     if (!editingOrder) return;
@@ -118,7 +133,7 @@ const OrdersManagement = ({ isMobile }) => {
       if (!response.ok) throw new Error("Failed to save order");
 
       // Update local state
-      setOrders(prev => prev.map(order => 
+      setOrders(prev => prev.map(order =>
         order.id === editingOrder.id ? editingOrder : order
       ));
 
@@ -134,7 +149,7 @@ const OrdersManagement = ({ isMobile }) => {
   };
 
   // Pagination logic
-   const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
@@ -142,7 +157,7 @@ const OrdersManagement = ({ isMobile }) => {
 
   if (loading) return <div className="text-center py-8 text-gray-600">Loading orders...</div>;
   if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
-  
+
   return (
     <div className="bg-white rounded-lg shadow p-4 md:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
@@ -193,7 +208,7 @@ const OrdersManagement = ({ isMobile }) => {
       </div>
 
       {/* Orders Table */}
-      <div className="overflow-x-auto">
+      {/* <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
@@ -277,10 +292,96 @@ const OrdersManagement = ({ isMobile }) => {
             No orders found matching your criteria.
           </div>
         )}
+      </div> */}
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50">
+              <th className="p-3 font-semibold text-gray-600 text-sm">Customer</th>
+              {!isMobile && <th className="p-3 font-semibold text-gray-600 text-sm">Date</th>}
+              <th className="p-3 font-semibold text-gray-600 text-sm">Items</th>
+              <th className="p-3 font-semibold text-gray-600 text-sm">Amount</th>
+              <th className="p-3 font-semibold text-gray-600 text-sm">Status</th>
+              <th className="p-3 font-semibold text-gray-600 text-sm">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentOrders.map((order, index) => (
+              <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                {/* Customer */}
+                <td className="p-3">
+                  <div>
+                    <p className="font-medium text-sm">{order.UserFullName}</p>
+                    <p className="text-xs text-gray-500">{order.UserEmail}</p>
+                  </div>
+                </td>
+
+                {/* Date */}
+                {!isMobile && (
+                  <td className="p-3 text-sm">
+                    {new Date(order.OrderDate).toLocaleDateString()}
+                  </td>
+                )}
+
+                {/* Items */}
+                <td className="p-3">
+                  <div className="text-xs">
+                    {order.items.slice(0, isMobile ? 1 : 3).map((item, i) => (
+                      <div key={i} className="mb-1">
+                        {item.Quantity} × {item.ProductName}
+                      </div>
+                    ))}
+                    {order.items.length > (isMobile ? 1 : 3) && (
+                      <div className="text-blue-500">
+                        +{order.items.length - (isMobile ? 1 : 3)} more
+                      </div>
+                    )}
+                  </div>
+                </td>
+
+                {/* Amount */}
+                <td className="p-3 font-medium text-sm">₹{order.NetAmount}</td>
+
+                {/* Status */}
+                <td className="p-3">
+                  <select
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[order.OrderStatus]} border-none focus:ring-2 focus:ring-blue-500`}
+                    value={order.OrderStatus}
+                    onChange={(e) => handleStatusChange(order.OrderID, e.target.value)}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </td>
+
+                {/* Actions */}
+                <td className="p-3">
+                  <button
+                    className="p-1 md:p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors"
+                    onClick={() => viewOrderDetails(order.OrderID)}
+                    title="View details"
+                  >
+                    <FaEye className="text-sm md:text-base" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {filteredOrders.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No orders found matching your criteria.
+          </div>
+        )}
       </div>
 
+
       {/* Pagination */}
-      {filteredOrders.length > 0 && (
+      {/* {filteredOrders.length > 0 && (
         <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-3">
           <div className="text-sm text-gray-600">
             Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} entries
@@ -336,7 +437,7 @@ const OrdersManagement = ({ isMobile }) => {
             </button>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmModal.isOpen && (
@@ -534,98 +635,6 @@ const OrdersManagement = ({ isMobile }) => {
   );
 };
 
-// Products data (should be imported from a separate file in a real application)
-const products = [
-  {
-    id: 1,
-    name: "Stellar Dainty Diamond Hoop id-1",
-    brand: "STYLIUM",
-    rating: 4.5,
-    reviews: 22,
-    price: 900,
-    inStock: true,
-    mainImage: "/s3.jpeg",
-    size: ["5 Ratti", "5.25 Ratti", "6 Ratti", "6.5 Ratti", "7 Ratti", "7.5 Ratti", "8 Ratti", "8.5 Ratti"],
-    material: ["Gemstone", "Pendant", "Necklace"],
-    images: [
-      { src: "/s1.jpeg", alt: "Product Image 1" },
-      { src: "/s2.jpeg", alt: "Product Image 2" },
-      { src: "/s3.jpeg", alt: "Product Image 3" },
-    ],
-    description: "Cool off this summer in the Mini Ruffle Smocked Tank Top from our very own LA Hearts. This tank features a smocked body, adjustable straps, scoop neckline, ruffled hems, and a cropped fit.",
-    advantages: ["Smocked body", "Adjustable straps", "Scoop neckline", "Ruffled hems", "Cropped length", "Model is wearing a small", "100% rayon", "Machine washable"],
-    shipping: "We offer Free Standard Shipping for all orders over $75 to the 50 states and the District of Columbia...",
-    reviewList: [
-      { user: "Het Patel", comment: "Amazing quality! Worth the price.", rating: 5 },
-      { user: "Priya Shah", comment: "Looks good but delivery was late.", rating: 4 },
-    ],
-  },
-  {
-    id: 2,
-    name: "Another Product Name id-2",
-    brand: "PEARLIX",
-    rating: 3.8,
-    reviews: 12,
-    price: 1200,
-    inStock: true,
-    mainImage: "/s2.jpeg",
-    size: ["5 Ratti", "5.25 Ratti", "6 Ratti", "6.5 Ratti", "7 Ratti", "7.5 Ratti", "8 Ratti", "8.5 Ratti"],
-    material: ["Silver", "Gold", "Copper"],
-    images: [
-      { src: "/s3.jpeg", alt: "Product Image 1" },
-      { src: "/s2.jpeg", alt: "Product Image 2" },
-    ],
-    description: "This is another product description.",
-    advantages: ["Feature 1", "Feature 2", "Feature 3"],
-    shipping: "Shipping info for product 2",
-    reviewList: [
-      { user: "Rahul Kumar", comment: "Good product overall.", rating: 4 },
-    ],
-  },
-  {
-    id: 3,
-    name: "Another Product Name id-3",
-    brand: "PEARLIX",
-    rating: 3.8,
-    reviews: 12,
-    price: 1200,
-    inStock: true,
-    mainImage: "/s4.jpeg",
-    size: ["5 Ratti", "5.25 Ratti", "6 Ratti", "6.5 Ratti", "7 Ratti", "7.5 Ratti", "8 Ratti", "8.5 Ratti"],
-    material: ["Silver", "Gold", "Copper"],
-    images: [
-      { src: "/s3.jpeg", alt: "Product Image 1" },
-      { src: "/s2.jpeg", alt: "Product Image 2" },
-    ],
-    description: "This is another product description.",
-    advantages: ["Feature 1", "Feature 2", "Feature 3"],
-    shipping: "Shipping info for product 2",
-    reviewList: [
-      { user: "Rahul Kumar", comment: "Good product overall.", rating: 4 },
-    ],
-  },
-  {
-    id: 4,
-    name: "Another Product Name id-4",
-    brand: "PEARLIX",
-    rating: 3.8,
-    reviews: 12,
-    price: 1200,
-    inStock: true,
-    mainImage: "/s1.jpeg",
-    size: ["5 Ratti", "5.25 Ratti", "6 Ratti", "6.5 Ratti", "7 Ratti", "7.5 Ratti", "8 Ratti", "8.5 Ratti"],
-    material: ["Silver", "Gold", "Copper"],
-    images: [
-      { src: "/s3.jpeg", alt: "Product Image 1" },
-      { src: "/s2.jpeg", alt: "Product Image 2" },
-    ],
-    description: "This is another product description.",
-    advantages: ["Feature 1", "Feature 2", "Feature 3"],
-    shipping: "Shipping info for product 2",
-    reviewList: [
-      { user: "Rahul Kumar", comment: "Good product overall.", rating: 4 },
-    ],
-  },
-];
+
 
 export default OrdersManagement;

@@ -134,10 +134,14 @@ const ProductDetails = () => {
           rating: productData.rating || 4.5, // fallback rating
           reviews: productData.reviews || 0,
           reviewList: productData.reviewList || [],
+
           images: productData.images.map((img, i) => ({
-            src: img.src || "/placeholder.png",
-            alt: img.alt || `${productData.name} ${i + 1}`,
+            src: img.imageData || "/placeholder.png",   // ✅ use imageData
+            alt: img.altText || `${productData.name} ${i + 1}`, // ✅ use altText
           })),
+
+          mainImage: productData.images[0]?.imageData || "/placeholder.png", // ✅
+
           size: productData.sizes.map((s) => s.size), // extract just size
           sizeDetails: productData.sizes, // keep full details
           material: ["Leather", "Synthetic"], // fallback until API provides
@@ -145,7 +149,8 @@ const ProductDetails = () => {
             ? productData.advantages.split(",").map((a) => a.trim())
             : [],
           shipping: "Delivered in 5-7 business days",
-          mainImage: productData.images[0]?.src || "/placeholder.png",
+          mainImage: productData.images[0]?.imageData || "/placeholder.png", // ✅ correct
+          // mainImage: productData.images[0]?.src || "/placeholder.png",
         };
         console.log(productData);
         setProduct(mapped);
@@ -301,9 +306,9 @@ const ProductDetails = () => {
                 </div>
 
                 {/* Premium badge */}
-                <div className="absolute top-4 left-4 bg-color-primary text-color-surface text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+                {/* <div className="absolute top-4 left-4 bg-color-primary text-color-surface text-xs font-semibold px-3 py-1 rounded-full shadow-md">
                   LUXURY COLLECTION
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
