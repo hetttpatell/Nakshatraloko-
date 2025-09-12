@@ -47,7 +47,7 @@ const ProductDetails = () => {
     message: "",
     type: "success",
     visible: false,
-  }); 
+  });
   const [zoomStyle, setZoomStyle] = useState({});
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const [product, setProduct] = useState(null);
@@ -409,16 +409,19 @@ const ProductDetails = () => {
 
             {/* Buttons */}
             <div className="flex gap-4 mb-8">
-              <Button
-                onClick={() => {
-                  addToCart(product, quantity, selectedSize, selectedMaterial);
-                  showToast(`${product.name} added to Bag`, "success");
-                }}
-                className="bg-color-primary text-color-surface px-10 py-3.5 font-medium text-sm hover:bg-color-primary-dark transition-all duration-300 shadow-md hover:shadow-lg flex-1"
-              >
-                ADD TO BAG
-              </Button>
-
+              {/* onClick={() => { */}
+              {/* //   addToCart(product, quantity, selectedSize, selectedMaterial); */}
+              {/* //   showToast(`${product.name} added to Bag`, "success"); */}
+              {/* // }} */}
+             <Button
+  onClick={() => {
+    addToCart({ productid: product.id }); // wrap in object
+    showToast(`${product.name} added to Bag`, "success");
+  }}
+  className="bg-color-primary text-color-surface px-10 py-3.5 font-medium text-sm hover:bg-color-primary-dark transition-all duration-300 shadow-md hover:shadow-lg flex-1"
+>
+  ADD TO BAG
+</Button>
 
               <Button
                 onClick={() => {
