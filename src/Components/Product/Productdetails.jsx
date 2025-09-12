@@ -426,6 +426,7 @@ const ProductDetails = () => {
               <Button
                 onClick={async () => {
                   const res = await addToWishlist(product);
+                  console.log(res);
                   showToast(res.message, res.success ? "success" : "error");
                 }}
                 className={`px-6 py-3.5 font-medium text-sm transition-all duration-300 shadow-md hover:shadow-lg border ${isWishlisted

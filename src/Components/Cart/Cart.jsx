@@ -36,7 +36,7 @@ export default function Cart() {
       originalPrice: parseFloat(item.firstdummyprice),
       discount: parseFloat(item.discount),
       discountPercentage: parseFloat(item.discountpercentage),
-      image: item.primaryimage ? `data:image/jpeg;base64,${item.primaryimage}` : '/s1.jpeg',
+      image: item.primaryimage ? `${item.primaryimage}` : '/s1.jpeg',
       category: item.catogaryname,
       inStock: item.stock > 0,
       stock: item.stock,

@@ -78,42 +78,49 @@ export function CartProvider({ children }) {
 };
 
   // ✅ Get cart from backend
-  const getCart = async () => {
-    try {
-      const token = localStorage.getItem("authToken");
+ const getCart = async () => {
+  try {
+    const token = localStorage.getItem("authToken");
 
-      if (!token) {
-        console.warn("No auth token found, cannot fetch cart");
-        setCart([]);
-        return;
+    if (!token) {
+      console.warn("No auth token found, cannot fetch cart");
+      setCart([]);
+      return;
+    }
+
+    const response = await axios.post(
+      "http://localhost:8001/api/getCart",
+      {},
+      {
+        headers: {
+          Authorization: `${token}`,
+        },
       }
+    );
 
-      const response = await axios.post(
-        "http://localhost:8001/api/getCart",
-        {},
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        }
-      );
+    if (response.data && Array.isArray(response.data.data)) {
+      setCart(response.data.data.map(item => {
+        // Convert Base64 to data URL
+        const imgSrc = item.primaryimage
+          ? `data:image/jpeg;base64,${item.primaryimage}`
+          : ""; // fallback if no image
 
-      if (response.data && Array.isArray(response.data.data)) {
-        setCart(response.data.data.map(item => ({
+        return {
           ...item,
+          img: imgSrc,
           id: item.ProductID || item.id || String(item.productId), // ensure we always have an id
-        })));
-      }
-
-      else {
-        console.warn("Cart API response invalid:", response.data);
-        setCart([]);
-      }
-    } catch (error) {
-      console.error("Error fetching cart:", error);
+        };
+      }));
+    } else {
+      console.warn("Cart API response invalid:", response.data);
       setCart([]);
     }
-  };
+  } catch (error) {
+    console.error("Error fetching cart:", error);
+    setCart([]);
+  }
+};
+
 
 
 

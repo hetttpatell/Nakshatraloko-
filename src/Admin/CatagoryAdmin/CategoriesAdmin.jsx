@@ -85,6 +85,13 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     }
   }, [products, categories]);
 
+  useEffect(()=>{
+    axios
+    .post("http://localhost:8001/api/saveCatogary")
+    .then((res) => {
+      setNewCategory((res.data.data))
+    })
+  })
   // Filter products for the selected category
   const filteredProducts = selectedCategory 
     ? products.filter(product => {
@@ -307,7 +314,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             </select>
           </div>
         </div>
-
+ 
         {/* Products Table */}
        {filteredProducts.length > 0 ? (
   <div className="overflow-x-auto rounded-lg border border-gray-200">

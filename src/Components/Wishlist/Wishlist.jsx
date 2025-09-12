@@ -25,36 +25,36 @@ export default function Wishlist() {
         setLoading(false);
       }
     };
-    
+
     loadWishlist();
   }, []);
 
   // Transform wishlist data if needed (similar to cart)
   const transformWishlistData = (apiData) => {
     if (!Array.isArray(apiData)) return [];
-    
-    return apiData.map(item => ({
-      id: item.productid || item._id || item.ID,
-      wishlistId: item.wishlistid || item.id,
-      name: item.name || item.productName,
-      description: item.description,
-      price: parseFloat(item.firstsizeprice || item.price || 0),
-      oldPrice: item.firstdummyprice ? parseFloat(item.firstdummyprice) : null,
-      discount: item.discount ? parseFloat(item.discount) : 0,
-      discountPercentage: item.discountpercentage ? parseFloat(item.discountpercentage) : 0,
-      mainImage: item.primaryimage ? `data:image/jpeg;base64,${item.primaryimage}` : 
-                 item.mainImage || item.image || '/s1.jpeg',
-      category: item.catogaryname || item.category,
-      brand: item.brand || item.catogaryname || 'Unknown',
-      material: item.material || item.catogaryname || 'Standard',
-      inStock: item.stock > 0,
-      stock: item.stock || 0,
-      rating: parseFloat(item.avgrating || item.rating || 0),
-      reviews: item.reviewcount || item.reviews || 0,
-      quantity: item.quantity || 1,
-      isActive: item.isActive !== false // Default to true unless explicitly false
-    }));
+
+    return apiData.map(item => {
+      const id = item.wishlistid || item.id || item.productid || item._id || item.ID;
+      return {
+        ...item,
+        id, // this ensures item.id is always defined
+        name: item.name || item.productName,
+        price: parseFloat(item.firstsizeprice || item.price || 0),
+        oldPrice: item.firstdummyprice ? parseFloat(item.firstdummyprice) : null,
+        discountPercentage: item.discountpercentage ? parseFloat(item.discountpercentage) : 0,
+        mainImage: item.primaryimage ? `data:image/jpeg;base64,${item.primaryimage}` : item.mainImage || item.image || '/s1.jpeg',
+        brand: item.brand || 'Unknown',
+        material: item.material || 'Standard',
+        inStock: item.stock > 0,
+        stock: item.stock || 0,
+        rating: parseFloat(item.avgrating || item.rating || 0),
+        reviews: item.reviewcount || item.reviews || 0,
+        quantity: item.quantity || 1,
+        isActive: item.isActive !== false
+      };
+    });
   };
+
 
   const transformedWishlist = transformWishlistData(wishlist);
 
@@ -66,9 +66,15 @@ export default function Wishlist() {
   };
 
   const handleRemove = async (item) => {
-    const itemId = item.id || item._id || item.ID;
+    console.log(item.id);
+    const itemId = item.id; // now guaranteed to exist
+    console.log(itemId);
     if (!itemId) {
       toast.error("Invalid item");
+
+      useEffect(() => {
+        console.log("Raw wishlist data:", wishlist);
+      }, [wishlist]);
       return;
     }
 
@@ -81,7 +87,7 @@ export default function Wishlist() {
         toast.error(res.message || "Failed to remove item");
       }
     } catch (error) {
-      console.error("Error removing from wishlist:", error);
+      console.error(error);
       toast.error("Failed to remove item");
     } finally {
       setItemLoading(itemId, false);
@@ -121,13 +127,13 @@ export default function Wishlist() {
     setItemLoading(productId, true);
     try {
       // Add to cart
-      const addRes = await addToCart({ 
+      const addRes = await addToCart({
         productId,
         quantity: item.quantity || 1,
         size: item.size,
         material: item.material
       });
-      
+
       if (addRes.success) {
         // Remove from wishlist after successful cart addition
         const removeRes = await removeFromWishlist(productId);
@@ -147,34 +153,34 @@ export default function Wishlist() {
     }
   };
 
-  const handleToggleWishlist = async (item) => {
-    const productId = item.id || item._id || item.ID;
-    if (!productId) {
-      toast.error("Invalid product");
-      return;
-    }
+  // const handleToggleWishlist = async (item) => {
+  //   const productId = item.id || item._id || item.ID;
+  //   if (!productId) {
+  //     toast.error("Invalid product");
+  //     return;
+  //   }
 
-    setItemLoading(productId, true);
-    try {
-      const product = { 
-        _id: productId, 
-        id: productId,
-        name: item.name 
-      };
-      
-      const res = await addToWishlist(product);
-      if (res.success) {
-        toast.success(res.message);
-      } else {
-        toast.error(res.message || "Failed to update wishlist");
-      }
-    } catch (error) {
-      console.error("Error toggling wishlist:", error);
-      toast.error("Error updating wishlist");
-    } finally {
-      setItemLoading(productId, false);
-    }
-  };
+  //   setItemLoading(productId, true);
+  //   try {
+  //     const product = {
+  //       _id: productId,
+  //       id: productId,
+  //       name: item.name
+  //     };
+
+  //     const res = await addToWishlist(product);
+  //     if (res.success) {
+  //       toast.success(res.message);
+  //     } else {
+  //       toast.error(res.message || "Failed to update wishlist");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error toggling wishlist:", error);
+  //     toast.error("Error updating wishlist");
+  //   } finally {
+  //     setItemLoading(productId, false);
+  //   }
+  // };
 
   // Background circles component
   const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
@@ -264,7 +270,7 @@ export default function Wishlist() {
             >
               {transformedWishlist.map((item) => {
                 const isItemLoading = actionLoading[item.id];
-                
+
                 return (
                   <motion.div
                     key={item.id}
@@ -309,7 +315,7 @@ export default function Wishlist() {
                       <p className="text-xs text-[var(--color-text-light)] uppercase tracking-wide">
                         {item.brand} · {item.material}
                       </p>
-                      
+
                       {item.rating > 0 && (
                         <div className="flex items-center gap-1 text-sm justify-center sm:justify-start">
                           <div className="flex text-[var(--color-rating)]">
@@ -336,11 +342,10 @@ export default function Wishlist() {
 
                       {/* Stock Status */}
                       <div className="flex items-center gap-4 justify-center sm:justify-start">
-                        <div className={`text-xs px-3 py-1 rounded-full font-medium ${
-                          item.inStock 
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-red-100 text-red-800"
-                        }`}>
+                        <div className={`text-xs px-3 py-1 rounded-full font-medium ${item.inStock
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                          }`}>
                           {item.inStock ? `In Stock (${item.stock} available)` : "Out of Stock"}
                         </div>
                       </div>
@@ -353,11 +358,10 @@ export default function Wishlist() {
                         disabled={!item.inStock || isItemLoading}
                         whileHover={{ scale: item.inStock && !isItemLoading ? 1.05 : 1 }}
                         whileTap={{ scale: item.inStock && !isItemLoading ? 0.95 : 1 }}
-                        className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all flex items-center gap-2 min-w-[140px] justify-center ${
-                          item.inStock && !isItemLoading
-                            ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
-                            : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        }`}
+                        className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all flex items-center gap-2 min-w-[140px] justify-center ${item.inStock && !isItemLoading
+                          ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                          }`}
                       >
                         {isItemLoading ? (
                           <motion.div
@@ -372,23 +376,25 @@ export default function Wishlist() {
                           </>
                         )}
                       </motion.button>
-                      
+
                       <motion.button
-                        onClick={() => handleRemove(item)}
+                        onClick={async () => {
+                          const res = await addToWishlist(item.ID);
+                          console.log(res);
+                        }}
                         disabled={isItemLoading}
                         whileHover={{ scale: !isItemLoading ? 1.05 : 1 }}
                         whileTap={{ scale: !isItemLoading ? 0.95 : 1 }}
-                        className={`text-sm transition-colors flex items-center gap-1 px-3 py-2 rounded-lg ${
-                          isItemLoading 
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] hover:bg-red-50"
-                        }`}
+                        className={`text-sm transition-colors flex items-center gap-1 px-3 py-2 rounded-lg ${isItemLoading
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] hover:bg-red-50"
+                          }`}
                       >
                         {isItemLoading ? (
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full"
+                            className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"
                           />
                         ) : (
                           <Trash2 size={14} />
