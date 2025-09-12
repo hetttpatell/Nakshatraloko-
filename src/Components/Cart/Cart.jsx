@@ -267,7 +267,10 @@ export default function Cart() {
                       {/* Remove button */}
                       <motion.button
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => handleRemoveItem(product)}
+                        onClick={() =>{
+                           addToCart({ productid: product.id }); // wrap in object
+                  // showToast(`${product.name} added to Bag`, "success");
+                        }}
                         className="flex items-center gap-1 text-sm text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] transition-colors"
                       >
                         <Trash2 size={14} />

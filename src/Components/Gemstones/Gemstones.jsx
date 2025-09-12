@@ -177,21 +177,28 @@ const ProductsPage = () => {
 
   // Filtered & sorted products
 const filteredAndSortedProducts = useMemo(() => {
-  // 1️⃣ Start with filtering
   let filtered = products.filter(product => {
     return Object.keys(filters).every(key => {
-      if (!filters[key] || filters[key] === "") return true; // ignore empty filters
+      if (!filters[key] || filters[key] === "") return true;
 
       if (key === "Categories") {
         return product.category === filters[key];
       }
 
-      // Assuming your product object keys match lowercase filter keys
-      return product[key.toLowerCase()] === filters[key];
+      if (key === "Ratings") {
+        const [min, max] = filters[key].split(" - ").map(Number);
+        return product.rating >= min && product.rating < max;
+      }
+
+      if (key === "Price") {
+        const [min, max] = filters[key].split(" - ").map(Number);
+        return product.numericPrice >= min && product.numericPrice <= max;
+      }
+
+      return true;
     });
   });
 
-  // 2️⃣ Then apply sorting
   let sorted = [...filtered];
   switch (sortBy) {
     case "price-asc":
@@ -211,7 +218,7 @@ const filteredAndSortedProducts = useMemo(() => {
   }
 
   return sorted;
-}, [products, filters, sortBy]); // ✅ also depend on filters
+}, [products, filters, sortBy]);
 
 
   // Handle filter change
