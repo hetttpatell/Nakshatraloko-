@@ -12,11 +12,10 @@ const ProductsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("");
   const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]); // Store all products separately
   const [error, setError] = useState(null);
   const [categoryData, setCategoryData] = useState([]);
   const [categories, setCategories] = useState([]);
-
-
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -35,8 +34,58 @@ const ProductsPage = () => {
     fetchCategories();
   }, []);
 
+  // Fetch all products initially
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        const res = await axios.post("http://localhost:8001/api/getFilteredProducts", {
+          p_min_price: null,
+          p_max_price: null,
+          p_catogaryname: "",
+          p_rating: null,
+        });
 
-  // Fetch products whenever filters change
+        if (res.data.success) {
+          const productsData = res.data.data.map(p => ({
+            id: p.productid,
+            name: p.name,
+            category: p.catogaryname,
+            description: p.description,
+            price: p.firstsizeprice
+              ? `₹ ${parseFloat(p.firstsizeprice).toLocaleString("en-IN")}`
+              : "₹ 0",
+            img: p.primaryimage || null,
+            rating: parseFloat(p.avgrating || 0),
+            stock: p.stock,
+            dummyPrice: p.firstdummyprice
+              ? `₹ ${parseFloat(p.firstdummyprice).toLocaleString("en-IN")}`
+              : null,
+            discount: p.discount
+              ? `₹ ${parseFloat(p.discount).toLocaleString("en-IN")}`
+              : null,
+            discountPercentage: p.discountpercentage || 0,
+            numericPrice: p.firstsizeprice ? parseFloat(p.firstsizeprice) : 0,
+          }));
+
+          setAllProducts(productsData);
+          setProducts(productsData);
+
+          // Extract categories dynamically
+          const categories = [...new Set(productsData.map(p => p.category))];
+          setCategoryData(categories.map(c => ({ CategoryName: c })));
+        } else {
+          setError("Failed to load products");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load products");
+      }
+    };
+
+    fetchAllProducts();
+  }, []);
+
+  // Fetch filtered products whenever filters change
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -77,13 +126,10 @@ const ProductsPage = () => {
               ? `₹ ${parseFloat(p.discount).toLocaleString("en-IN")}`
               : null,
             discountPercentage: p.discountpercentage || 0,
+            numericPrice: p.firstsizeprice ? parseFloat(p.firstsizeprice) : 0,
           }));
 
           setProducts(productsData);
-
-          // Extract categories dynamically
-          const categories = [...new Set(productsData.map(p => p.category))];
-          setCategoryData(categories.map(c => ({ CategoryName: c })));
         } else {
           setError("Failed to load products");
         }
@@ -96,18 +142,18 @@ const ProductsPage = () => {
     fetchProducts();
   }, [filters]);
 
-  // Filter options for dropdowns
+  // Filter options for dropdowns - use allProducts instead of products
   const optionsfilter = useMemo(() => {
-    if (!products || products.length === 0) return { Ratings: [], Categories: [], Price: [] };
+    if (!allProducts || allProducts.length === 0) return { Ratings: [], Categories: [], Price: [] };
 
     const ratingsSet = new Set();
     const priceRangesSet = new Set();
 
-    products.forEach(p => {
+    allProducts.forEach(p => {
       const r = Math.floor(p.rating);
       ratingsSet.add(`${r} - ${r + 1}`);
 
-      const price = Number(p.price.replace(/[^\d]/g, ""));
+      const price = p.numericPrice;
       const min = Math.floor(price / 1000) * 1000;
       const max = min + 999;
       priceRangesSet.add(`${min} - ${max}`);
@@ -115,10 +161,10 @@ const ProductsPage = () => {
 
     return {
       Ratings: Array.from(ratingsSet).sort(),
-      Categories: categoryData.map(c => c.CategoryName),
+      Categories: [...new Set(allProducts.map(p => p.category))],
       Price: Array.from(priceRangesSet).sort((a, b) => Number(a.split(" - ")[0]) - Number(b.split(" - ")[0])),
     };
-  }, [products, categoryData]);
+  }, [allProducts]);
 
   // Sorting options
   const sortOptions = [
@@ -130,28 +176,43 @@ const ProductsPage = () => {
   ];
 
   // Filtered & sorted products
-  const filteredAndSortedProducts = useMemo(() => {
-    let sorted = [...products];
+const filteredAndSortedProducts = useMemo(() => {
+  // 1️⃣ Start with filtering
+  let filtered = products.filter(product => {
+    return Object.keys(filters).every(key => {
+      if (!filters[key] || filters[key] === "") return true; // ignore empty filters
 
-    switch (sortBy) {
-      case "price-asc":
-        sorted.sort((a, b) => Number(a.price.replace(/[^\d]/g, "")) - Number(b.price.replace(/[^\d]/g, "")));
-        break;
-      case "price-desc":
-        sorted.sort((a, b) => Number(b.price.replace(/[^\d]/g, "")) - Number(a.price.replace(/[^\d]/g, "")));
-        break;
-      case "rating-desc":
-        sorted.sort((a, b) => b.rating - a.rating);
-        break;
-      case "name-asc":
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      default:
-        break;
-    }
+      if (key === "Categories") {
+        return product.category === filters[key];
+      }
 
-    return sorted;
-  }, [products, sortBy]);
+      // Assuming your product object keys match lowercase filter keys
+      return product[key.toLowerCase()] === filters[key];
+    });
+  });
+
+  // 2️⃣ Then apply sorting
+  let sorted = [...filtered];
+  switch (sortBy) {
+    case "price-asc":
+      sorted.sort((a, b) => a.numericPrice - b.numericPrice);
+      break;
+    case "price-desc":
+      sorted.sort((a, b) => b.numericPrice - a.numericPrice);
+      break;
+    case "rating-desc":
+      sorted.sort((a, b) => b.rating - a.rating);
+      break;
+    case "name-asc":
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+      break;
+    default:
+      break;
+  }
+
+  return sorted;
+}, [products, filters, sortBy]); // ✅ also depend on filters
+
 
   // Handle filter change
   const handleFilterChange = (key, value) => setFilters(prev => ({ ...prev, [key]: value }));
@@ -160,6 +221,7 @@ const ProductsPage = () => {
   const resetFilters = () => {
     setFilters({ Ratings: "", Categories: "", Price: "" });
     setSortBy("");
+    setProducts(allProducts); // Reset to show all products
   };
 
   const hasActiveFilters = Object.values(filters).some(v => v !== "") || sortBy !== "";
@@ -244,7 +306,7 @@ const ProductsPage = () => {
         {/* Results count */}
         <div className="mb-8 flex justify-between items-center">
           <p className="text-[var(--color-text-light)]">
-            Showing <span className="text-[var(--color-primary)] font-semibold">{filteredAndSortedProducts.length}</span> of {products.length} products
+            Showing <span className="text-[var(--color-primary)] font-semibold">{filteredAndSortedProducts.length}</span> of {allProducts.length} products
           </p>
         </div>
 
