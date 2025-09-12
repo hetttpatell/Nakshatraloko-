@@ -47,7 +47,7 @@ const ProductDetails = () => {
     message: "",
     type: "success",
     visible: false,
-  });
+  }); 
   const [zoomStyle, setZoomStyle] = useState({});
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const [product, setProduct] = useState(null);

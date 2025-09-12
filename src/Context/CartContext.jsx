@@ -6,60 +6,56 @@ const CartContext = createContext();
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
 
-  // Load cart from localStorage on mount
+  // ✅ Load cart from backend on mount
   useEffect(() => {
-    const saved = localStorage.getItem("cart");
-    if (saved) {
-      setCart(JSON.parse(saved));
-    }
+    getCart();
   }, []);
-
-  // Sync cart with localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
 
   // ✅ Add or increase quantity with API integration
   const addToCart = async (product, quantity = 1, size = "", material = "") => {
   try {
-    const token = localStorage.getItem("authToken"); // ✅ fetch token
+    const token = localStorage.getItem("authToken");
 
-    // Payload exactly as backend expects
-    const cartItem = {
-      productId: product.id, // ✅ match backend key
-    };
+    // ✅ Fix here
+    const cartItem = { productId: product.productid };
 
     const response = await axios.post(
       "http://localhost:8001/api/saveCart",
       cartItem,
-      {
-        headers: {
-          Authorization: `${token}`,
-        },
-      }
+      { headers: { Authorization: `${token}` } }
     );
 
-    // Update local state (you can keep full product info here for UI)
     setCart((prev) => {
       const exists = prev.find(
-        (p) => p.id === product.id && p.size === size && p.material === material
+        (p) =>
+          p.id === product.productid &&
+          p.size === size &&
+          p.material === material
       );
 
       if (exists) {
-        return prev.map((p) =>
-          p.id === product.id && p.size === size && p.material === material
-            ? {
-                ...p,
-                quantity: Number(p.quantity) + Number(quantity || 1),
-              }
-            : p
-        );
+        return [
+          ...prev,
+          {
+            id: product.productid, // ✅ consistent
+            name: product.name,
+            price: Number(product.price) || 0,
+            quantity: Number(quantity) || 1,
+            size,
+            material,
+            image:
+              product.image ||
+              product.mainImage ||
+              product.images?.[0]?.src ||
+              "",
+          },
+        ];
       }
 
       return [
         ...prev,
         {
-          id: product.id,
+          id: product.productid, // ✅ consistent
           name: product.name,
           price: Number(product.price) || 0,
           quantity: Number(quantity) || 1,
@@ -81,143 +77,102 @@ export function CartProvider({ children }) {
   }
 };
 
-const removeFromCart = async (id, size, material) => {
-  try {
-    const token = localStorage.getItem("authToken");
-    if (!token) throw new Error("No auth token found");
 
-    // Correct API endpoint and payload
-    const response = await axios.post(
-      "http://localhost:8001/api/manageCart",
-      { id, size, material, action: "remove" },
-      {
-        headers: {
-          Authorization: `${token}`,
-        },
-      }
-    );
 
-    // Update local cart state
-    setCart((prev) =>
-      prev.filter(
-        (p) => !(p.id === id && p.size === size && p.material === material)
-      )
-    );
-
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error("Error removing from cart:", error);
-    return { success: false, error: error.message };
-  }
-};
-
-  // ✅ Update quantity directly with API integration
-  const updateQuantity = async (id, size, material, quantity) => {
+  // ✅ Toggle add/remove (matches backend /saveCart)
+  const toggleCartItem = async (productId) => {
     try {
-      const updatedQuantity = Math.max(1, Number(quantity));
+      const token = localStorage.getItem("authToken");
+      if (!token) throw new Error("No auth token found");
 
-      // Send update to backend API
-      const response = await axios.post("http://localhost:8001/api/manageCart", {
-        id,
-        size,
-        material,
-        quantity: updatedQuantity,
-        action: "update"
-      });
-
-      // If API call is successful, update local state
-      setCart((prev) =>
-        prev.map((p) =>
-          p.id === id && p.size === size && p.material === material
-            ? { ...p, quantity: updatedQuantity }
-            : p
-        )
+      const response = await axios.post(
+        "http://localhost:8001/api/saveCart",
+        { productId },
+        { headers: { Authorization: `${token}` } }
       );
+
+      // Update frontend state
+      const updatedItem = response.data.cartItem;
+
+      setCart((prev) => {
+  const exists = prev.find((p) => p.id === (updatedItem.ProductID || updatedItem.id));
+
+  if (exists) {
+    if (!updatedItem.IsActive) {
+      return prev.filter((p) => p.id !== (updatedItem.ProductID || updatedItem.id));
+    }
+
+    return prev.map((p) =>
+      p.id === (updatedItem.ProductID || updatedItem.id)
+        ? { ...p, inStock: updatedItem.IsActive }
+        : p
+    );
+  }
+
+  return [
+    ...prev,
+    {
+      id: updatedItem.ProductID || updatedItem.id, // ✅ normalize here too
+      inStock: updatedItem.IsActive,
+      quantity: 1,
+    },
+  ];
+});
+
 
       return { success: true, data: response.data };
     } catch (error) {
-      console.error("Error updating quantity:", error);
+      console.error("Error toggling cart:", error);
       return { success: false, error: error.message };
     }
   };
-  // Inside CartProvider
-  useEffect(() => {
-    getCart(); // Fetch cart from backend on mount
-  }, []);
 
+  // ✅ Get cart from backend
   const getCart = async () => {
-  try {
-    const token = localStorage.getItem("authToken"); // ✅ fetch token
+    try {
+      const token = localStorage.getItem("authToken");
 
-    if (!token) {
-      console.warn("No auth token found, cannot fetch cart");
-      setCart([]);
-      return;
-    }
-
-    const response = await axios.post(
-      "http://localhost:8001/api/getCart",
-      {}, // empty body since getCart doesn’t need a body
-      {
-        headers: {
-          Authorization: `${token}`, // ✅ send token to backend
-        },
+      if (!token) {
+        console.warn("No auth token found, cannot fetch cart");
+        setCart([]);
+        return;
       }
-    );
 
-    if (response.data && Array.isArray(response.data.data)) {
-      // ✅ backend returns `data`, not `cart`
-      setCart(response.data.data);
-    } else {
-      console.warn("Cart API response invalid:", response.data);
+      const response = await axios.post(
+        "http://localhost:8001/api/getCart",
+        {},
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        }
+      );
+
+      if (response.data && Array.isArray(response.data.data)) {
+        setCart(response.data.data.map(item => ({
+          ...item,
+          id: item.ProductID || item.id || String(item.productId), // ensure we always have an id
+        })));
+      }
+
+      else {
+        console.warn("Cart API response invalid:", response.data);
+        setCart([]);
+      }
+    } catch (error) {
+      console.error("Error fetching cart:", error);
       setCart([]);
     }
-  } catch (error) {
-    console.error("Error fetching cart:", error);
-    setCart([]);
-  }
-};
-
-
-  // ✅ Increment quantity
-  const increaseQuantity = (id, size, material) => {
-    updateQuantity(
-      id,
-      size,
-      material,
-      (cart.find(
-        (p) => p.id === id && p.size === size && p.material === material
-      )?.quantity || 0) + 1
-    );
   };
 
-  // ✅ Decrement quantity
-  const decreaseQuantity = (id, size, material) => {
-    updateQuantity(
-      id,
-      size,
-      material,
-      (cart.find(
-        (p) => p.id === id && p.size === size && p.material === material
-      )?.quantity || 1) - 1
-    );
-  };
-
-  // Remove one product completely with API integration
-  
-
-
-  // Clear entire cart with API integration
+  // ✅ Clear entire cart
   const clearCart = async () => {
     try {
-      // Send clear request to backend API
       const response = await axios.post("http://localhost:8001/api/manageCart", {
         action: "clear"
       });
 
-      // If API call is successful, update local state
       setCart([]);
-
       return { success: true, data: response.data };
     } catch (error) {
       console.error("Error clearing cart:", error);
@@ -230,17 +185,13 @@ const removeFromCart = async (id, size, material) => {
       value={{
         cart,
         addToCart,
-        updateQuantity,
-        increaseQuantity,
-        decreaseQuantity,
-        removeFromCart,
+        toggleCartItem,
         clearCart,
-        getCart,   // ✅ new function
+        getCart,
       }}
     >
       {children}
     </CartContext.Provider>
-
   );
 }
 

@@ -5,31 +5,30 @@ import { Minus, Plus, Trash2, ShoppingBag, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-
 export default function Cart() {
-  // ✅ include getCart here
-const { cart, addToCart, updateQuantity, getCart, removeFromCart } = useCart();
+  // ✅ Include toggleCartItem from context
+  const { cart, addToCart, getCart, toggleCartItem } = useCart();
 
-  // ✅ fetch cart on mount
-  
+  // ✅ Fetch cart on mount
   useEffect(() => {
     getCart();
   }, []);
 
-  // Handlers
-  
-  // Remove handler using CartContext's removeFromCart
-const handleRemove = async (product) => {
-    try {
-      await removeFromCart(product.id, product.size, product.material);
-      getCart(); // Refresh cart after removal
-    } catch (error) {
-      console.error("Failed to remove item:", error);
+  // ✅ Handle remove item
+  const handleRemove = async (product) => {
+    console.log("Product received in remove:", product);
+    console.log("Resolved id:", product.id || product.ProductID);
+
+    const productId = product.id || product.ProductID;
+
+    if (!productId) {
+      console.error("Invalid product id for remove:", product);
+      return;
     }
+    await toggleCartItem(productId);
   };
 
-   const handleQuantityChange = (id, size, material, value) =>
-    updateQuantity(id, size, material, Math.max(1, Number(value)));
+
   // Calculations
   const subtotal = cart.reduce(
     (sum, item) => (item.inStock ? sum + item.price * item.quantity : sum),
@@ -100,8 +99,13 @@ const handleRemove = async (product) => {
               {/* Cart Items */}
               <div className="lg:col-span-2 space-y-6">
                 {cart.map((product) => (
+                  // console.log()
                   <motion.div
-                    key={`${product.id ?? Math.random()}-${product.size ?? "default"}-${product.material ?? "default"}`}
+                    key={
+                      product.id
+                        ? `${product.id}-${product.size || "default"}-${product.material || "default"}`
+                        : `fallback-${Math.random()}`
+                    }
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -137,11 +141,11 @@ const handleRemove = async (product) => {
                       </p>
                       <div className="flex items-center gap-1 text-sm">
                         <div className="flex text-[var(--color-rating)]">
-                          {"★".repeat(Math.floor(product.rating))}
-                          {"☆".repeat(5 - Math.floor(product.rating))}
+                          {"★".repeat(Math.floor(product.rating || 0))}
+                          {"☆".repeat(5 - Math.floor(product.rating || 0))}
                         </div>
                         <span className="text-[var(--color-text-light)]">
-                          ({product.reviews} reviews)
+                          ({product.reviews || 0} reviews)
                         </span>
                       </div>
 
@@ -165,58 +169,24 @@ const handleRemove = async (product) => {
 
                     {/* Actions */}
                     <div className="flex flex-col items-center sm:items-end gap-4">
-                      {/* Quantity Selector */}
-                      <div className="flex items-center border border-[var(--color-border)] rounded-full overflow-hidden shadow-sm">
-                        <motion.button
-                          onClick={() =>
-                            handleQuantityChange(
-                              product.id,
-                              product.size,
-                              product.material,
-                              product.quantity - 1
-                            )
-                          }
-                          disabled={product.quantity <= 1 || !product.inStock}
-                          whileTap={{ scale: 0.9 }}
-                          className="px-3 py-2 bg-gray-100 text-[var(--color-text)] hover:bg-gray-200 disabled:opacity-40 transition-colors"
-                        >
-                          <Minus size={16} />
-                        </motion.button>
-                        <span className="px-4 py-2 text-[var(--color-text)] font-semibold">
-                          {product.quantity}
-                        </span>
-                        <motion.button
-                          onClick={() =>
-                            handleQuantityChange(
-                              product.id,
-                              product.size,
-                              product.material,
-                              product.quantity + 1
-                            )
-                          }
-                          disabled={!product.inStock}
-                          whileTap={{ scale: 0.9 }}
-                          className="px-3 py-2 bg-gray-100 text-[var(--color-text)] hover:bg-gray-200 disabled:opacity-40 transition-colors"
-                        >
-                          <Plus size={16} />
-                        </motion.button>
-                      </div>
-
-                      {/* Remove */}
-                     
+                      {/* Remove button */}
                       <motion.button
-                        onClick={() => handleRemove(product)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          addToCart(product);
+                          showToast(`${product.name} added to Bag`, "success");
+                        }}
                         className="flex items-center gap-1 text-sm text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] transition-colors"
                       >
                         <Trash2 size={14} />
                         Remove
                       </motion.button>
 
+
+
                     </div>
                   </motion.div>
-                ))}
+                ))} /
+                {/* //fewfewfegw */}
               </div>
 
               {/* Summary */}

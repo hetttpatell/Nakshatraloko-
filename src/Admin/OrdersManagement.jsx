@@ -81,28 +81,28 @@ const OrdersManagement = ({ isMobile }) => {
   }, []);
 
   // Filter orders based on search term and status
-useEffect(() => {
-  let result = orders;
+  useEffect(() => {
+    let result = orders;
 
-  if (searchTerm) {
-    const term = searchTerm.toLowerCase();
-    result = result.filter(order =>
-      (order.OrderID?.toString().toLowerCase().includes(term)) ||
-      (order.UserFullName?.toLowerCase().includes(term)) ||
-      (order.UserEmail?.toLowerCase().includes(term))
-    );
-  }
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(order =>
+        (order.OrderID?.toString().toLowerCase().includes(term)) ||
+        (order.UserFullName?.toLowerCase().includes(term)) ||
+        (order.UserEmail?.toLowerCase().includes(term))
+      );
+    }
 
-  if (statusFilter !== "all") {
-    result = result.filter(order => order.OrderStatus === statusFilter);
-  }
+    if (statusFilter !== "all") {
+      result = result.filter(order => order.OrderStatus === statusFilter);
+    }
 
-  setFilteredOrders(result);
-  setCurrentPage(1); // Reset to first page when filters change
-}, [searchTerm, statusFilter, orders]);
+    setFilteredOrders(result);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [searchTerm, statusFilter, orders]);
 
   //debounce for mobile 
-    const debounce = (fn, delay) => {
+  const debounce = (fn, delay) => {
     let timer;
     return (...args) => {
       clearTimeout(timer);
@@ -204,17 +204,20 @@ useEffect(() => {
                 {['all', 'Pending', 'Processing', 'Completed', 'Cancelled'].map((status) => (
                   <label key={status} className="flex items-center px-2 py-1.5 rounded hover:bg-gray-100 cursor-pointer">
                     <input
-          type="text"
-          placeholder="Search orders by ID, customer, or email..."
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          onChange={debounce((e) => setSearchTerm(e.target.value), 300)}
-        />
+                      type="radio"
+                      name="statusFilter"
+                      value={status}
+                      checked={statusFilter === status}
+                      onChange={() => setStatusFilter(status)}
+                      className="mr-2"
+                    />
                     <span className="text-sm">{status === 'all' ? 'All Statuses' : status}</span>
                   </label>
                 ))}
               </div>
             </div>
           )}
+
         </div>
       </div>
 
