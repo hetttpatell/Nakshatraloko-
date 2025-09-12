@@ -33,18 +33,25 @@ const OrdersManagement = ({ isMobile }) => {
 
         const res = await axios.post(
           "http://localhost:8001/api/listAllOrders",
-          {}, // body (empty if not required)
+          {},
           {
-            headers: {
-              Authorization: token ? token : "",
-            },
+            headers: { Authorization: token || "" },
           }
         );
 
-        // Ensure data is an array
-        const ordersArray = Array.isArray(res.data) ? res.data : res.data.orders || [];
+
+        const ordersArray = Array.isArray(res.data.data) ? res.data.data.map(order => ({
+          ...order,
+          items: order.ProductID ? [{
+            ProductID: order.ProductID,
+            ProductName: order.ProductName,
+            Quantity: order.Quantity || 1,
+          }] : [] // empty array if no product
+        })) : [];
+
         setOrders(ordersArray);
-        setFilteredOrders(ordersArray); // important!
+        setFilteredOrders(ordersArray);
+
       } catch (err) {
         console.error("Error fetching orders:", err);
         setError(err.response?.data?.message || err.message);
@@ -55,9 +62,6 @@ const OrdersManagement = ({ isMobile }) => {
 
     fetchOrders();
   }, []);
-
-
-
 
   // Filter orders based on search term and status
   useEffect(() => {
@@ -332,6 +336,7 @@ const OrdersManagement = ({ isMobile }) => {
                         {item.Quantity} × {item.ProductName}
                       </div>
                     ))}
+
                     {order.items.length > (isMobile ? 1 : 3) && (
                       <div className="text-blue-500">
                         +{order.items.length - (isMobile ? 1 : 3)} more
@@ -339,6 +344,7 @@ const OrdersManagement = ({ isMobile }) => {
                     )}
                   </div>
                 </td>
+
 
                 {/* Amount */}
                 <td className="p-3 font-medium text-sm">₹{order.NetAmount}</td>
