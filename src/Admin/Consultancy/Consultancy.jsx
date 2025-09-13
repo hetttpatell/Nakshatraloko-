@@ -40,30 +40,26 @@ const Consultancy = () => {
     return true;
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("authToken")
-        // Make POST request to API
-        const response = await axios.post("http://localhost:8001/api/getConsultations", {
-          // You can send payload here if needed, for example:
-          // userId: 123
-        },{
-          headers:{
-            Authorization :`${token}`
-          }
-        });
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await axios.post(
+        "http://localhost:8001/api/getConsultations",
+        {},
+        { headers: { Authorization: `${token}` } }
+      );
 
-        // Axios automatically parses JSON, so no need for response.json()
-        setSubmissions(response.data); // assuming API returns an array
-      } catch (error) {
-        console.error("Error fetching consultations:", error);
+      if (response.data.success) {
+        setSubmissions(response.data.data); // use local state for new API
       }
-    };
+    } catch (error) {
+      console.error("Error fetching consultations:", error);
+    }
+  };
+  fetchData();
+}, []);
 
-    fetchData();
-  }, []);
-  
   const handleEditSubmission = () => {
     if (!editingSubmission) return;
     
@@ -183,105 +179,52 @@ const Consultancy = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredSubmissions.map(submission => (
-              <tr key={submission.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                <td className="p-3">
-                  <div className="font-medium text-gray-800">{submission.username}</div>
-                  {submission.formType === "ExpertCall" && submission.gender && (
-                    <div className="text-xs text-gray-500 flex items-center">
-                      <FaVenusMars className="mr-1" />
-                      {submission.gender}
-                    </div>
-                  )}
-                </td>
-                <td className="p-3">
-                  <div className="text-gray-800">{submission.phone}</div>
-                  <div className="flex gap-2 mt-1">
-                    <a
-                      href={`tel:${submission.phone}`}
-                      className="text-blue-500 hover:text-blue-700"
-                      title="Call"
-                    >
-                      <FaPhone size={14} />
-                    </a>
-                    <a
-                      href={`https://wa.me/${submission.phone.replace(/\D/g, '')}`}
-                      className="text-green-500 hover:text-green-700"
-                      title="WhatsApp"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <FaWhatsapp size={14} />
-                    </a>
-                  </div>
-                </td>
-                <td className="p-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    submission.formType === "HelpingForm" 
-                      ? "bg-blue-100 text-blue-800" 
-                      : "bg-purple-100 text-purple-800"
-                  }`}>
-                    {submission.formType === "HelpingForm" ? "Helping Form" : "Expert Call"}
-                  </span>
-                </td>
-                <td className="p-3">
-                  <div className="text-sm">
-                    <div className="flex items-center">
-                      <FaCalendarAlt className="mr-1 text-gray-500" size={12} />
-                      {formatDate(submission.date)}
-                    </div>
-                    <div className="flex items-center">
-                      <FaClock className="mr-1 text-gray-500" size={12} />
-                      {formatTime(submission.time)}
-                    </div>
-                  </div>
-                </td>
-                <td className="p-3">
-                  <select
-                    value={submission.status}
-                    onChange={(e) => updateSubmissionStatus(submission.id, e.target.value)}
-                    className={`text-xs font-medium px-2 py-1 rounded-full border-0 focus:ring-2 focus:ring-blue-500 ${getStatusBadgeClass(submission.status)}`}
-                  >
-                    <option value="new">New</option>
-                    <option value="contacted">Contacted</option>
-                    <option value="scheduled">Scheduled</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </td>
-                <td className="p-3">
-                  <div className="text-xs text-gray-500">
-                    {formatDate(submission.createdAt)}
-                  </div>
-                </td>
-                <td className="p-3">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => setSelectedSubmission(submission)}
-                      className="p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors"
-                      title="View details"
-                    >
-                      <FaEye />
-                    </button>
-                    <button
-                      onClick={() => setEditingSubmission({...submission})}
-                      className="p-2 text-green-500 hover:bg-green-50 rounded transition-colors"
-                      title="Edit"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(submission)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
-                      title="Delete"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+  {Submissions.map(submission => (
+    <tr key={submission.ID} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+      <td className="p-3">
+        <div className="font-medium text-gray-800">{submission.UserName || "-"}</div>
+      </td>
+      <td className="p-3">
+        <div className="text-gray-800">-</div> {/* No phone in new API */}
+      </td>
+      <td className="p-3">
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+          {submission.ConsultationType || "-"}
+        </span>
+      </td>
+      <td className="p-3">
+        <div className="text-sm flex items-center">
+          <FaCalendarAlt className="mr-1 text-gray-500" size={12} />
+          {formatDate(submission.BookingDate)}
+        </div>
+      </td>
+      <td className="p-3">
+        <select
+          value={submission.Status}
+          onChange={(e) => updateSubmissionStatus(submission.ID, e.target.value)}
+          className={`text-xs font-medium px-2 py-1 rounded-full border-0 focus:ring-2 focus:ring-blue-500 ${getStatusBadgeClass(submission.Status)}`}
+        >
+          <option value="Pending">Pending</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </td>
+      <td className="p-3">
+        <div className="text-xs text-gray-500">
+          {formatDate(submission.Created_Date)}
+        </div>
+      </td>
+      <td className="p-3">
+        <div className="flex justify-end gap-2">
+          <button onClick={() => setSelectedSubmission(submission)} className="p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors">
+            <FaEye />
+          </button>
+        </div>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
         </table>
       </div>
 
