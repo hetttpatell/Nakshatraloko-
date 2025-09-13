@@ -8,7 +8,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
+   const [isAddingCategory, setIsAddingCategory] = useState(false); 
   const [newCategory, setNewCategory] = useState({
     name: "",
     description: "",
@@ -92,8 +92,84 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     }
   }, [products, categories]);
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setImagePreview(base64String);
+        setNewCategory({ ...newCategory, image: base64String });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+
+  const handleAddCategory = async () => {
+    if (!newCategory.name.trim()) {
+      setError("Category name is required");
+      return;
+    }
+
+    try {
+      setIsAddingCategory(true);
+      const token = localStorage.getItem("authToken")
+      // Call API to save category
+      const response = await axios.post("http://localhost:8001/api/saveCatogary", {
+        name: newCategory.name,
+        description: newCategory.description,
+        isShown: newCategory.isShown,
+        isActive: newCategory.isActive,
+        isFeatured: newCategory.isFeatured,
+        image: newCategory.image // base64 string
+      },{
+        headers :{
+          Authorization: `${token}`
+        }
+      });
+
+      if (response.data.success) {
+        // Add the new category to the state
+        const newCat = {
+          id: response.data.id || response.data._id,
+          name: newCategory.name,
+          description: newCategory.description,
+          isShown: newCategory.isShown,
+          isActive: newCategory.isActive,
+          isFeatured: newCategory.isFeatured,
+          image: newCategory.image,
+          productCount: 0
+        };
+
+        setCategories([...categories, newCat]);
+
+        // Reset form
+        setIsAdding(false);
+        setNewCategory({
+          name: "",
+          description: "",
+          isShown: true,
+          isActive: true,
+          isFeatured: false,
+          image: ""
+        });
+        setImagePreview("");
+        setImageFile(null);
+        setError(null);
+      }
+    } catch (err) {
+      console.error("Error adding category:", err);
+      setError("Failed to add category. Please try again.");
+    } finally {
+      setIsAddingCategory(false);
+    }
+  };
+
   // Filter products for the selected category
   const filteredProducts = selectedCategory
+
     ? products.filter(product => {
       // First check if product has the categoryId matching selected category
       if (product.categoryId === selectedCategory.id ||
@@ -124,115 +200,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     })
     : [];
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file); // Store file for the API call
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-
-const handleAddCategory = async () => {
-  if (!newCategory.name.trim()) {
-    setError("Category name is required");
-    return;
-  }
-
-  try {
-    setIsLoading(true);
-    setError(null);
-
-    // Example image metadata - create according to your needs
-    // Here assuming you have an array images with altText, isPrimary, isActive
-    // For single image, you can adapt this accordingly, for example:
-    const images = [
-      {
-        altText: "Category Image",
-        isPrimary: true,
-        isActive: true
-      }
-    ];
-
-    const imagesMeta = images.map((img, index) => ({
-      altText: img.altText?.trim() || "",
-      isPrimary: Boolean(img.isPrimary),
-      isActive: Boolean(img.isActive),
-      order: index
-    }));
-
-    const formData = new FormData();
-    formData.append("id", 0);
-    formData.append("name", newCategory.name);
-    formData.append("description", newCategory.description);
-    formData.append("isShown", newCategory.isShown);
-    formData.append("isFeatured", newCategory.isFeatured);
-
-    // Append image metadata JSON string if needed by backend
-    formData.append("images", JSON.stringify(imagesMeta));
-
-    // Append the actual image file as normal file data
-    if (imageFile) {
-      formData.append("files", imageFile);
-    }
-
-    console.log("Payload JSON (excluding image file):", {
-      id: 0,
-      name: newCategory.name,
-      description: newCategory.description,
-      isShown: newCategory.isShown,
-      isFeatured: newCategory.isFeatured,
-      imagesMeta
-    });
-
-    const token = localStorage.getItem("authToken");
-
-    const response = await axios.post(
-      "http://localhost:8001/api/saveCatogary",
-      formData,
-      {
-        headers: {
-          Authorization: `${token}`,
-          "Content-Type": "multipart/form-data"
-        }
-      }
-    );
-
-    if (response.data.success) {
-      const data = response.data;
-      const addedCategory = {
-        id: Date.now(),
-        name: newCategory.name,
-        description: newCategory.description,
-        isShown: newCategory.isShown,
-        isFeatured: newCategory.isFeatured,
-        isActive: true,
-        image: data.image ? `http://localhost:8001/uploads/${data.image}` : "",
-        productCount: 0
-      };
-      setCategories(prev => [...prev, addedCategory]);
-      setNewCategory({
-        name: "",
-        description: "",
-        isShown: true,
-        isFeatured: false,
-        isActive: true,
-        image: ""
-      });
-      setImageFile(null);
-      setImagePreview("");
-      setIsAdding(false);
-    } else {
-      setError(response.data.message || "Failed to add category.");
-    }
-    console.log(newCategory)
-  } catch (err) {
-    console.error("Error adding category:", err);
-    setError(err.response?.data?.message || "Failed to add category.");
-  } finally {
-    setIsLoading(false);
-  }
-};
 
   const handleEditCategory = async () => {
     if (!editingCategory.name.trim()) return;
@@ -512,10 +479,9 @@ const handleAddCategory = async () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleImageUpload} // Use the function here
-                      className="hidden" // Keep it hidden for styling
+                      onChange={handleImageUpload}
+                      className="hidden"
                     />
-
                   </label>
                 </div>
                 {imagePreview && (
@@ -572,21 +538,23 @@ const handleAddCategory = async () => {
             <div className="flex gap-2">
               <button
                 onClick={handleAddCategory}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                disabled={isAddingCategory}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                Add Category
+                {isAddingCategory ? "Adding..." : "Add Category"}
               </button>
               <button
                 onClick={() => {
                   setIsAdding(false);
                   setImagePreview("");
+                  setImageFile(null);
                   setNewCategory({
                     name: "",
                     description: "",
                     isShown: true,
                     isActive: true,
                     isFeatured: false,
-                    image: null
+                    image: ""
                   });
                 }}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
@@ -596,8 +564,6 @@ const handleAddCategory = async () => {
             </div>
           </div>
         )}
-
-
 
         {/* Categories Table */}
         <div className="overflow-x-auto rounded-lg border border-gray-200">
