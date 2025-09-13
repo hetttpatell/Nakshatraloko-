@@ -37,14 +37,14 @@ const router = createBrowserRouter(
       </Route>
       <Route path="faqs" element={<FAQs />} />
       <Route path="cart" element={<Cart />} />
-      <Route 
-  path="/admin/*" 
-  element={
-    <ProtectedRoute adminOnly={true}>
-      <Admin />
-    </ProtectedRoute>
-  } 
-/>
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute adminOnly={true}>
+            <Admin />
+          </ProtectedRoute>
+        }
+      />
       <Route path="login" element={<LoginSignup />} />
       <Route path="auth/success" element={<AuthSuccess />} />
 
@@ -52,7 +52,7 @@ const router = createBrowserRouter(
       <Route path="wishlist" element={<Wishlist />} />
       <Route path="account" element={<UserAccount />} />
       <Route path="blogs" element={<Blogs />} />
- 
+
       <Route path="payment" element={<PaymentForm />} />
       <Route path="thankyou" element={<ThankYouPage />} />
     </Route>
