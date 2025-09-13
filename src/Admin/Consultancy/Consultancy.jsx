@@ -1,5 +1,5 @@
 // components/Consultancy.jsx
-import React, { useState, useEffect, useContext } from "react";import {
+import React, { useState, useEffect, useContext } from "react"; import {
   FaEye,
   FaEdit,
   FaTrash,
@@ -11,15 +11,15 @@ import React, { useState, useEffect, useContext } from "react";import {
   FaUser,
   FaClock,
   FaMapMarkerAlt,
-  FaVenusMars 
+  FaVenusMars
 } from "react-icons/fa";
-import  ConsultancyContext  from "../../Context/ConsultancyContext";
+import ConsultancyContext from "../../Context/ConsultancyContext";
 import axios from "axios";
 
 const Consultancy = () => {
   // Sample data - in a real app, this would come from your backend
   const { submissions, updateSubmission, deleteSubmission } = useContext(ConsultancyContext);
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [formTypeFilter, setFormTypeFilter] = useState("all");
@@ -29,40 +29,66 @@ const Consultancy = () => {
   const [Submissions, setSubmissions] = useState([]);
 
   // Filter submissions based on search and filters
- const filteredSubmissions = submissions.filter(submission => {
-    if (searchTerm && 
-        !submission.username?.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !submission.phone?.toLowerCase().includes(searchTerm.toLowerCase())) {
+  const filteredSubmissions = submissions.filter(submission => {
+    if (searchTerm &&
+      !submission.username?.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !submission.phone?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
     if (statusFilter !== "all" && submission.status !== statusFilter) return false;
     if (formTypeFilter !== "all" && submission.formType !== formTypeFilter) return false;
     return true;
   });
+  //getting detaisl of consultancy 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await axios.post(
+          "http://localhost:8001/api/getConsultations",
+          {},
+          { headers: { Authorization: `${token}` } }
+        );
 
-useEffect(() => {
-  const fetchData = async () => {
+        if (response.data.success) {
+          setSubmissions(response.data.data); // use local state for new API
+        }
+      } catch (error) {
+        console.error("Error fetching consultations:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  //updating detaisl of consultacy 
+  const updateSubmissionStatus = async (id, newStatus) => {
     try {
       const token = localStorage.getItem("authToken");
       const response = await axios.post(
-        "http://localhost:8001/api/getConsultations",
-        {},
+        `http://localhost:8001/api/updateConsultationStatus/${id}`,
+        { status: newStatus },
         { headers: { Authorization: `${token}` } }
       );
 
       if (response.data.success) {
-        setSubmissions(response.data.data); // use local state for new API
+        // Update local state after successful update
+        setSubmissions(prev =>
+          prev.map(sub => (sub.ID === id ? { ...sub, Status: newStatus } : sub))
+        );
+      } else {
+        console.error("Failed to update status:", response.data.message);
+        alert("Failed to update status: " + response.data.message);
       }
     } catch (error) {
-      console.error("Error fetching consultations:", error);
+      console.error("Error updating status:", error);
+      alert("Error updating status. See console for details.");
     }
   };
-  fetchData();
-}, []);
+
 
   const handleEditSubmission = () => {
     if (!editingSubmission) return;
-    
+
     updateSubmission(editingSubmission.id, editingSubmission);
     setEditingSubmission(null);
   };
@@ -72,9 +98,7 @@ useEffect(() => {
     setDeleteConfirm(null);
   };
 
-  const updateSubmissionStatus = (id, newStatus) => {
-    updateSubmission(id, { status: newStatus });
-  };
+  
 
   const getStatusBadgeClass = (status) => {
     switch (status) {
@@ -116,7 +140,7 @@ useEffect(() => {
     });
   };
 
-  
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       {/* Header */}
@@ -179,51 +203,52 @@ useEffect(() => {
             </tr>
           </thead>
           <tbody>
-  {Submissions.map(submission => (
-    <tr key={submission.ID} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-      <td className="p-3">
-        <div className="font-medium text-gray-800">{submission.UserName || "-"}</div>
-      </td>
-      <td className="p-3">
-        <div className="text-gray-800">-</div> {/* No phone in new API */}
-      </td>
-      <td className="p-3">
-        <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-          {submission.ConsultationType || "-"}
-        </span>
-      </td>
-      <td className="p-3">
-        <div className="text-sm flex items-center">
-          <FaCalendarAlt className="mr-1 text-gray-500" size={12} />
-          {formatDate(submission.BookingDate)}
-        </div>
-      </td>
-      <td className="p-3">
-        <select
-          value={submission.Status}
-          onChange={(e) => updateSubmissionStatus(submission.ID, e.target.value)}
-          className={`text-xs font-medium px-2 py-1 rounded-full border-0 focus:ring-2 focus:ring-blue-500 ${getStatusBadgeClass(submission.Status)}`}
-        >
-          <option value="Pending">Pending</option>
-          <option value="Completed">Completed</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
-      </td>
-      <td className="p-3">
-        <div className="text-xs text-gray-500">
-          {formatDate(submission.Created_Date)}
-        </div>
-      </td>
-      <td className="p-3">
-        <div className="flex justify-end gap-2">
-          <button onClick={() => setSelectedSubmission(submission)} className="p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors">
-            <FaEye />
-          </button>
-        </div>
-      </td>
-    </tr>
-  ))}
-</tbody>
+            {Submissions.map(submission => (
+              <tr key={submission.ID} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                <td className="p-3">
+                  <div className="font-medium text-gray-800">{submission.UserName || "-"}</div>
+                </td>
+                <td className="p-3">
+                  <div className="text-gray-800">-</div> {/* No phone in new API */}
+                </td>
+                <td className="p-3">
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    {submission.ConsultationType || "-"}
+                  </span>
+                </td>
+                <td className="p-3">
+                  <div className="text-sm flex items-center">
+                    <FaCalendarAlt className="mr-1 text-gray-500" size={12} />
+                    {formatDate(submission.BookingDate)}
+                  </div>
+                </td>
+                <td className="p-3">
+                  <select
+                    value={submission.Status}
+                    onChange={(e) => updateSubmissionStatus(submission.ID, e.target.value)}
+                    className={`text-xs font-medium px-2 py-1 rounded-full border-0 focus:ring-2 focus:ring-blue-500 ${getStatusBadgeClass(submission.Status)}`}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </td>
+
+                <td className="p-3">
+                  <div className="text-xs text-gray-500">
+                    {formatDate(submission.Created_Date)}
+                  </div>
+                </td>
+                <td className="p-3">
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setSelectedSubmission(submission)} className="p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors">
+                      <FaEye />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
 
         </table>
       </div>
@@ -240,7 +265,7 @@ useEffect(() => {
           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-4">Consultation Request Details</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <h4 className="font-medium text-gray-700 mb-2">User Information</h4>
@@ -265,14 +290,14 @@ useEffect(() => {
                     )}
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-medium text-gray-700 mb-2">Appointment Details</h4>
                   <div className="space-y-2">
                     <p><span className="font-medium">Form Type:</span> {selectedSubmission.formType === "HelpingForm" ? "Helping Form" : "Expert Call"}</p>
                     <p><span className="font-medium">Preferred Date:</span> {formatDate(selectedSubmission.date)}</p>
                     <p><span className="font-medium">Preferred Time:</span> {formatTime(selectedSubmission.time)}</p>
-                    <p><span className="font-medium">Status:</span> 
+                    <p><span className="font-medium">Status:</span>
                       <span className={`ml-2 px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(selectedSubmission.status)}`}>
                         {getStatusText(selectedSubmission.status)}
                       </span>
@@ -281,7 +306,7 @@ useEffect(() => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-end">
                 <button
                   onClick={() => setSelectedSubmission(null)}
@@ -301,48 +326,48 @@ useEffect(() => {
           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-4">Edit Consultation Request</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                   <input
                     type="text"
                     value={editingSubmission.username}
-                    onChange={(e) => setEditingSubmission({...editingSubmission, username: e.target.value})}
+                    onChange={(e) => setEditingSubmission({ ...editingSubmission, username: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                   <input
                     type="text"
                     value={editingSubmission.phone}
-                    onChange={(e) => setEditingSubmission({...editingSubmission, phone: e.target.value})}
+                    onChange={(e) => setEditingSubmission({ ...editingSubmission, phone: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Date</label>
                   <input
                     type="date"
                     value={editingSubmission.date}
-                    onChange={(e) => setEditingSubmission({...editingSubmission, date: e.target.value})}
+                    onChange={(e) => setEditingSubmission({ ...editingSubmission, date: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Time</label>
                   <input
                     type="time"
                     value={editingSubmission.time}
-                    onChange={(e) => setEditingSubmission({...editingSubmission, time: e.target.value})}
+                    onChange={(e) => setEditingSubmission({ ...editingSubmission, time: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                
+
                 {editingSubmission.formType === "ExpertCall" && (
                   <>
                     <div>
@@ -350,36 +375,36 @@ useEffect(() => {
                       <input
                         type="date"
                         value={editingSubmission.birthDate || ""}
-                        onChange={(e) => setEditingSubmission({...editingSubmission, birthDate: e.target.value})}
+                        onChange={(e) => setEditingSubmission({ ...editingSubmission, birthDate: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Birth Time</label>
                       <input
                         type="time"
                         value={editingSubmission.birthTime || ""}
-                        onChange={(e) => setEditingSubmission({...editingSubmission, birthTime: e.target.value})}
+                        onChange={(e) => setEditingSubmission({ ...editingSubmission, birthTime: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Birth Place</label>
                       <input
                         type="text"
                         value={editingSubmission.birthPlace || ""}
-                        onChange={(e) => setEditingSubmission({...editingSubmission, birthPlace: e.target.value})}
+                        onChange={(e) => setEditingSubmission({ ...editingSubmission, birthPlace: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
                       <select
                         value={editingSubmission.gender || ""}
-                        onChange={(e) => setEditingSubmission({...editingSubmission, gender: e.target.value})}
+                        onChange={(e) => setEditingSubmission({ ...editingSubmission, gender: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select Gender</option>
@@ -390,12 +415,12 @@ useEffect(() => {
                     </div>
                   </>
                 )}
-                
+
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     value={editingSubmission.status}
-                    onChange={(e) => setEditingSubmission({...editingSubmission, status: e.target.value})}
+                    onChange={(e) => setEditingSubmission({ ...editingSubmission, status: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="new">New</option>
@@ -406,7 +431,7 @@ useEffect(() => {
                   </select>
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setEditingSubmission(null)}
