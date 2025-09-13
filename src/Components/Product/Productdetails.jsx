@@ -414,7 +414,7 @@ const ProductDetails = () => {
               {/* //   showToast(`${product.name} added to Bag`, "success"); */}
               {/* // }} */}
               <Button
-                onClick={() => {
+                 onClick={() => {
                   addToCart({ productid: product.id }); // wrap in object
                   showToast(`${product.name} added to Bag`, "success");
                 }}

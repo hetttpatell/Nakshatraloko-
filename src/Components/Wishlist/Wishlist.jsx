@@ -356,31 +356,56 @@ export default function Wishlist() {
                         )}
                       </motion.button>
 
+                     <motion.button
+  onClick={async () => {
+    const itemId = item.productId || item.id || item._id;
+    if (!itemId) {
+      toast.error("Invalid product");
+      return;
+    }
 
-                      <motion.button
-                        onClick={async () => {
-                          const res = await addToWishlist(item.ID);
-                          console.log(res);
-                        }}
-                        disabled={isItemLoading}
-                        whileHover={{ scale: !isItemLoading ? 1.05 : 1 }}
-                        whileTap={{ scale: !isItemLoading ? 0.95 : 1 }}
-                        className={`text-sm transition-colors flex items-center gap-1 px-3 py-2 rounded-lg ${isItemLoading
-                          ? "text-gray-400 cursor-not-allowed"
-                          : "text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] hover:bg-red-50"
-                          }`}
-                      >
-                        {isItemLoading ? (
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"
-                          />
-                        ) : (
-                          <Trash2 size={14} />
-                        )}
-                        Remove
-                      </motion.button>
+    setItemLoading(item.id, true); // show loading spinner for this item
+
+    try {
+      const res = await addToWishlist({
+        _id: itemId,
+        name: item.name
+      });
+
+      if (res.success) {
+        toast.success(res.message || `${item.name} updated in wishlist`);
+        await fetchWishlist(); // refresh the wishlist after toggle
+      } else {
+        toast.error(res.message || "Failed to update wishlist");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Error updating wishlist");
+    } finally {
+      setItemLoading(item.id, false);
+    }
+  }}
+  disabled={actionLoading[item.id]}
+  whileHover={{ scale: !actionLoading[item.id] ? 1.05 : 1 }}
+  whileTap={{ scale: !actionLoading[item.id] ? 0.95 : 1 }}
+  className={`text-sm transition-colors flex items-center gap-1 px-3 py-2 rounded-lg ${
+    actionLoading[item.id]
+      ? "text-gray-400 cursor-not-allowed"
+      : "text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] hover:bg-red-50"
+  }`}
+>
+  {actionLoading[item.id] ? (
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+      className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"
+    />
+  ) : (
+    <Trash2 size={14} />
+  )}
+  Remove
+</motion.button>
+
                     </div>
                   </motion.div>
                 );
