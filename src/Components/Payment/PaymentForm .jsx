@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCreditCard, FaMoneyBillWave, FaMobileAlt } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Sparkles, Zap, ArrowRight } from "lucide-react";
+import axios from "axios";
 
 // Background circles component (same as Collections.jsx)
 const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
-  <motion.div 
+  <motion.div
     className={`absolute ${size} rounded-full ${color}`}
     style={{ top: `${top}%`, left: `${left}%` }}
     animate={{
@@ -55,6 +56,7 @@ const UnderlineInput = ({
 );
 
 const PaymentPage = () => {
+  const [order, setOrder] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [formData, setFormData] = useState({
@@ -72,20 +74,74 @@ const PaymentPage = () => {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [apiLoading, setApiLoading] = useState(true);
 
   const navigate = useNavigate();
+  const { id } = useParams(); // Get order ID from URL params
 
-  // ✅ Load cart from localStorage
+  // ✅ Fetch order data from API - FIXED VERSION
   useEffect(() => {
-    const savedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    setCartItems(savedCart);
+    const fetchOrder = async () => {
+      try {
+        setApiLoading(true);
+        
+        // Check if we have an ID to fetch
+        if (!id) {
+          throw new Error("No order ID provided");
+        }
+        
+        console.log("Fetching order with ID:", id);
+        
+        // Make the POST request with proper error handling
+        const response = await axios.post(`http://localhost:8001/api/getOrderById/${id}`,
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        // Check if response has data
+        if (!response.data) {
+          throw new Error("No data received from server");
+        }
+        
+        const orderData = response.data;
+        console.log("Order data received:", orderData);
 
-    const total = savedCart.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
-    setTotalAmount(total);
-  }, []);
+        setOrder(orderData);
+
+        if (orderData.items && Array.isArray(orderData.items)) {
+          setCartItems(orderData.items);
+
+          const total = orderData.items.reduce(
+            (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
+            0
+          );
+          setTotalAmount(total);
+        } else {
+          throw new Error("Invalid order data structure");
+        }
+      } catch (error) {
+        console.error("Error fetching order:", error);
+        setError("Failed to load order details. Using local cart data.");
+
+        // Fallback to localStorage
+        const savedCart = JSON.parse(localStorage.getItem("cart")) || [];
+        setCartItems(savedCart);
+
+        const total = savedCart.reduce(
+          (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
+          0
+        );
+        setTotalAmount(total);
+      } finally {
+        setApiLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -97,19 +153,23 @@ const PaymentPage = () => {
     setError("");
     setLoading(true);
 
-    const orderId = "ORD" + Math.floor(Math.random() * 1000000); // generate orderId
+    const orderId = order?.orderId || "ORD" + Math.floor(Math.random() * 1000000);
 
     const proceedToThankYou = () => {
-      // Save cart & orderId to localStorage if needed
-      localStorage.setItem("lastOrder", JSON.stringify({ cart: cartItems, orderId }));
+      // Save order to localStorage if needed
+      localStorage.setItem("lastOrder", JSON.stringify({
+        cart: cartItems,
+        orderId,
+        orderDetails: order
+      }));
 
       // Navigate to ThankYouPage and pass cart & orderId via state
-      navigate("/thankyou", { state: { cart: cartItems, orderId } });
+      navigate("/thankyou", { state: { cart: cartItems, orderId, orderDetails: order } });
 
-      // Clear cart after order
-      localStorage.removeItem("cart");
-      setCartItems([]);
-      setTotalAmount(0);
+      // Clear cart after order if it was from localStorage
+      if (!order) {
+        localStorage.removeItem("cart");
+      }
     };
 
     if (formData.paymentMethod === "card") {
@@ -144,11 +204,22 @@ const PaymentPage = () => {
     }
   };
 
+  if (!id) {
+    return (
+      <main className="py-16 md:py-24 bg-gradient-to-b from-[var(--color-primary-light)]/50 to-[var(--color-background)] relative overflow-hidden min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)] mx-auto"></div>
+          <p className="mt-4 text-[var(--color-text)]">Loading order details...</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="py-16 md:py-24 bg-gradient-to-b from-[var(--color-primary-light)]/50 to-[var(--color-background)] relative overflow-hidden min-h-screen">
       {/* Animated background elements - same as Collections.jsx */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-[var(--color-primary-light)]/30 to-[var(--color-primary-light)]/20"></div>
-      
+
       {/* Multiple background circles - same as Collections.jsx */}
       <BackgroundCircle top={10} left={5} size="w-16 h-16" color="bg-[var(--color-primary)]/10" delay={0} duration={8} yMovement={15} />
       <BackgroundCircle top={80} left={90} size="w-20 h-20" color="bg-[var(--color-primary)]/10" delay={1} duration={7} yMovement={-12} />
@@ -163,13 +234,13 @@ const PaymentPage = () => {
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Header section with animation */}
-        <motion.div 
+        <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <motion.div 
+          <motion.div
             className="inline-flex items-center gap-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-4 py-2 rounded-full mb-5"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -178,8 +249,8 @@ const PaymentPage = () => {
             <Zap size={16} className="fill-[var(--color-primary)] text-[var(--color-primary)]" />
             <span className="text-sm font-medium">Secure Checkout</span>
           </motion.div>
-          
-          <motion.h2 
+
+          <motion.h2
             className="text-3xl md:text-4xl lg:text-5xl font-bold text-[var(--color-text)] mb-5"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -188,24 +259,24 @@ const PaymentPage = () => {
             Complete Your <span className="text-[var(--color-primary)] relative">
               Purchase
               <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 20">
-                <path 
-                  d="M 0 10 Q 50 15 100 10 T 200 10" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  fill="none" 
+                <path
+                  d="M 0 10 Q 50 15 100 10 T 200 10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
                   className="opacity-30"
                 />
               </svg>
             </span>
           </motion.h2>
-          
-          <motion.p 
+
+          <motion.p
             className="text-lg text-[var(--color-text-light)] max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            Securely complete your payment and have your order on its way
+            {order ? `Order #${order.orderId || id}` : "Securely complete your payment and have your order on its way"}
           </motion.p>
         </motion.div>
 
@@ -217,8 +288,8 @@ const PaymentPage = () => {
             <ul className="space-y-4 md:space-y-6 flex-grow overflow-y-auto max-h-96 pr-2">
               {cartItems.length > 0 ? (
                 cartItems.map(({ id, name, price, quantity, image }) => (
-                  <motion.li 
-                    key={id} 
+                  <motion.li
+                    key={id}
                     className="flex items-center gap-4 p-3 md:p-4 border border-[var(--color-border)] rounded-lg bg-white/80 hover:shadow-md transition-all"
                     whileHover={{ y: -2 }}
                     transition={{ duration: 0.2 }}
@@ -275,11 +346,10 @@ const PaymentPage = () => {
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, paymentMethod: key }))}
                       aria-pressed={formData.paymentMethod === key}
-                      className={`flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-semibold text-sm transition-all duration-300 ${
-                        formData.paymentMethod === key
-                          ? "bg-[var(--color-primary)] text-white shadow-md border border-[var(--color-primary)]"
-                          : "bg-white text-[var(--color-text)] border border-[var(--color-border)] hover:bg-[var(--color-primary-light)]"
-                      } w-full sm:w-auto`}
+                      className={`flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-semibold text-sm transition-all duration-300 ${formData.paymentMethod === key
+                        ? "bg-[var(--color-primary)] text-white shadow-md border border-[var(--color-primary)]"
+                        : "bg-white text-[var(--color-text)] border border-[var(--color-border)] hover:bg-[var(--color-primary-light)]"
+                        } w-full sm:w-auto`}
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -295,78 +365,106 @@ const PaymentPage = () => {
                     key={formData.paymentMethod}
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 18 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="space-y-4 max-w-xl"
-                    layout
+                    exit={{ opacity: 0, y: -18 }}
+                    transition={{ duration: 0.3 }}
+                    className="mb-8"
                   >
                     {formData.paymentMethod === "card" && (
-                      <>
-                        <UnderlineInput label="Card Number" name="cardNumber" value={formData.cardNumber} onChange={handleChange} maxLength={16} required autoComplete="cc-number" />
-                        <div className="flex flex-col sm:flex-row gap-4">
-                          <UnderlineInput label="Expiry (MM/YY)" name="cardExpiry" value={formData.cardExpiry} onChange={handleChange} maxLength={5} required autoComplete="cc-exp" />
-                          <UnderlineInput label="CVC" name="cardCVC" value={formData.cardCVC} onChange={handleChange} maxLength={3} required autoComplete="cc-csc" />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                        <div className="col-span-1 sm:col-span-2">
+                          <UnderlineInput
+                            label="Card Number"
+                            name="cardNumber"
+                            value={formData.cardNumber}
+                            onChange={handleChange}
+                            maxLength={16}
+                            required
+                          />
                         </div>
-                      </>
+                        <UnderlineInput
+                          label="Expiry (MM/YY)"
+                          name="cardExpiry"
+                          value={formData.cardExpiry}
+                          onChange={handleChange}
+                          maxLength={5}
+                          required
+                        />
+                        <UnderlineInput
+                          label="CVC"
+                          name="cardCVC"
+                          value={formData.cardCVC}
+                          onChange={handleChange}
+                          maxLength={3}
+                          required
+                        />
+                      </div>
                     )}
+
                     {formData.paymentMethod === "upi" && (
-                      <>
-                        <UnderlineInput label="UPI ID (e.g. username@upi)" name="upiId" value={formData.upiId} onChange={handleChange} required />
-                        <p className="text-xs text-center text-[var(--color-text-light)] bg-[var(--color-primary-light)]/30 rounded-md p-3 border border-[var(--color-border)]">
-                          You'll be redirected to your UPI app to complete payment.
-                        </p>
-                      </>
+                      <div>
+                        <UnderlineInput
+                          label="UPI ID"
+                          name="upiId"
+                          value={formData.upiId}
+                          onChange={handleChange}
+                          placeholder="e.g. yourname@upi"
+                          required
+                        />
+                      </div>
                     )}
+
                     {formData.paymentMethod === "cod" && (
-                      <p className="text-center text-[var(--color-text)] bg-[var(--color-primary-light)]/30 rounded-md p-4 border border-[var(--color-border)]">
-                        You can pay with cash when your order is delivered 🚚
-                      </p>
+                      <div className="bg-[var(--color-primary-light)]/20 p-4 rounded-lg border border-[var(--color-primary)]/30">
+                        <p className="text-sm text-[var(--color-text)]">
+                          Pay with cash when your order is delivered. An extra ₹50 will be charged for cash handling.
+                        </p>
+                      </div>
                     )}
                   </motion.div>
                 </AnimatePresence>
               </div>
 
-              {/* Error & Submit */}
-              <div className="mt-8">
-                {error && (
-                  <motion.p 
-                    className="mb-4 text-center text-[var(--color-accent-red)] font-semibold p-3 bg-red-50 rounded-lg border border-red-100"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                <motion.button
-                  type="submit"
-                  disabled={loading}
-                  className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${
-                    loading
-                      ? "bg-[var(--color-primary-light)] text-[var(--color-text-muted)] cursor-not-allowed"
-                      : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white shadow-md hover:shadow-lg"
-                  }`}
-                  whileHover={!loading ? { y: -2, scale: 1.01 } : {}}
-                  whileTap={!loading ? { scale: 0.99 } : {}}
+              {/* Error message */}
+              {error && (
+                <motion.div
+                  className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                 >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <span>Pay ₹{totalAmount}</span>
-                      <ArrowRight size={20} />
-                    </>
-                  )}
-                </motion.button>
-              </div>
+                  {error}
+                </motion.div>
+              )}
+
+              {/* Submit button */}
+              <motion.button
+                type="submit"
+                disabled={loading}
+                className={`flex items-center justify-center gap-2 w-full py-4 px-6 rounded-xl font-semibold text-white transition-all ${loading
+                  ? "bg-[var(--color-primary)]/70 cursor-not-allowed"
+                  : "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+                  }`}
+                whileHover={!loading ? { scale: 1.02 } : {}}
+                whileTap={!loading ? { scale: 0.98 } : {}}
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    Complete Payment
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </motion.button>
             </form>
           </section>
         </div>
       </div>
     </main>
   );
+
 };
 
 export default PaymentPage;

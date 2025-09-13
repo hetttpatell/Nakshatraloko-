@@ -53,7 +53,7 @@ const router = createBrowserRouter(
       <Route path="account" element={<UserAccount />} />
       <Route path="blogs" element={<Blogs />} />
 
-      <Route path="payment" element={<PaymentForm />} />
+      <Route path="payment/:id" element={<PaymentForm />} />
       <Route path="thankyou" element={<ThankYouPage />} />
     </Route>
   )
