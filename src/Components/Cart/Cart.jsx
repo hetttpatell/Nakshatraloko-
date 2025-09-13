@@ -36,7 +36,8 @@ export default function Cart() {
       originalPrice: parseFloat(item.firstdummyprice),
       discount: parseFloat(item.discount),
       discountPercentage: parseFloat(item.discountpercentage),
-      image: item.primaryimage ? `${item.primaryimage}` : '/s1.jpeg',
+      // Fix: Use the image path directly from database, prepend your server URL if needed
+      image: item.primaryimage ? `${'http://localhost:8001'}${item.primaryimage}` : '/s1.jpeg',
       category: item.catogaryname,
       inStock: item.stock > 0,
       stock: item.stock,
@@ -176,6 +177,7 @@ export default function Cart() {
                         alt={product.name}
                         className="w-32 h-32 object-cover"
                         onError={(e) => {
+                          console.log('Image failed to load:', product.image);
                           e.target.src = '/s1.jpeg'; // Fallback image
                         }}
                       />
@@ -264,13 +266,10 @@ export default function Cart() {
                         </div>
                       )}
 
-                      {/* Remove button */}
+                      {/* Remove button - Fixed the onClick handler */}
                       <motion.button
                         whileTap={{ scale: 0.95 }}
-                        onClick={() =>{
-                           addToCart({ productid: product.id }); // wrap in object
-                  // showToast(`${product.name} added to Bag`, "success");
-                        }}
+                        onClick={() => handleRemoveItem(product)}
                         className="flex items-center gap-1 text-sm text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] transition-colors"
                       >
                         <Trash2 size={14} />
