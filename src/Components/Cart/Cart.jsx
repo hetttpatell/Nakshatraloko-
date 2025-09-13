@@ -4,10 +4,12 @@ import Recommendations from "../Product/Recommendation";
 import { Minus, Plus, Trash2, ShoppingBag, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 
 export default function Cart() {
   const { cart, addToCart, removeFromCart, updateQuantity, getCart } = useCart();
   const [loading, setLoading] = useState(true);
+  const [transformedCart, setTransformedCart] = useState([]);
 
   // Fetch cart on mount
   useEffect(() => {
@@ -21,43 +23,70 @@ export default function Cart() {
         setLoading(false);
       }
     };
-    
+
     fetchCartData();
   }, []);
 
-  // Transform API data to component format
-  const transformCartData = (apiData) => {
-    return apiData.map(item => ({
-      id: item.productid,
+
+
+  // // Transform API data to component format
+  // const transformCartData = (apiData) => {
+  //   return apiData.map(item => ({
+  //     id: item.productid,
+  //     cartId: item.cartid,
+  //     name: item.name,
+  //     description: item.description,
+  //     price: parseFloat(item.firstsizeprice),
+  //     originalPrice: parseFloat(item.firstdummyprice),
+  //     discount: parseFloat(item.discount),
+  //     discountPercentage: parseFloat(item.discountpercentage),
+  //     // Fix: Use the image path directly from database, prepend your server URL if needed
+  //     image: item.primaryimage
+  //       ? `http://localhost:8001/uploads/${item.primaryimage}` // prepend /uploads
+  //       : '/s1.jpeg',
+  //     category: item.catogaryname,
+  //     inStock: item.stock > 0,
+  //     stock: item.stock,
+  //     rating: parseFloat(item.avgrating) || 0,
+  //     reviews: item.reviewcount || 0,
+  //     quantity: item.quantity || 1, // Default quantity if not provided
+  //     size: item.size || 'Standard',
+  //     material: item.material || item.catogaryname
+  //   }));
+  // };
+
+  // Transform API data to component format and store in state
+  useEffect(() => {
+    const newTransformedCart = cart.map((item) => ({
+      id: item.productid || item.id,
       cartId: item.cartid,
       name: item.name,
       description: item.description,
-      price: parseFloat(item.firstsizeprice),
-      originalPrice: parseFloat(item.firstdummyprice),
-      discount: parseFloat(item.discount),
-      discountPercentage: parseFloat(item.discountpercentage),
-      // Fix: Use the image path directly from database, prepend your server URL if needed
-      image: item.primaryimage ? `${'http://localhost:8001'}${item.primaryimage}` : '/s1.jpeg',
-      category: item.catogaryname,
+      price: parseFloat(item.firstsizeprice || item.price),
+      originalPrice: parseFloat(item.firstdummyprice || item.originalPrice),
+      discount: parseFloat(item.discount || 0),
+      discountPercentage: parseFloat(item.discountpercentage || 0),
+      image: item.primaryimage
+        ? `http://localhost:8001/uploads/${item.primaryimage}`
+        : item.img || "/s1.jpeg",
+      category: item.catogaryname || item.category,
       inStock: item.stock > 0,
       stock: item.stock,
-      rating: parseFloat(item.avgrating) || 0,
+      rating: parseFloat(item.avgrating || 0),
       reviews: item.reviewcount || 0,
-      quantity: item.quantity || 1, // Default quantity if not provided
-      size: item.size || 'Standard',
-      material: item.material || item.catogaryname
+      quantity: item.quantity || 1,
+      size: item.size || "Standard",
+      material: item.material || item.catogaryname,
     }));
-  };
-
-  // Get transformed cart data
-  const transformedCart = transformCartData(cart);
+    setTransformedCart(newTransformedCart);
+  }, [cart]); // ✅ updates whenever `cart` changes
 
   // Calculations
   const subtotal = transformedCart.reduce(
     (sum, item) => (item.inStock ? sum + item.price * item.quantity : sum),
     0
   );
-  const shipping = subtotal > 5000 ? 0 : 199;
+  const shipping = subtotal > 5000 ? 0 : 0;
   const total = subtotal + (subtotal > 0 ? shipping : 0);
 
   // Handle quantity change
@@ -66,21 +95,42 @@ export default function Cart() {
       handleRemoveItem(item);
       return;
     }
-    
+
     if (newQuantity <= item.stock) {
-      updateQuantity(item.cartId, newQuantity);
+      updateQuantity(item.id, newQuantity); // ✅ updates CartContext state
     } else {
-      // Show toast or alert that quantity exceeds stock
       console.warn(`Cannot add more than ${item.stock} items`);
     }
   };
 
+
   // Handle remove item
-  const handleRemoveItem = (item) => {
-    removeFromCart(item.cartId);
-    // You can add toast notification here
-    console.log(`${item.name} removed from cart`);
+  const handleRemoveItem = async (product) => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const res = await axios.post(
+        "http://localhost:8001/api/saveCart",
+        { productId: product.id },
+        { headers: { Authorization: `${token}` } }
+      );
+
+      if (res.data.success) {
+        console.log(`${product.name} removed successfully from server`);
+
+        // // Remove from client-side cart state
+        // removeFromCart(product.id); // <-- use product.id, not cartId
+        await getCart();
+
+      } else {
+        console.warn(res.data.message);
+      }
+    } catch (err) {
+      console.error("Failed to remove product:", err);
+    }
   };
+
+
 
   // Background circles component
   const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
@@ -201,7 +251,7 @@ export default function Cart() {
                       <p className="text-xs text-[var(--color-text-light)] uppercase tracking-wide">
                         {product.category}
                       </p>
-                      
+
                       {product.rating > 0 && (
                         <div className="flex items-center gap-1 text-sm">
                           <div className="flex text-[var(--color-rating)]">
@@ -246,23 +296,30 @@ export default function Cart() {
                       {/* Quantity Controls */}
                       {product.inStock && (
                         <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
-                          <motion.button
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleQuantityChange(product, product.quantity - 1)}
-                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
-                            disabled={product.quantity <= 1}
-                          >
-                            <Minus size={14} />
-                          </motion.button>
-                          <span className="w-8 text-center font-medium">{product.quantity}</span>
-                          <motion.button
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleQuantityChange(product, product.quantity + 1)}
-                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
-                            disabled={product.quantity >= product.stock}
-                          >
-                            <Plus size={14} />
-                          </motion.button>
+                          <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
+                            <motion.button
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleQuantityChange(product, product.quantity - 1)}
+                              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
+                              disabled={product.quantity <= 1}
+                              type="button"
+                            >
+                              <Minus size={14} />
+                            </motion.button>
+
+                            <span className="w-8 text-center font-medium">{product.quantity}</span>
+
+                            <motion.button
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleQuantityChange(product, product.quantity + 1)}
+                              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
+                              disabled={product.quantity >= product.stock}
+                              type="button"
+                            >
+                              <Plus size={14} />
+                            </motion.button>
+                          </div>
+
                         </div>
                       )}
 
@@ -299,11 +356,11 @@ export default function Cart() {
                       {shipping === 0 ? "Free" : `₹${shipping}`}
                     </span>
                   </div>
-                  {subtotal > 0 && subtotal < 5000 && (
+                  {/* {subtotal > 0 && subtotal < 5000 && (
                     <div className="text-xs text-[var(--color-text-light)] bg-blue-50 p-2 rounded">
                       Add ₹{(5000 - subtotal).toFixed(2)} more for free shipping!
                     </div>
-                  )}
+                  )} */}
                   <div className="border-t border-[var(--color-border)] pt-4 mt-4">
                     <div className="flex justify-between font-bold text-xl text-[var(--color-text)]">
                       <span>Total</span>

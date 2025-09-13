@@ -29,30 +29,32 @@ export default function Wishlist() {
     loadWishlist();
   }, []);
 
+
   // Transform wishlist data if needed (similar to cart)
   const transformWishlistData = (apiData) => {
     if (!Array.isArray(apiData)) return [];
 
-    return apiData.map(item => {
-      const id = item.wishlistid || item.id || item.productid || item._id || item.ID;
-      return {
-        ...item,
-        id, // this ensures item.id is always defined
-        name: item.name || item.productName,
-        price: parseFloat(item.firstsizeprice || item.price || 0),
-        oldPrice: item.firstdummyprice ? parseFloat(item.firstdummyprice) : null,
-        discountPercentage: item.discountpercentage ? parseFloat(item.discountpercentage) : 0,
-        mainImage: item.primaryimage ? `data:image/jpeg;base64,${item.primaryimage}` : item.mainImage || item.image || '/s1.jpeg',
-        brand: item.brand || 'Unknown',
-        material: item.material || 'Standard',
-        inStock: item.stock > 0,
-        stock: item.stock || 0,
-        rating: parseFloat(item.avgrating || item.rating || 0),
-        reviews: item.reviewcount || item.reviews || 0,
-        quantity: item.quantity || 1,
-        isActive: item.isActive !== false
-      };
-    });
+    return apiData.map(item => ({
+      id: item.WishlistID, // use WishlistID as unique id
+      name: item.Name,
+      price: item.Price ? parseFloat(item.Price) : 0,
+      oldPrice: item["Dummy Price"] ? parseFloat(item["Dummy Price"]) : null,
+      stock: item.Stock,
+      inStock: item.Stock > 0,
+      advantages: item.Advantages,
+      howToWear: item.HowToWear,
+      description: item.Description,
+      discountPercentage: item["Discount Percentage"] ? parseFloat(item["Discount Percentage"]) : 0,
+      createdAt: item.CreatedAt,
+      updatedAt: item.UpdatedAt,
+      fullname: item.fullname,
+      email: item.email,
+      userId: item.UserID,
+      productId: item.ProductID,
+      wishlistIsActive: item.WishlistIsActive,
+      mainImage: '/s1.jpeg', // fallback image, you can replace if API has real image
+      quantity: 1
+    }));
   };
 
 
@@ -113,45 +115,40 @@ export default function Wishlist() {
   };
 
   const handleMoveToCart = async (item) => {
-    const productId = item.id || item._id || item.ID;
-    if (!productId) {
-      toast.error("Invalid product");
-      return;
-    }
+    const isItemLoading = actionLoading[item.id];
+    if (isItemLoading) return;
 
     if (!item.inStock) {
       toast.error("Item is out of stock");
       return;
     }
 
-    setItemLoading(productId, true);
+    setItemLoading(item.id, true); // show loading spinner on button
     try {
-      // Add to cart
-      const addRes = await addToCart({
-        productId,
-        quantity: item.quantity || 1,
-        size: item.size,
-        material: item.material
+      // Call addToCart from context
+      const res = await addToCart({
+        productid: item.productId, // match your API expected field
+        name: item.name,
+        price: item.price,
+        mainImage: item.mainImage || '/s1.jpeg',
       });
+      console.log(res.data)
+      if (res.success) {
+        toast.success(`${item.name} added to cart successfully!`);
 
-      if (addRes.success) {
-        // Remove from wishlist after successful cart addition
-        const removeRes = await removeFromWishlist(productId);
-        if (removeRes.success) {
-          toast.success(`${item.name} moved to cart`);
-        } else {
-          toast.success(`${item.name} added to cart`);
-        }
+        // Optionally remove from wishlist
+        await removeFromWishlist(item.id);
       } else {
-        toast.error(addRes.message || "Failed to add to cart");
+        toast.error(res.error || "Failed to add item to cart");
       }
     } catch (error) {
       console.error("Error moving to cart:", error);
-      toast.error("Error moving to cart");
+      toast.error("Something went wrong!");
     } finally {
-      setItemLoading(productId, false);
+      setItemLoading(item.id, false);
     }
   };
+
 
   // const handleToggleWishlist = async (item) => {
   //   const productId = item.id || item._id || item.ID;
@@ -309,61 +306,43 @@ export default function Wishlist() {
 
                     {/* Product Info */}
                     <div className="flex-1 text-center sm:text-left space-y-2">
-                      <h3 className="text-lg font-semibold text-[var(--color-text)] line-clamp-2">
-                        {item.name}
-                      </h3>
-                      <p className="text-xs text-[var(--color-text-light)] uppercase tracking-wide">
-                        {item.brand} · {item.material}
-                      </p>
+                      <h3 className="text-lg font-semibold">{item.name}</h3>
+                      <p className="text-sm text-gray-500">Added by: {item.fullname} ({item.email})</p>
 
-                      {item.rating > 0 && (
-                        <div className="flex items-center gap-1 text-sm justify-center sm:justify-start">
-                          <div className="flex text-[var(--color-rating)]">
-                            {"★".repeat(Math.floor(item.rating))}
-                            {"☆".repeat(5 - Math.floor(item.rating))}
-                          </div>
-                          <span className="text-[var(--color-text-light)]">
-                            ({item.reviews} reviews)
-                          </span>
-                        </div>
-                      )}
+                      <p className="text-sm"><strong>Description:</strong> {item.description}</p>
+                      <p className="text-sm"><strong>Advantages:</strong> {item.advantages}</p>
+                      <p className="text-sm"><strong>How To Wear:</strong> {item.howToWear}</p>
 
-                      {/* Price */}
-                      <div className="flex items-center gap-2 justify-center sm:justify-start">
-                        <span className="text-lg font-semibold text-[var(--color-text)]">
-                          ₹{item.price.toFixed(2)}
-                        </span>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-lg font-semibold">₹{item.price.toFixed(2)}</span>
                         {item.oldPrice && item.oldPrice > item.price && (
-                          <span className="text-sm text-gray-500 line-through">
-                            ₹{item.oldPrice.toFixed(2)}
-                          </span>
+                          <span className="text-sm text-gray-500 line-through">₹{item.oldPrice.toFixed(2)}</span>
+                        )}
+                        {item.discountPercentage > 0 && (
+                          <span className="text-xs text-red-500">{item.discountPercentage.toFixed(0)}% OFF</span>
                         )}
                       </div>
 
-                      {/* Stock Status */}
-                      <div className="flex items-center gap-4 justify-center sm:justify-start">
-                        <div className={`text-xs px-3 py-1 rounded-full font-medium ${item.inStock
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                          }`}>
-                          {item.inStock ? `In Stock (${item.stock} available)` : "Out of Stock"}
-                        </div>
+                      <div className={`text-xs px-3 py-1 rounded-2xl  font-medium  w-40
+                        ${item.inStock ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                        {item.inStock ? `In Stock (${item.stock} available)` : "Out of Stock"}
                       </div>
                     </div>
+
 
                     {/* Actions */}
                     <div className="flex flex-col items-center sm:items-end gap-3">
                       <motion.button
                         onClick={() => handleMoveToCart(item)}
-                        disabled={!item.inStock || isItemLoading}
-                        whileHover={{ scale: item.inStock && !isItemLoading ? 1.05 : 1 }}
-                        whileTap={{ scale: item.inStock && !isItemLoading ? 0.95 : 1 }}
-                        className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all flex items-center gap-2 min-w-[140px] justify-center ${item.inStock && !isItemLoading
+                        disabled={!item.inStock || actionLoading[item.id]}
+                        whileHover={{ scale: item.inStock && !actionLoading[item.id] ? 1.05 : 1 }}
+                        whileTap={{ scale: item.inStock && !actionLoading[item.id] ? 0.95 : 1 }}
+                        className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all flex items-center gap-2 min-w-[140px] justify-center ${item.inStock && !actionLoading[item.id]
                           ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
                           : "bg-gray-200 text-gray-500 cursor-not-allowed"
                           }`}
                       >
-                        {isItemLoading ? (
+                        {actionLoading[item.id] ? (
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -376,6 +355,7 @@ export default function Wishlist() {
                           </>
                         )}
                       </motion.button>
+
 
                       <motion.button
                         onClick={async () => {
