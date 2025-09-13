@@ -108,65 +108,71 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
 
   const handleAddCategory = async () => {
-    if (!newCategory.name.trim()) {
-      setError("Category name is required");
-      return;
-    }
+  if (!newCategory.name.trim()) {
+    setError("Category name is required");
+    return;
+  }
 
-    try {
-      setIsAddingCategory(true);
-      const token = localStorage.getItem("authToken")
-      // Call API to save category
-      const response = await axios.post("http://localhost:8001/api/saveCatogary", {
+  try {
+    setIsAddingCategory(true);
+    const token = localStorage.getItem("authToken");
+    
+    // Call API to save category
+    const response = await axios.post(
+      "http://localhost:8001/api/saveCatogary",
+      {
         name: newCategory.name,
         description: newCategory.description,
         isShown: newCategory.isShown,
         isActive: newCategory.isActive,
         isFeatured: newCategory.isFeatured,
-        image: newCategory.image // base64 string
-      },{
-        headers :{
+        image: newCategory.image, // base64 string
+        Created_By: 1 // Add the Created_By field with default value of 1
+      },
+      {
+        headers: {
           Authorization: `${token}`
         }
-      });
-
-      if (response.data.success) {
-        // Add the new category to the state
-        const newCat = {
-          id: response.data.id || response.data._id,
-          name: newCategory.name,
-          description: newCategory.description,
-          isShown: newCategory.isShown,
-          isActive: newCategory.isActive,
-          isFeatured: newCategory.isFeatured,
-          image: newCategory.image,
-          productCount: 0
-        };
-
-        setCategories([...categories, newCat]);
-
-        // Reset form
-        setIsAdding(false);
-        setNewCategory({
-          name: "",
-          description: "",
-          isShown: true,
-          isActive: true,
-          isFeatured: false,
-          image: ""
-        });
-        setImagePreview("");
-        setImageFile(null);
-        setError(null);
       }
-    } catch (err) {
-      console.error("Error adding category:", err);
-      setError("Failed to add category. Please try again.");
-    } finally {
-      setIsAddingCategory(false);
-    }
-  };
+    );
 
+    if (response.data.success) {
+      // Add the new category to the state
+      const newCat = {
+        id: response.data.id || response.data._id,
+        name: newCategory.name,
+        description: newCategory.description,
+        isShown: newCategory.isShown,
+        isActive: newCategory.isActive,
+        isFeatured: newCategory.isFeatured,
+        image: newCategory.image,
+        productCount: 0,
+        Created_By: 1 // Also add to local state if needed
+      };
+
+      setCategories([...categories, newCat]);
+
+      // Reset form
+      setIsAdding(false);
+      setNewCategory({
+        name: "",
+        description: "",
+        isShown: true,
+        isActive: true,
+        isFeatured: false,
+        image: ""
+      });
+      setImagePreview("");
+      setImageFile(null);
+      setError(null);
+    }
+  } catch (err) {
+    console.error("Error adding category:", err);
+    setError("Failed to add category. Please try again.");
+  } finally {
+    setIsAddingCategory(false);
+  }
+};
   // Filter products for the selected category
   const filteredProducts = selectedCategory
 
