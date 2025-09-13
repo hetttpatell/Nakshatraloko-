@@ -30,21 +30,21 @@ export default function Wishlist() {
   }, []);
 
 
-  // Transform wishlist data if needed (similar to cart)
+  // In transformWishlistData
   const transformWishlistData = (apiData) => {
     if (!Array.isArray(apiData)) return [];
 
     return apiData.map(item => ({
-      id: item.WishlistID, // use WishlistID as unique id
+      id: item.WishlistID,
       name: item.Name,
       price: item.Price ? parseFloat(item.Price) : 0,
-      oldPrice: item["Dummy Price"] ? parseFloat(item["Dummy Price"]) : null,
-      stock: item.Stock,
-      inStock: item.Stock > 0,
+      oldPrice: item.DummyPrice ? parseFloat(item.DummyPrice) : null,
+      stockStatus: item.StockStatus || "Out of Stock",
+      inStock: item.StockStatus === "In Stock", // convert to boolean
       advantages: item.Advantages,
       howToWear: item.HowToWear,
       description: item.Description,
-      discountPercentage: item["Discount Percentage"] ? parseFloat(item["Discount Percentage"]) : 0,
+      discountPercentage: item.DiscountPercentage ? parseFloat(item.DiscountPercentage) : 0,
       createdAt: item.CreatedAt,
       updatedAt: item.UpdatedAt,
       fullname: item.fullname,
@@ -52,11 +52,12 @@ export default function Wishlist() {
       userId: item.UserID,
       productId: item.ProductID,
       wishlistIsActive: item.WishlistIsActive,
-      mainImage: '/s1.jpeg', // fallback image, you can replace if API has real image
+      mainImage: item.PrimaryImage
+        ? `http://localhost:8001/uploads/${item.PrimaryImage}`
+        : item.img || "/s1.jpeg", // use API image
       quantity: 1
     }));
   };
-
 
   const transformedWishlist = transformWishlistData(wishlist);
 
@@ -285,13 +286,12 @@ export default function Wishlist() {
                       transition={{ type: "spring", stiffness: 400, damping: 10 }}
                     >
                       <img
-                        src={item.mainImage}
+                        src={item.mainImage} // ✅ this will now show PrimaryImage
                         alt={item.name}
                         className="w-32 h-32 object-cover"
-                        onError={(e) => {
-                          e.target.src = '/s1.jpeg';
-                        }}
+                        onError={(e) => { e.target.src = '/s1.jpeg'; }} // fallback if image fails
                       />
+
                       {!item.inStock && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                           <span className="text-white text-sm font-medium">Out of Stock</span>
@@ -323,10 +323,10 @@ export default function Wishlist() {
                         )}
                       </div>
 
-                      <div className={`text-xs px-3 py-1 rounded-2xl  font-medium  w-40
-                        ${item.inStock ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                        {item.inStock ? `In Stock (${item.stock} available)` : "Out of Stock"}
+                      <div className={`text-xs px-3 py-1 rounded-2xl font-medium w-40 ${item.inStock ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                        {item.inStock ? item.stockStatus : "Out of Stock"}
                       </div>
+
                     </div>
 
 
@@ -355,57 +355,49 @@ export default function Wishlist() {
                           </>
                         )}
                       </motion.button>
+                      <motion.button
+                        onClick={async () => {
+                          const productId = item.ProductID; // API expects ProductID
+                          if (!productId) {
+                            toast.error("Invalid product");
+                            return;
+                          }
 
-                     <motion.button
-  onClick={async () => {
-    const itemId = item.productId || item.id || item._id;
-    if (!itemId) {
-      toast.error("Invalid product");
-      return;
-    }
-
-    setItemLoading(item.id, true); // show loading spinner for this item
-
-    try {
-      const res = await addToWishlist({
-        _id: itemId,
-        name: item.name
-      });
-
-      if (res.success) {
-        toast.success(res.message || `${item.name} updated in wishlist`);
-        await fetchWishlist(); // refresh the wishlist after toggle
-      } else {
-        toast.error(res.message || "Failed to update wishlist");
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Error updating wishlist");
-    } finally {
-      setItemLoading(item.id, false);
-    }
-  }}
-  disabled={actionLoading[item.id]}
-  whileHover={{ scale: !actionLoading[item.id] ? 1.05 : 1 }}
-  whileTap={{ scale: !actionLoading[item.id] ? 0.95 : 1 }}
-  className={`text-sm transition-colors flex items-center gap-1 px-3 py-2 rounded-lg ${
-    actionLoading[item.id]
-      ? "text-gray-400 cursor-not-allowed"
-      : "text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] hover:bg-red-50"
-  }`}
->
-  {actionLoading[item.id] ? (
-    <motion.div
-      animate={{ rotate: 360 }}
-      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-      className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"
-    />
-  ) : (
-    <Trash2 size={14} />
-  )}
-  Remove
-</motion.button>
-
+                          setItemLoading(item.id, true);
+                          try {
+                            const res = await addToWishlist({ _id: productId, name: item.name });
+                            if (res.success) {
+                              toast.success(res.message || `${item.name} removed from wishlist`);
+                              await fetchWishlist(); // refresh the list
+                            } else {
+                              toast.error(res.message || "Failed to update wishlist");
+                            }
+                          } catch (error) {
+                            console.error(error);
+                            toast.error("Error updating wishlist");
+                          } finally {
+                            setItemLoading(item.id, false);
+                          }
+                        }}
+                        disabled={actionLoading[item.id]}
+                        whileHover={{ scale: !actionLoading[item.id] ? 1.05 : 1 }}
+                        whileTap={{ scale: !actionLoading[item.id] ? 0.95 : 1 }}
+                        className={`text-sm transition-colors flex items-center gap-1 px-3 py-2 rounded-lg ${actionLoading[item.id]
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] hover:bg-red-50"
+                          }`}
+                      >
+                        {actionLoading[item.id] ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"
+                          />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                        Remove
+                      </motion.button>
                     </div>
                   </motion.div>
                 );

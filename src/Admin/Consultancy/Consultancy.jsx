@@ -11,9 +11,10 @@ import React, { useState, useEffect, useContext } from "react";import {
   FaUser,
   FaClock,
   FaMapMarkerAlt,
-  FaVenusMars
+  FaVenusMars 
 } from "react-icons/fa";
 import  ConsultancyContext  from "../../Context/ConsultancyContext";
+import axios from "axios";
 
 const Consultancy = () => {
   // Sample data - in a real app, this would come from your backend
@@ -25,29 +26,44 @@ const Consultancy = () => {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [editingSubmission, setEditingSubmission] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [Submissions, setSubmissions] = useState([]);
 
   // Filter submissions based on search and filters
-  const filteredSubmissions = submissions.filter(submission => {
-    // Search filter
+ const filteredSubmissions = submissions.filter(submission => {
     if (searchTerm && 
-        !submission.username.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !submission.phone.toLowerCase().includes(searchTerm.toLowerCase())) {
+        !submission.username?.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !submission.phone?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
-    
-    // Status filter
-    if (statusFilter !== "all" && submission.status !== statusFilter) {
-      return false;
-    }
-    
-    // Form type filter
-    if (formTypeFilter !== "all" && submission.formType !== formTypeFilter) {
-      return false;
-    }
-    
+    if (statusFilter !== "all" && submission.status !== statusFilter) return false;
+    if (formTypeFilter !== "all" && submission.formType !== formTypeFilter) return false;
     return true;
   });
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("authToken")
+        // Make POST request to API
+        const response = await axios.post("http://localhost:8001/api/getConsultations", {
+          // You can send payload here if needed, for example:
+          // userId: 123
+        },{
+          headers:{
+            Authorization :`${token}`
+          }
+        });
+
+        // Axios automatically parses JSON, so no need for response.json()
+        setSubmissions(response.data); // assuming API returns an array
+      } catch (error) {
+        console.error("Error fetching consultations:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+  
   const handleEditSubmission = () => {
     if (!editingSubmission) return;
     
@@ -87,6 +103,7 @@ const Consultancy = () => {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -95,6 +112,7 @@ const Consultancy = () => {
   };
 
   const formatTime = (timeString) => {
+    if (!timeString) return "-";
     return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
@@ -102,6 +120,7 @@ const Consultancy = () => {
     });
   };
 
+  
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       {/* Header */}

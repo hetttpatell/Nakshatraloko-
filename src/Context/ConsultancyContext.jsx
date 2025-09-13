@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const ConsultancyContext = createContext();
-
+ 
 export const useConsultancy = () => {
   const context = useContext(ConsultancyContext);
   if (!context) {
