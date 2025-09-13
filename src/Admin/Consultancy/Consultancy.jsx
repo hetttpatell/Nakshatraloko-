@@ -91,7 +91,8 @@ const Consultancy = () => {
 
   
 
- const getStatusBadgeClass = (status) => {
+const getStatusBadgeClass = (status) => {
+  if (!status) return "bg-gray-100 text-gray-800"; // default class
   switch (status.toLowerCase()) {
     case "pending":
       return "bg-yellow-100 text-yellow-800";

@@ -1,9 +1,10 @@
 // ConsultationForm.jsx - Mobile-optimized version
-import React, { useState,useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Phone, Calendar, Clock, User, MessageCircle } from "lucide-react";
 import axios from "axios";
 import Toast from "../Product/Toast";
+
 export default function ConsultationForm() {
   const [formData, setFormData] = useState({
     name: "",
@@ -11,49 +12,59 @@ export default function ConsultationForm() {
     date: "",
     time: "09:00"
   });
-  const [consultationFields, setConsultationFields] = useState([]);
-    const [toast, setToast] = useState({
-       message: "",
-       type: "success",
-       visible: false,
-     });
-   
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const [toast, setToast] = useState({
+    message: "",
+    type: "success",
+    visible: false,
+  });
 
-  try {
-    const token = localStorage.getItem("authToken");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    // Only send the fields the user filled
-    const payload = {
-      name: formData.name,
-      phone: formData.phone,
-      date: formData.date,
-      time: formData.time
-    };
+    try {
+      const token = localStorage.getItem("authToken");
 
-    const response = await axios.post(
-      "http://localhost:8001/api/saveConsultation",
-      payload,
-      { headers: { Authorization: `${token}` } }
-    );
+      // ✅ Match backend field names
+      const payload = {
+        fullName: formData.name,
+        phoneNumber: formData.phone,
+        bookingDate: formData.date,
+        bookingTime: formData.time,
+        status: "Pending",            // default value
+        consultationType: "General",  // example type
+        isActive: true
+      };
 
-    if (response.data.success) {
-           <Toast 
-           message={toast.message}
-           type={toast.type}
-           onClose={() => setToast({ ...toast, visible: false })}
-           />
-      setFormData({ name: "", phone: "", date: "", time: "09:00" });
-    } else {
-     <Toast message={"Failue"}/>
+      const response = await axios.post(
+        "http://localhost:8001/api/saveConsultation",
+        payload,
+        { headers: { Authorization: `${token}` } }
+      );
+
+      if (response.data.success) {
+        setToast({
+          message: "Consultation saved successfully!",
+          type: "success",
+          visible: true,
+        });
+        setFormData({ name: "", phone: "", date: "", time: "09:00" });
+      } else {
+        setToast({
+          message: "Failed to save consultation.",
+          type: "error",
+          visible: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting consultation:", error);
+      setToast({
+        message: "Something went wrong.",
+        type: "error",
+        visible: true,
+      });
     }
-  } catch (error) {
-    console.error("Error submitting consultation:", error);
-    alert("Something went wrong.");
-  }
-};
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -63,7 +74,7 @@ const handleSubmit = async (e) => {
   };
 
   return (
-<section className="py-12 md:py-20 bg-[var(--color-background-alt)]">
+    <section className="py-12 md:py-20 bg-[var(--color-background-alt)]">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
           <motion.div
@@ -97,7 +108,8 @@ const handleSubmit = async (e) => {
             <div className="flex flex-col md:flex-row">
               {/* Form Section */}
               <div className="md:w-full p-6 md:p-8 lg:p-12">
-               <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+                  {/* Full Name */}
                   <div>
                     <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
                       Full Name
@@ -116,6 +128,7 @@ const handleSubmit = async (e) => {
                     </div>
                   </div>
 
+                  {/* Phone Number */}
                   <div>
                     <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
                       Phone Number
@@ -134,6 +147,7 @@ const handleSubmit = async (e) => {
                     </div>
                   </div>
 
+                  {/* Date & Time */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                     <div>
                       <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
@@ -177,6 +191,7 @@ const handleSubmit = async (e) => {
                     </div>
                   </div>
 
+                  {/* Submit */}
                   <button
                     type="submit"
                     className="w-full py-3 bg-[var(--color-primary)] text-white font-medium rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors shadow-md hover:shadow-lg text-sm md:text-base"
@@ -184,6 +199,15 @@ const handleSubmit = async (e) => {
                     Schedule Free Consultation
                   </button>
                 </form>
+
+                {/* ✅ Toast Rendering */}
+                {toast.visible && (
+                  <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ ...toast, visible: false })}
+                  />
+                )}
               </div>
             </div>
           </motion.div>
