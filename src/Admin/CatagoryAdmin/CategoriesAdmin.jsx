@@ -1,6 +1,6 @@
 // components/CategoriesAdmin.jsx
 import React, { useState, useEffect } from "react";
-import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaTimes, FaCheck, FaArrowLeft, FaSearch, FaFilter } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaTimes, FaCheck, FaArrowLeft, FaSearch, FaFilter, FaUpload } from "react-icons/fa";
 import axios from "axios";
 
 const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
@@ -13,14 +13,19 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     name: "",
     description: "",
     isShown: true,
-    isActive: true
+    isActive: true,
+    isFeatured: false,   // ✅ new field
+    image: ""            // ✅ new field
   });
+
   const [isAdding, setIsAdding] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [imagePreview, setImagePreview] = useState(""); // For image preview
+  const [imageFile, setImageFile] = useState(null);
 
   // Fetch categories from API
   useEffect(() => {
@@ -28,29 +33,30 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       try {
         setIsLoading(true);
         const response = await axios.post("http://localhost:8001/api/getAllCatogary");
-        
+
         if (response.data.data) {
           // Transform API data to match our component structure
           const formattedCategories = response.data.data.map(category => ({
-  id: category._id || category.id || category.ID,
-  name: category.name || category.Name || "",
-  description: category.description || category.Description || "",
-  productCount: 0,
-  isShown:
-    category.isShown !== undefined
-      ? category.isShown
-      : category.IsShown !== undefined
-      ? category.IsShown
-      : true,
-  isActive:
-    category.isActive !== undefined
-      ? category.isActive
-      : category.IsActive !== undefined
-      ? category.IsActive
-      : true
-}));
- 
-          
+            id: category._id || category.id || category.ID,
+            name: category.name || category.Name || "",
+            description: category.description || category.Description || "",
+            productCount: 0,
+            isShown:
+              category.isShown !== undefined
+                ? category.isShown
+                : category.IsShown !== undefined
+                  ? category.IsShown
+                  : true,
+            isActive:
+              category.isActive !== undefined
+                ? category.isActive
+                : category.IsActive !== undefined
+                  ? category.IsActive
+                  : true,
+            isFeatured: category.isFeatured || false,
+            image: category.image || ""
+          }));
+
           setCategories(formattedCategories);
         }
       } catch (err) {
@@ -64,108 +70,189 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     fetchCategories();
   }, []);
 
+
   // Calculate product counts for each category
   useEffect(() => {
     if (products && products.length > 0 && categories.length > 0) {
       const updatedCategories = categories.map(category => {
-        const count = products.filter(product => 
+        const count = products.filter(product =>
           product.categoryId === category.id ||
           (product.category && product.category.toString() === category.id.toString()) ||
           product.name.toLowerCase().includes(category.name.toLowerCase()) ||
           (product.description && product.description.toLowerCase().includes(category.name.toLowerCase()))
         ).length;
-        
+
         return {
           ...category,
           productCount: count
         };
       });
-      
+
       setCategories(updatedCategories);
     }
   }, [products, categories]);
 
-  useEffect(()=>{
-    axios
-    .post("http://localhost:8001/api/saveCatogary")
-    .then((res) => {
-      setNewCategory((res.data.data))
-    })
-  })
   // Filter products for the selected category
-  const filteredProducts = selectedCategory 
+  const filteredProducts = selectedCategory
     ? products.filter(product => {
-        // First check if product has the categoryId matching selected category
-        if (product.categoryId === selectedCategory.id || 
-            (product.category && product.category.toString() === selectedCategory.id.toString())) {
-          return true;
-        }
-        
-        // Fallback: check if product name or description contains category name
-        return (
-          product.name.toLowerCase().includes(selectedCategory.name.toLowerCase()) ||
-          (product.description && product.description.toLowerCase().includes(selectedCategory.name.toLowerCase()))
-        );
-      }).filter(product => {
-        // Apply search filter
-        if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-            !product.description.toLowerCase().includes(searchTerm.toLowerCase())) {
-          return false;
-        }
-        
-        // Apply status filter
-        if (statusFilter !== "all") {
-          const inStockFilter = statusFilter === "inStock";
-          if (product.inStock !== inStockFilter) return false;
-        }
-        
+      // First check if product has the categoryId matching selected category
+      if (product.categoryId === selectedCategory.id ||
+        (product.category && product.category.toString() === selectedCategory.id.toString())) {
         return true;
-      })
+      }
+
+
+      // Fallback: check if product name or description contains category name
+      return (
+        product.name.toLowerCase().includes(selectedCategory.name.toLowerCase()) ||
+        (product.description && product.description.toLowerCase().includes(selectedCategory.name.toLowerCase()))
+      );
+    }).filter(product => {
+      // Apply search filter
+      if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !product.description.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+
+      // Apply status filter
+      if (statusFilter !== "all") {
+        const inStockFilter = statusFilter === "inStock";
+        if (product.inStock !== inStockFilter) return false;
+      }
+
+      return true;
+    })
     : [];
 
-  const handleAddCategory = async () => {
-    if (!newCategory.name.trim()) return;
-    
-    try {
-      // Call API to add category
-      const response = await axios.post("http://localhost:8001/api/addCategory", {
-        name: newCategory.name,
-        description: newCategory.description,
-        isShown: newCategory.isShown,
-        isActive: newCategory.isActive
-      });
-      
-      if (response.data.success) {
-        const categoryToAdd = {
-          ...newCategory,
-          id: response.data.data._id || Date.now(),
-          productCount: 0
-        };
-        
-        setCategories([...categories, categoryToAdd]);
-        setNewCategory({ name: "", description: "", isShown: true, isActive: true });
-        setIsAdding(false);
-      }
-    } catch (err) {
-      console.error("Error adding category:", err);
-      setError("Failed to add category. Please try again.");
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file); // Store file for the API call
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
+
+const handleAddCategory = async () => {
+  if (!newCategory.name.trim()) {
+    setError("Category name is required");
+    return;
+  }
+
+  try {
+    setIsLoading(true);
+    setError(null);
+
+    // Example image metadata - create according to your needs
+    // Here assuming you have an array images with altText, isPrimary, isActive
+    // For single image, you can adapt this accordingly, for example:
+    const images = [
+      {
+        altText: "Category Image",
+        isPrimary: true,
+        isActive: true
+      }
+    ];
+
+    const imagesMeta = images.map((img, index) => ({
+      altText: img.altText?.trim() || "",
+      isPrimary: Boolean(img.isPrimary),
+      isActive: Boolean(img.isActive),
+      order: index
+    }));
+
+    const formData = new FormData();
+    formData.append("id", 0);
+    formData.append("name", newCategory.name);
+    formData.append("description", newCategory.description);
+    formData.append("isShown", newCategory.isShown);
+    formData.append("isFeatured", newCategory.isFeatured);
+
+    // Append image metadata JSON string if needed by backend
+    formData.append("images", JSON.stringify(imagesMeta));
+
+    // Append the actual image file as normal file data
+    if (imageFile) {
+      formData.append("files", imageFile);
+    }
+
+    console.log("Payload JSON (excluding image file):", {
+      id: 0,
+      name: newCategory.name,
+      description: newCategory.description,
+      isShown: newCategory.isShown,
+      isFeatured: newCategory.isFeatured,
+      imagesMeta
+    });
+
+    const token = localStorage.getItem("authToken");
+
+    const response = await axios.post(
+      "http://localhost:8001/api/saveCatogary",
+      formData,
+      {
+        headers: {
+          Authorization: `${token}`,
+          "Content-Type": "multipart/form-data"
+        }
+      }
+    );
+
+    if (response.data.success) {
+      const data = response.data;
+      const addedCategory = {
+        id: Date.now(),
+        name: newCategory.name,
+        description: newCategory.description,
+        isShown: newCategory.isShown,
+        isFeatured: newCategory.isFeatured,
+        isActive: true,
+        image: data.image ? `http://localhost:8001/uploads/${data.image}` : "",
+        productCount: 0
+      };
+      setCategories(prev => [...prev, addedCategory]);
+      setNewCategory({
+        name: "",
+        description: "",
+        isShown: true,
+        isFeatured: false,
+        isActive: true,
+        image: ""
+      });
+      setImageFile(null);
+      setImagePreview("");
+      setIsAdding(false);
+    } else {
+      setError(response.data.message || "Failed to add category.");
+    }
+    console.log(newCategory)
+  } catch (err) {
+    console.error("Error adding category:", err);
+    setError(err.response?.data?.message || "Failed to add category.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
   const handleEditCategory = async () => {
     if (!editingCategory.name.trim()) return;
-    
+
     try {
       // Call API to update category
-      const response = await axios.put(`http://localhost:8001/api/updateCategory/${editingCategory.id}`, {
-        name: editingCategory.name,
-        description: editingCategory.description,
-        isShown: editingCategory.isShown,
-        isActive: editingCategory.isActive
-      });
-      
+      const response = await axios.put(
+        `http://localhost:8001/api/updateCategory/${editingCategory.id}`,
+        {
+          name: editingCategory.name,
+          description: editingCategory.description,
+          isShown: editingCategory.isShown,
+          isActive: editingCategory.isActive,
+          isFeatured: editingCategory.isFeatured,  // ✅ new
+          image: editingCategory.image             // ✅ new
+        }
+      );
+
       if (response.data.success) {
-        setCategories(categories.map(cat => 
+        setCategories(categories.map(cat =>
           cat.id === editingCategory.id ? editingCategory : cat
         ));
         setEditingCategory(null);
@@ -180,11 +267,11 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     try {
       // Call API to delete category
       const response = await axios.delete(`http://localhost:8001/api/deleteCategory/${id}`);
-      
+
       if (response.data.success) {
         setCategories(categories.filter(cat => cat.id !== id));
         setDeleteConfirm(null);
-        
+
         // If the deleted category was selected, go back to categories list
         if (selectedCategory && selectedCategory.id === id) {
           setSelectedCategory(null);
@@ -199,15 +286,15 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const toggleCategoryVisibility = async (id) => {
     const category = categories.find(cat => cat.id === id);
     const newVisibility = !category.isShown;
-    
+
     try {
       // Call API to update visibility
       const response = await axios.put(`http://localhost:8001/api/updateCategory/${id}`, {
         isShown: newVisibility
       });
-      
+
       if (response.data.success) {
-        setCategories(categories.map(cat => 
+        setCategories(categories.map(cat =>
           cat.id === id ? { ...cat, isShown: newVisibility } : cat
         ));
       }
@@ -220,15 +307,15 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const toggleCategoryStatus = async (id) => {
     const category = categories.find(cat => cat.id === id);
     const newStatus = !category.isActive;
-    
+
     try {
       // Call API to update status
       const response = await axios.put(`http://localhost:8001/api/updateCategory/${id}`, {
         isActive: newStatus
       });
-      
+
       if (response.data.success) {
-        setCategories(categories.map(cat => 
+        setCategories(categories.map(cat =>
           cat.id === id ? { ...cat, isActive: newStatus } : cat
         ));
       }
@@ -314,62 +401,61 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             </select>
           </div>
         </div>
- 
+
         {/* Products Table */}
-       {filteredProducts.length > 0 ? (
-  <div className="overflow-x-auto rounded-lg border border-gray-200">
-    <table className="w-full text-left">
-      <thead className="bg-gray-50">
-        <tr>
-          <th className="p-3 font-semibold text-gray-700">Product</th>
-          <th className="p-3 font-semibold text-gray-700">Brand</th>
-          <th className="p-3 font-semibold text-gray-700">Price</th>
-          <th className="p-3 font-semibold text-gray-700">Stock</th>
-          <th className="p-3 font-semibold text-gray-700">Rating</th>
-          <th className="p-3 font-semibold text-gray-700">Category</th> {/* Display-only */}
-        </tr>
-      </thead>
-      <tbody>
-        {filteredProducts.map(product => (
-          <tr key={product.id} className="border-b border-gray-200"> {/* Removed hover */}
-            <td className="p-3">
-              <div className="flex items-center">
-                <img 
-                  src={product.mainImage} 
-                  alt={product.name} 
-                  className="w-12 h-12 object-cover rounded mr-3"
-                />
-                <div>
-                  <p className="font-medium text-gray-800">{product.name}</p>
-                  <p className="text-sm text-gray-500">ID: {product.id}</p>
-                </div>
-              </div>
-            </td>
-            <td className="p-3">{product.brand}</td>
-            <td className="p-3 font-medium">${product.price}</td>
-            <td className="p-3">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                product.inStock ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-              }`}>
-                {product.inStock ? "In Stock" : "Out of Stock"}
-              </span>
-            </td>
-            <td className="p-3">
-              <div className="flex items-center">
-                <span className="text-yellow-500">★</span>
-                <span className="ml-1">{product.rating}</span>
-                <span className="text-gray-500 text-sm ml-1">({product.reviews})</span>
-              </div>
-            </td>
-            <td className="p-3 text-gray-700">{product.category}</td> {/* Display-only */}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-) : (
-  <div className="text-center py-8 text-gray-500">No products found.</div>
-)}
+        {filteredProducts.length > 0 ? (
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="p-3 font-semibold text-gray-700">Product</th>
+                  <th className="p-3 font-semibold text-gray-700">Brand</th>
+                  <th className="p-3 font-semibold text-gray-700">Price</th>
+                  <th className="p-3 font-semibold text-gray-700">Stock</th>
+                  <th className="p-3 font-semibold text-gray-700">Rating</th>
+                  <th className="p-3 font-semibold text-gray-700">Category</th> {/* Display-only */}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProducts.map(product => (
+                  <tr key={product.id} className="border-b border-gray-200"> {/* Removed hover */}
+                    <td className="p-3">
+                      <div className="flex items-center">
+                        <img
+                          src={product.mainImage}
+                          alt={product.name}
+                          className="w-12 h-12 object-cover rounded mr-3"
+                        />
+                        <div>
+                          <p className="font-medium text-gray-800">{product.name}</p>
+                          <p className="text-sm text-gray-500">ID: {product.id}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3">{product.brand}</td>
+                    <td className="p-3 font-medium">${product.price}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${product.inStock ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                        }`}>
+                        {product.inStock ? "In Stock" : "Out of Stock"}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center">
+                        <span className="text-yellow-500">★</span>
+                        <span className="ml-1">{product.rating}</span>
+                        <span className="text-gray-500 text-sm ml-1">({product.reviews})</span>
+                      </div>
+                    </td>
+                    <td className="p-3 text-gray-700">{product.category}</td> {/* Display-only */}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">No products found.</div>
+        )}
 
       </div>
     );
@@ -397,32 +483,92 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
           </button>
         </div>
 
+
         {/* Add Category Form */}
         {isAdding && (
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
             <h3 className="text-lg font-semibold mb-3">Add New Category</h3>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
+              <input
+                type="text"
+                value={newCategory.name}
+                onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter category name"
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category Name</label>
-                <input
-                  type="text"
-                  value={newCategory.name}
-                  onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter category name"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category Image</label>
+                <div className="flex items-center gap-2">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-500">Click to upload</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload} // Use the function here
+                      className="hidden" // Keep it hidden for styling
+                    />
+
+                  </label>
+                </div>
+                {imagePreview && (
+                  <div className="mt-2">
+                    <img src={imagePreview} alt="Preview" className="w-20 h-20 object-cover rounded" />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <input
-                  type="text"
+                <textarea
                   value={newCategory.description}
-                  onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
+                  onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter category description"
+                  rows="4"
                 />
               </div>
             </div>
+
+            <div className="flex items-center gap-6 mb-4">
+              <div className="flex items-center">
+                <button
+                  onClick={() => setNewCategory({ ...newCategory, isShown: !newCategory.isShown })}
+                  type="button"
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${newCategory.isShown ? 'bg-blue-600' : 'bg-gray-300'}`}
+                >
+                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${newCategory.isShown ? 'translate-x-6' : 'translate-x-0'}`} />
+                </button>
+                <span className="text-sm">Show on Website</span>
+              </div>
+              <div className="flex items-center">
+                <button
+                  onClick={() => setNewCategory({ ...newCategory, isActive: !newCategory.isActive })}
+                  type="button"
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${newCategory.isActive ? 'bg-green-600' : 'bg-gray-300'}`}
+                >
+                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${newCategory.isActive ? 'translate-x-6' : 'translate-x-0'}`} />
+                </button>
+                <span className="text-sm">Active</span>
+              </div>
+              <div className="flex items-center">
+                <button
+                  onClick={() => setNewCategory({ ...newCategory, isFeatured: !newCategory.isFeatured })}
+                  type="button"
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${newCategory.isFeatured ? 'bg-yellow-600' : 'bg-gray-300'}`}
+                >
+                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${newCategory.isFeatured ? 'translate-x-6' : 'translate-x-0'}`} />
+                </button>
+                <span className="text-sm">Featured</span>
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <button
                 onClick={handleAddCategory}
@@ -431,7 +577,18 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                 Add Category
               </button>
               <button
-                onClick={() => setIsAdding(false)}
+                onClick={() => {
+                  setIsAdding(false);
+                  setImagePreview("");
+                  setNewCategory({
+                    name: "",
+                    description: "",
+                    isShown: true,
+                    isActive: true,
+                    isFeatured: false,
+                    image: null
+                  });
+                }}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
               >
                 Cancel
@@ -439,6 +596,8 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             </div>
           </div>
         )}
+
+
 
         {/* Categories Table */}
         <div className="overflow-x-auto rounded-lg border border-gray-200">
@@ -454,17 +613,33 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             </thead>
             <tbody>
               {categories.map(category => (
-                <tr 
-                  key={category.id} 
+                <tr
+                  key={category.id}
                   className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                   onClick={() => setSelectedCategory(category)}
                 >
+                  <td className="p-3">
+                    {category.image ? (
+                      <img src={category.image} alt={category.name} className="w-12 h-12 rounded object-cover" />
+                    ) : (
+                      <span className="text-gray-400 text-sm">No Image</span>
+                    )}
+                  </td>
+                  <td className="p-3">
+                    {category.isFeatured ? (
+                      <span className="text-yellow-600 font-medium">★ Featured</span>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
+
                   <td className="p-3">
                     <div>
                       <p className="font-medium text-gray-800">{category.name}</p>
                       <p className="text-sm text-gray-500">{category.description}</p>
                     </div>
                   </td>
+
                   <td className="p-3">
                     <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
                       {category.productCount} products
@@ -490,28 +665,26 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                     <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => toggleCategoryVisibility(category.id)}
-                        className={`p-2 rounded transition-colors ${
-                          category.isShown 
-                            ? 'text-green-500 hover:bg-green-50' 
-                            : 'text-gray-500 hover:bg-gray-100'
-                        }`}
+                        className={`p-2 rounded transition-colors ${category.isShown
+                          ? 'text-green-500 hover:bg-green-50'
+                          : 'text-gray-500 hover:bg-gray-100'
+                          }`}
                         title={category.isShown ? 'Hide category' : 'Show category'}
                       >
                         {category.isShown ? <FaEye /> : <FaEyeSlash />}
                       </button>
                       <button
                         onClick={() => toggleCategoryStatus(category.id)}
-                        className={`p-2 rounded transition-colors ${
-                          category.isActive 
-                            ? 'text-green-500 hover:bg-green-50' 
-                            : 'text-gray-500 hover:bg-gray-100'
-                        }`}
+                        className={`p-2 rounded transition-colors ${category.isActive
+                          ? 'text-green-500 hover:bg-green-50'
+                          : 'text-gray-500 hover:bg-gray-100'
+                          }`}
                         title={category.isActive ? 'Deactivate category' : 'Activate category'}
                       >
                         {category.isActive ? <FaCheck /> : <FaTimes />}
                       </button>
                       <button
-                        onClick={() => setEditingCategory({...category})}
+                        onClick={() => setEditingCategory({ ...category })}
                         className="p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors"
                         title="Edit category"
                       >
@@ -544,7 +717,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   return (
     <div className="space-y-6">
       {selectedCategory ? renderProductList() : renderCategoriesList()}
-      
+
       {/* Edit Category Modal */}
       {editingCategory && (
         <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -557,15 +730,15 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   <input
                     type="text"
                     value={editingCategory.name}
-                    onChange={(e) => setEditingCategory({...editingCategory, name: e.target.value})}
+                    onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  /> 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                   <textarea
                     value={editingCategory.description}
-                    onChange={(e) => setEditingCategory({...editingCategory, description: e.target.value})}
+                    onChange={(e) => setEditingCategory({ ...editingCategory, description: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows="3"
                   />
@@ -573,27 +746,23 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                 <div className="flex items-center gap-4">
                   <div className="flex items-center">
                     <button
-                      onClick={() => setEditingCategory({...editingCategory, isShown: !editingCategory.isShown})}
-                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
-                        editingCategory.isShown ? 'bg-blue-600' : 'bg-gray-300'
-                      }`}
+                      onClick={() => setEditingCategory({ ...editingCategory, isShown: !editingCategory.isShown })}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isShown ? 'bg-blue-600' : 'bg-gray-300'
+                        }`}
                     >
-                      <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                        editingCategory.isShown ? 'translate-x-6' : 'translate-x-0'
-                      }`} />
+                      <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isShown ? 'translate-x-6' : 'translate-x-0'
+                        }`} />
                     </button>
                     <span className="text-sm">Show on Website</span>
                   </div>
                   <div className="flex items-center">
                     <button
-                      onClick={() => setEditingCategory({...editingCategory, isActive: !editingCategory.isActive})}
-                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
-                        editingCategory.isActive ? 'bg-green-600' : 'bg-gray-300'
-                      }`}
+                      onClick={() => setEditingCategory({ ...editingCategory, isActive: !editingCategory.isActive })}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isActive ? 'bg-green-600' : 'bg-gray-300'
+                        }`}
                     >
-                      <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                        editingCategory.isActive ? 'translate-x-6' : 'translate-x-0'
-                      }`} />
+                      <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isActive ? 'translate-x-6' : 'translate-x-0'
+                        }`} />
                     </button>
                     <span className="text-sm">Active</span>
                   </div>
