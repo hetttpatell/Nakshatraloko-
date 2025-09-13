@@ -1,17 +1,8 @@
 // components/Consultancy.jsx
 import React, { useState, useEffect, useContext } from "react"; import {
   FaEye,
-  FaEdit,
-  FaTrash,
   FaSearch,
-  FaFilter,
-  FaWhatsapp,
-  FaPhone,
   FaCalendarAlt,
-  FaUser,
-  FaClock,
-  FaMapMarkerAlt,
-  FaVenusMars
 } from "react-icons/fa";
 import ConsultancyContext from "../../Context/ConsultancyContext";
 import axios from "axios";
@@ -100,16 +91,21 @@ const Consultancy = () => {
 
   
 
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case "new": return "bg-blue-100 text-blue-800";
-      case "contacted": return "bg-yellow-100 text-yellow-800";
-      case "scheduled": return "bg-purple-100 text-purple-800";
-      case "completed": return "bg-green-100 text-green-800";
-      case "cancelled": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
+ const getStatusBadgeClass = (status) => {
+  switch (status.toLowerCase()) {
+    case "pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "completed":
+      return "bg-green-100 text-green-800";
+    case "cancelled":
+      return "bg-red-100 text-red-800";
+    case "process":
+      return "bg-blue-100 text-blue-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+};
+
 
   const getStatusText = (status) => {
     switch (status) {
@@ -199,7 +195,7 @@ const Consultancy = () => {
               <th className="p-3 font-semibold text-gray-700">Preferred Time</th>
               <th className="p-3 font-semibold text-gray-700">Status</th>
               <th className="p-3 font-semibold text-gray-700">Submitted</th>
-              <th className="p-3 font-semibold text-gray-700 text-right">Actions</th>
+             
             </tr>
           </thead>
           <tbody>
@@ -209,7 +205,7 @@ const Consultancy = () => {
                   <div className="font-medium text-gray-800">{submission.UserName || "-"}</div>
                 </td>
                 <td className="p-3">
-                  <div className="text-gray-800">-</div> {/* No phone in new API */}
+                  <div className="text-gray-800">{submission.PhoneNumber}</div> {/* No phone in new API */}
                 </td>
                 <td className="p-3">
                   <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
@@ -241,9 +237,7 @@ const Consultancy = () => {
                 </td>
                 <td className="p-3">
                   <div className="flex justify-end gap-2">
-                    <button onClick={() => setSelectedSubmission(submission)} className="p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors">
-                      <FaEye />
-                    </button>
+                   
                   </div>
                 </td>
               </tr>
