@@ -15,51 +15,55 @@ export const useProductManagement = () => {
   });
 
   const [error, setError] = useState(null);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
 
   // Simulate loading products from an API
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        setLoading(true);
-        setError(null); // Reset error state on new attempt
+useEffect(() => {
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        // REPLACE THIS WITH YOUR ACTUAL API CALL
-        const response = await axios.post('http://localhost:8001/api/getAllProducts');
+      // Fetch all products
+      const allResponse = await axios.post('http://localhost:8001/api/getAllProducts');
+      // Fetch featured products
+      const featuredResponse = await axios.post('http://localhost:8001/api/getFeaturedProducts');
 
-        // Check the structure of your API's response and adjust these lines accordingly
-        if (response.data.success) {
-          const normalized = response.data.data.map(item => ({
-            id: item.ID,
-            categoryId: item.CatogaryID,
-            name: item.Name,
-            description: item.Description,
-            price: item.Price,
-            dummyPrice: item.DummyPrice,
-            discountPercentage: item.DiscountPercentage,
-            stock: item.Stock,
-            advantages: item.Advantages,
-            howToWear: item.HowToWear,
-            isActive: item.IsActive,
-            isFeatured: item.IsFeatured || false, // <-- add this
-            primaryImage: item.PrimaryImage
-          }));
+      if (allResponse.data.success && featuredResponse.data.success) {
+        const featuredIds = featuredResponse.data.data.map(p => p.ID);
 
-          setProducts(normalized);
-        }
-        else {
-          // Handle API response indicating failure
-          throw new Error(response.data.message || 'Failed to fetch products');
-        }
-      } catch (error) {
-        console.error("Failed to load products:", error);
-        setError(error.message); // Store the error to display it later
-      } finally {
-        setLoading(false);
+        // Normalize products and mark featured ones
+        const normalized = allResponse.data.data.map(item => ({
+          id: item.ID,
+          categoryId: item.CatogaryID,
+          name: item.Name,
+          description: item.Description,
+          price: item.Price,
+          dummyPrice: item.DummyPrice,
+          discountPercentage: item.DiscountPercentage,
+          stock: item.Stock,
+          advantages: item.Advantages,
+          howToWear: item.HowToWear,
+          isActive: item.IsActive,
+          isFeatured: featuredIds.includes(item.ID), // <-- mark featured
+          primaryImage: item.PrimaryImage
+        }));
+
+        setProducts(normalized);
+        setFeaturedProducts(featuredIds); // update featured state too
+      } else {
+        throw new Error('Failed to fetch products or featured products');
       }
-    };
+    } catch (error) {
+      console.error("Failed to load products:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadProducts();
-  }, []);
+  loadProducts();
+}, []);
 
   const handleDeleteProduct = () => {
     if (deleteConfirmModal.productId) {

@@ -58,7 +58,6 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
       {},
       { headers: { Authorization: `${token}` } }
     );
-
     if (!response.data.success) setIsFeatured(!newValue); // rollback
   } catch (err) {
     setIsFeatured(!newValue); // rollback

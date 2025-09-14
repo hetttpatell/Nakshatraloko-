@@ -7,6 +7,7 @@ import SearchAndFilterBar from "./SearchAndFilterBar";
 import { useProductManagement } from "../../CustomHooks/useProductManagement";
 import { filterProducts } from "../ProductSection/productFilters";
 import api from '../../Utils/api'; // Import the api utility
+import axios from "axios";
 
 
 
@@ -67,7 +68,6 @@ const ProductAdmin = ({ isMobile }) => {
 
   // ✅ FIX: hooks must be inside component
   const [featuredProducts, setFeaturedProducts] = useState([]);
-
 
   
 // 🔹 Fetch featured products from backend
