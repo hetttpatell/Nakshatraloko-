@@ -32,66 +32,64 @@ const LoginSignup = ({ onClose }) => {
 
   // ✅ Normal login
 
-// Replace your login function with:
-const handleLogin = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+  // Replace your login function with:
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
     if (!email || !password) {
       setError("Email and password are required.");
       setLoading(false);
       return;
     }
 
-    const res = await api.post("/login", { email, password });
-    console.log("Login API response:", res.data);
+    try {
+      const res = await axios.post("http://localhost:8001/api/login", {
+        email,
+        password,
+      });
 
-    if (res.data.success) {
-      setIsLogedin(true);
+      console.log("Login API response:", res.data);
 
-      // ✅ Save auth token
-      if (res.data.token) {
-        localStorage.setItem("authToken", res.data.token);
-      }
+      if (res.data.success) {
+        setIsLogedin(true);
 
-      // ✅ Handle user data
-      if (res.data.user) {
+        // ✅ Save auth token
+        if (res.data.token) {
+          localStorage.setItem("authToken", res.data.token);
+        }
+
+        // ✅ Save user data
+        const user = res.data.user || {
+          id: "",
+          name: "",
+          email,
+          role: "user",
+        };
+
         const normalizedUser = {
-          id: res.data.user.id || "",
-          name: res.data.user.fullname || res.data.user.name || "",
-          email: res.data.user.email || email,
-          role: res.data.user.role
-            ? res.data.user.role.toLowerCase()
-            : "user", // 👈 always lowercase, fallback to "user"
+          id: user.id || "",
+          name: user.fullname || user.name || "",
+          email: user.email || email,
+          role: user.role ? user.role.toLowerCase() : "user",
         };
 
         localStorage.setItem("user", JSON.stringify(normalizedUser));
-      } else {
-        // Fallback if backend doesn't return user
-        const fallbackUser = {
-          id: "",
-          name: "",
-          email: email,
-          role: "user",
-        };
-        localStorage.setItem("user", JSON.stringify(fallbackUser));
-      }
 
-      // ✅ Close modal and navigate home
-      if (onClose) onClose();
-      navigate("/");
-    } else {
-      setError(res.data.message || "Login failed. Please try again.");
+        // ✅ Close modal and navigate
+        if (onClose) onClose();
+        navigate("/");
+      } else {
+        setError(res.data.message || "Login failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.response?.data?.message || "Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Login error:", error);
-    setError(error.response?.data?.message || "Something went wrong. Try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // ✅ Signup function
   const handleSignup = async (e) => {

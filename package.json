@@ -21,6 +21,7 @@
     "dotenv": "^17.2.2",
     "env": "^0.0.2",
     "framer-motion": "^12.23.12",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.541.0",
     "phosphor-react": "^1.4.1",
     "react": "^19.1.1",

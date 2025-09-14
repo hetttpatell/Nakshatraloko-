@@ -2,20 +2,24 @@
 import React, { useState, useEffect } from "react";
 import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaTimes, FaCheck, FaArrowLeft, FaSearch, FaFilter, FaUpload } from "react-icons/fa";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import { toast } from "react-toastify";
+
 
 const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   // State for categories
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-   const [isAddingCategory, setIsAddingCategory] = useState(false); 
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategory, setNewCategory] = useState({
     name: "",
     description: "",
     isShown: true,
     isActive: true,
     isFeatured: false,   // ✅ new field
-    image: ""            // ✅ new field
+    image: "",          // ✅ new field
+    active_product_count: 0
   });
 
   const [isAdding, setIsAdding] = useState(false);
@@ -40,7 +44,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             id: category._id || category.id || category.ID,
             name: category.name || category.Name || "",
             description: category.description || category.Description || "",
-            productCount: 0,
+            active_product_count: category.active_product_count,
             isShown:
               category.isShown !== undefined
                 ? category.isShown
@@ -54,8 +58,11 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   ? category.IsActive
                   : true,
             isFeatured: category.isFeatured || false,
-            image: category.image || ""
+            image: category.Image
+              ? `http://localhost:8001/uploads/${category.Image}`
+              : category.Image || "/s1.jpeg",
           }));
+          console.log({ data: response });
 
           setCategories(formattedCategories);
         }
@@ -70,27 +77,22 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     fetchCategories();
   }, []);
 
-
-  // Calculate product counts for each category
+  const activeCount = products.filter(product => {
+    return product.isActive && (product.categoryId?.toString() === category.id || product.category === category.name);
+  }).length;
   useEffect(() => {
-    if (products && products.length > 0 && categories.length > 0) {
-      const updatedCategories = categories.map(category => {
-        const count = products.filter(product =>
-          product.categoryId === category.id ||
-          (product.category && product.category.toString() === category.id.toString()) ||
-          product.name.toLowerCase().includes(category.name.toLowerCase()) ||
-          (product.description && product.description.toLowerCase().includes(category.name.toLowerCase()))
-        ).length;
+    if (!products || products.length === 0) return;
 
-        return {
-          ...category,
-          productCount: count
-        };
-      });
+    setCategories(prev => prev.map(category => {
+      const activeCount = products.filter(p => {
+        const productCategoryId = p.categoryId?.toString() || p.category?.toString();
+        return p.isActive && productCategoryId === category.id?.toString();
+      }).length;
 
-      setCategories(updatedCategories);
-    }
-  }, [products, categories]);
+      return { ...category, active_product_count: activeCount };
+    }));
+  }, [products]);
+
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -98,81 +100,55 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = reader.result;
-        setImagePreview(base64String);
-        setNewCategory({ ...newCategory, image: base64String });
+        setImagePreview(reader.result);
+        if (isAdding) setNewCategory({ ...newCategory, image: reader.result });
+        else if (editingCategory) setEditingCategory({ ...editingCategory, image: reader.result });
       };
       reader.readAsDataURL(file);
     }
   };
 
-
+  // Add new category
   const handleAddCategory = async () => {
-  if (!newCategory.name.trim()) {
-    setError("Category name is required");
-    return;
-  }
+    if (!newCategory.name.trim()) return setError("Category name is required");
+    try {
+      setIsAdding(true);
+      const token = localStorage.getItem("authToken");
+      const formData = new FormData();
+      formData.append("name", newCategory.name);
+      formData.append("description", newCategory.description);
+      formData.append("isActive", newCategory.isActive);
+      formData.append("isFeatured", newCategory.isFeatured);
+      if (imageFile) formData.append("images", imageFile); // backend expects 'images'
 
-  try {
-    setIsAddingCategory(true);
-    const token = localStorage.getItem("authToken");
-    
-    // Call API to save category
-    const response = await axios.post(
-      "http://localhost:8001/api/saveCatogary",
-      {
-        name: newCategory.name,
-        description: newCategory.description,
-        isShown: newCategory.isShown,
-        isActive: newCategory.isActive,
-        isFeatured: newCategory.isFeatured,
-        image: newCategory.image, // base64 string
-        Created_By: 1 // Add the Created_By field with default value of 1
-      },
-      {
-        headers: {
-          Authorization: `${token}`
-        }
-      }
-    );
-
-    if (response.data.success) {
-      // Add the new category to the state
-      const newCat = {
-        id: response.data.id || response.data._id,
-        name: newCategory.name,
-        description: newCategory.description,
-        isShown: newCategory.isShown,
-        isActive: newCategory.isActive,
-        isFeatured: newCategory.isFeatured,
-        image: newCategory.image,
-        productCount: 0,
-        Created_By: 1 // Also add to local state if needed
-      };
-
-      setCategories([...categories, newCat]);
-
-      // Reset form
-      setIsAdding(false);
-      setNewCategory({
-        name: "",
-        description: "",
-        isShown: true,
-        isActive: true,
-        isFeatured: false,
-        image: ""
+      const res = await axios.post("http://localhost:8001/api/saveCatogary", formData, {
+        headers: { Authorization: token, "Content-Type": "multipart/form-data" }
       });
-      setImagePreview("");
-      setImageFile(null);
-      setError(null);
+
+      if (res.data.success) {
+        setCategories([...categories, {
+          ...newCategory,
+          id: res.data.id || res.data._id,
+          active_product_count: 0,
+          image: res.data.image
+        }]);
+        setNewCategory({ name: "", description: "", isActive: true, isFeatured: false, image: "" });
+        // ✅ Show success toast
+      toast.success(response.data.message || "Category Added successfully");
+        setImageFile(null);
+        setImagePreview("");
+        setError(null);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to add category.");
+    } finally {
+      setIsAdding(false);
     }
-  } catch (err) {
-    console.error("Error adding category:", err);
-    setError("Failed to add category. Please try again.");
-  } finally {
-    setIsAddingCategory(false);
-  }
-};
+  };
+
+
+
   // Filter products for the selected category
   const filteredProducts = selectedCategory
 
@@ -206,44 +182,61 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     })
     : [];
 
-
   const handleEditCategory = async () => {
     if (!editingCategory.name.trim()) return;
 
     try {
-      // Call API to update category
-      const response = await axios.put(
-        `http://localhost:8001/api/updateCategory/${editingCategory.id}`,
+      const token = localStorage.getItem("authToken");
+      const formData = new FormData();
+      formData.append("id", editingCategory.id); // <-- include ID here
+      formData.append("name", editingCategory.name);
+      formData.append("description", editingCategory.description);
+      formData.append("isActive", editingCategory.isActive);
+      formData.append("isFeatured", editingCategory.isFeatured);
+      if (imageFile) formData.append("images", imageFile); // or "image" depending on multer field name
+
+      const res = await axios.post("http://localhost:8001/api/saveCatogary", formData, {
+        headers: {
+          Authorization: token,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (res.data.success) {
+        setCategories(
+          categories.map((cat) => (cat.id === editingCategory.id ? editingCategory : cat))
+        );
+        setEditingCategory(null);
+        setImageFile(null);
+        setImagePreview("");
+        // ✅ Show success toast
+      toast.success(response.data.message || "Category updated successfully");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to update category.");
+    }
+  };
+  const handleDeleteCategory = async (id) => {
+    try {
+      const token = localStorage.getItem("authToken"); // ✅ get token
+
+      // Call API to delete category with token in headers
+      const response = await axios.post(
+        `http://localhost:8001/api/deleteCatogary/${id}`,
+        {}, // no body needed for delete
         {
-          name: editingCategory.name,
-          description: editingCategory.description,
-          isShown: editingCategory.isShown,
-          isActive: editingCategory.isActive,
-          isFeatured: editingCategory.isFeatured,  // ✅ new
-          image: editingCategory.image             // ✅ new
+          headers: {
+            Authorization: token, // ✅ pass token
+          },
         }
       );
 
       if (response.data.success) {
-        setCategories(categories.map(cat =>
-          cat.id === editingCategory.id ? editingCategory : cat
-        ));
-        setEditingCategory(null);
-      }
-    } catch (err) {
-      console.error("Error updating category:", err);
-      setError("Failed to update category. Please try again.");
-    }
-  };
-
-  const handleDeleteCategory = async (id) => {
-    try {
-      // Call API to delete category
-      const response = await axios.delete(`http://localhost:8001/api/deleteCategory/${id}`);
-
-      if (response.data.success) {
         setCategories(categories.filter(cat => cat.id !== id));
         setDeleteConfirm(null);
+        // ✅ Show success toast
+        toast.success(response.data.message || "Category deleted successfully");
 
         // If the deleted category was selected, go back to categories list
         if (selectedCategory && selectedCategory.id === id) {
@@ -329,109 +322,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
   // Render product list for selected category
   const renderProductList = () => {
-    if (!selectedCategory) return null;
-
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className="flex items-center gap-2 px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors mr-4"
-            >
-              <FaArrowLeft /> Back to Categories
-            </button>
-            <h2 className="text-2xl font-bold text-gray-800">
-              Products in {selectedCategory.name}
-            </h2>
-          </div>
-          <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
-            {filteredProducts.length} products
-          </span>
-        </div>
-
-        {/* Search and Filter */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="relative">
-            <select
-              className="w-full md:w-40 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="inStock">In Stock</option>
-              <option value="outOfStock">Out of Stock</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Products Table */}
-        {filteredProducts.length > 0 ? (
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="w-full text-left">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="p-3 font-semibold text-gray-700">Product</th>
-                  <th className="p-3 font-semibold text-gray-700">Brand</th>
-                  <th className="p-3 font-semibold text-gray-700">Price</th>
-                  <th className="p-3 font-semibold text-gray-700">Stock</th>
-                  <th className="p-3 font-semibold text-gray-700">Rating</th>
-                  <th className="p-3 font-semibold text-gray-700">Category</th> {/* Display-only */}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProducts.map(product => (
-                  <tr key={product.id} className="border-b border-gray-200"> {/* Removed hover */}
-                    <td className="p-3">
-                      <div className="flex items-center">
-                        <img
-                          src={product.mainImage}
-                          alt={product.name}
-                          className="w-12 h-12 object-cover rounded mr-3"
-                        />
-                        <div>
-                          <p className="font-medium text-gray-800">{product.name}</p>
-                          <p className="text-sm text-gray-500">ID: {product.id}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3">{product.brand}</td>
-                    <td className="p-3 font-medium">${product.price}</td>
-                    <td className="p-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${product.inStock ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                        }`}>
-                        {product.inStock ? "In Stock" : "Out of Stock"}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center">
-                        <span className="text-yellow-500">★</span>
-                        <span className="ml-1">{product.rating}</span>
-                        <span className="text-gray-500 text-sm ml-1">({product.reviews})</span>
-                      </div>
-                    </td>
-                    <td className="p-3 text-gray-700">{product.category}</td> {/* Display-only */}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">No products found.</div>
-        )}
-
-      </div>
-    );
   };
 
   // Render categories list
@@ -510,14 +400,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
             <div className="flex items-center gap-6 mb-4">
               <div className="flex items-center">
-                <button
-                  onClick={() => setNewCategory({ ...newCategory, isShown: !newCategory.isShown })}
-                  type="button"
-                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${newCategory.isShown ? 'bg-blue-600' : 'bg-gray-300'}`}
-                >
-                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${newCategory.isShown ? 'translate-x-6' : 'translate-x-0'}`} />
-                </button>
-                <span className="text-sm">Show on Website</span>
               </div>
               <div className="flex items-center">
                 <button
@@ -576,10 +458,10 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
           <table className="w-full text-left">
             <thead className="bg-gray-50">
               <tr>
-                <th className="p-3 font-semibold text-gray-700">Category</th>
+                <th className="p-3 font-semibold text-gray-700">Image</th>
                 <th className="p-3 font-semibold text-gray-700">Products</th>
-                <th className="p-3 font-semibold text-gray-700">Status</th>
-                <th className="p-3 font-semibold text-gray-700">Visibility</th>
+                <th className="p-3 font-semibold text-gray-700">Name</th>
+                {/* <th className="p-3 font-semibold text-gray-700">Visibility</th> */}
                 <th className="p-3 font-semibold text-gray-700 text-right">Actions</th>
               </tr>
             </thead>
@@ -597,11 +479,12 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                       <span className="text-gray-400 text-sm">No Image</span>
                     )}
                   </td>
-                  <td className="p-3">
-                    {category.isFeatured ? (
-                      <span className="text-yellow-600 font-medium">★ Featured</span>
-                    ) : (
-                      <span className="text-gray-400">—</span>
+                  <td className="p-3 flex flex-col gap-1">
+                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                      {category.active_product_count || 0} Active Products
+                    </span>
+                    {category.isFeatured && (
+                      <span className="text-yellow-600 font-medium text-xs">★ Featured</span>
                     )}
                   </td>
 
@@ -612,11 +495,11 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                     </div>
                   </td>
 
-                  <td className="p-3">
+                  {/* <td className="p-3">
                     <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
                       {category.productCount} products
                     </span>
-                  </td>
+                  </td> */}
                   <td className="p-3">
                     <div className="flex items-center">
                       <span className={`w-3 h-3 rounded-full mr-2 ${category.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
@@ -697,52 +580,88 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-4">Edit Category</h3>
               <div className="space-y-4">
+                {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
                   <input
                     type="text"
                     value={editingCategory.name}
                     onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter category name"
                   />
                 </div>
+
+                {/* Description */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                   <textarea
                     value={editingCategory.description}
                     onChange={(e) => setEditingCategory({ ...editingCategory, description: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows="3"
+                    placeholder="Enter category description"
+                    rows="4"
                   />
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => setEditingCategory({ ...editingCategory, isShown: !editingCategory.isShown })}
-                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isShown ? 'bg-blue-600' : 'bg-gray-300'
-                        }`}
-                    >
-                      <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isShown ? 'translate-x-6' : 'translate-x-0'
-                        }`} />
-                    </button>
-                    <span className="text-sm">Show on Website</span>
+
+                {/* Image Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category Image</label>
+                  <div className="flex items-center gap-2">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">Click to upload</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img src={imagePreview} alt="Preview" className="w-20 h-20 object-cover rounded" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Active & Featured toggles */}
+                <div className="flex items-center gap-6">
                   <div className="flex items-center">
                     <button
                       onClick={() => setEditingCategory({ ...editingCategory, isActive: !editingCategory.isActive })}
-                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isActive ? 'bg-green-600' : 'bg-gray-300'
-                        }`}
+                      type="button"
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isActive ? 'bg-green-600' : 'bg-gray-300'}`}
                     >
-                      <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isActive ? 'translate-x-6' : 'translate-x-0'
-                        }`} />
+                      <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isActive ? 'translate-x-6' : 'translate-x-0'}`} />
                     </button>
                     <span className="text-sm">Active</span>
                   </div>
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => setEditingCategory({ ...editingCategory, isFeatured: !editingCategory.isFeatured })}
+                      type="button"
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isFeatured ? 'bg-yellow-600' : 'bg-gray-300'}`}
+                    >
+                      <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isFeatured ? 'translate-x-6' : 'translate-x-0'}`} />
+                    </button>
+                    <span className="text-sm">Featured</span>
+                  </div>
+
                 </div>
               </div>
+
+              {/* Action Buttons */}
               <div className="flex justify-end gap-3 mt-6">
                 <button
-                  onClick={() => setEditingCategory(null)}
+                  onClick={() => {
+                    setEditingCategory(null);
+                    setImagePreview("");
+                    setImageFile(null);
+                  }}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
                 >
                   Cancel
