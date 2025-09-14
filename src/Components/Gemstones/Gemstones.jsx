@@ -2,8 +2,11 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Star, StarHalf, Filter, X, Sparkles, Eye, ArrowRight } from "lucide-react";
 import axios from "axios";
+import { useParams } from "react-router-dom";
 
 const ProductsPage = () => {
+  const { category } = useParams();
+
   const [filters, setFilters] = useState({
     Ratings: "",
     Categories: "",
@@ -33,7 +36,13 @@ const ProductsPage = () => {
 
     fetchCategories();
   }, []);
-
+useEffect(() => {
+  if (category) {
+    // Map URL param back to your category name
+    const formattedCategory = category.replace(/-/g, ' '); 
+    setFilters(prev => ({ ...prev, Categories: formattedCategory }));
+  }
+}, [category]);
   // Fetch all products initially
   useEffect(() => {
     const fetchAllProducts = async () => {

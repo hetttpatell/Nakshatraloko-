@@ -12,6 +12,17 @@ const ProductTable = ({ products, onView, onEdit, onDelete }) => {
       </div>
     );
   }
+  const handleEdit = async (product) => {
+    try {
+      const response = await axios.get(`http://localhost:8001/api/getProductById/${product.id}`);
+      if (response.data.success) {
+        setSelectedProduct(response.data.data);
+        setIsModalOpen(true);
+      }
+    } catch (err) {
+      console.error("Failed to fetch product:", err);
+    }
+  };
 
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200">
@@ -48,21 +59,21 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
   const [isFeatured, setIsFeatured] = useState(product.isFeatured || false);
 
   const handleToggle = async () => {
-  const newValue = !isFeatured;
-  setIsFeatured(newValue); // immediate feedback
+    const newValue = !isFeatured;
+    setIsFeatured(newValue); // immediate feedback
 
-  try {
-    const token = localStorage.getItem("authToken");
-    const response = await axios.post(
-      `http://localhost:8001/api/toggleFeaturedProduct/${product.id}/feature`,
-      {},
-      { headers: { Authorization: `${token}` } }
-    );
-    if (!response.data.success) setIsFeatured(!newValue); // rollback
-  } catch (err) {
-    setIsFeatured(!newValue); // rollback
-  }
-};
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await axios.post(
+        `http://localhost:8001/api/toggleFeaturedProduct/${product.id}/feature`,
+        {},
+        { headers: { Authorization: `${token}` } }
+      );
+      if (!response.data.success) setIsFeatured(!newValue); // rollback
+    } catch (err) {
+      setIsFeatured(!newValue); // rollback
+    }
+  };
   return (
     <>
       <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
@@ -163,6 +174,7 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
               onClick={() => onEdit(product)}
               title="Edit product"
             />
+
             <ActionButton
               icon={FaTrash}
               color="red"

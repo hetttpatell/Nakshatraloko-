@@ -18,6 +18,7 @@ import CategoryPage from "./Components/Catagories/Catagories.jsx";
 import AuthSuccess from "./Components/Login/AuthSucess.jsx";
 import Admin from "./Admin/Admin.jsx";
 import ProtectedRoute from "./Components/ProtectedRoute.jsx";
+import ProductsPage from "./Components/Gemstones/Gemstones.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />} >
@@ -32,9 +33,10 @@ const router = createBrowserRouter(
       <Route path="expertcall" element={<ExpertCall />} />
 
       <Route path="custom" element={<Custom />} />
-      <Route path="categories" element={<Categories />}>
-        <Route path=":category" element={<CategoryPage />} />
-      </Route>
+      <Route path="categories" element={<Categories />} />
+       <Route path="/category/:category" element={<ProductsPage />} />
+      
+
       <Route path="faqs" element={<FAQs />} />
       <Route path="cart" element={<Cart />} />
       <Route

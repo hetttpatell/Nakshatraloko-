@@ -129,11 +129,13 @@ export function CartProvider({ children }) {
 
   // ✅ Update quantity in cart state
  // ✅ Update quantity in cart state AND call backend API
-const updateQuantity = async (productId, newQuantity) => {
+const updateQuantity = async (cartId, newQuantity) => {
+  if (!cartId) return;
+
   // 1️⃣ Optimistically update local state
   setCart((prev) =>
     prev.map((item) =>
-      item.id === productId ? { ...item, quantity: newQuantity } : item
+      item.CartID === cartId ? { ...item, Quantity: newQuantity } : item
     )
   );
 
@@ -143,29 +145,29 @@ const updateQuantity = async (productId, newQuantity) => {
 
     // 2️⃣ Call backend API to persist quantity
     const response = await axios.post(
-      "http://localhost:8001/api/updateCart",
+      "http://localhost:8001/api/UpdateCartData",
       {
-        productId,
-        quantity: newQuantity,
+        cartId,       // ✅ Send CartID instead of productId
+        quantity: newQuantity
       },
       { headers: { Authorization: token } }
     );
 
     if (!response.data.success) {
       console.warn("Failed to update quantity on server:", response.data.message);
-      // Optionally rollback local change
+      // Rollback local change
       setCart((prev) =>
         prev.map((item) =>
-          item.id === productId ? { ...item, quantity: prev.find(p => p.id === productId).quantity } : item
+          item.CartID === cartId ? { ...item, Quantity: prev.find(p => p.CartID === cartId).Quantity } : item
         )
       );
     }
   } catch (error) {
     console.error("Error updating quantity on server:", error);
-    // Optionally rollback local change
+    // Rollback local change
     setCart((prev) =>
       prev.map((item) =>
-        item.id === productId ? { ...item, quantity: prev.find(p => p.id === productId).quantity } : item
+        item.CartID === cartId ? { ...item, Quantity: prev.find(p => p.CartID === cartId).Quantity } : item
       )
     );
   }
