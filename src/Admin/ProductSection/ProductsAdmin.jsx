@@ -8,6 +8,11 @@ import { useProductManagement } from "../../CustomHooks/useProductManagement";
 import { filterProducts } from "../ProductSection/productFilters";
 import api from '../../Utils/api'; // Import the api utility
 
+
+
+
+
+
 // Constants for options
 const BRAND_OPTIONS = ["STYLIUM", "PEARLIX", "DIAMONDX", "GOLDEN"];
 const SIZE_OPTIONS = [
@@ -60,6 +65,33 @@ const ProductAdmin = ({ isMobile }) => {
 
   const [isSaving, setIsSaving] = useState(false);
 
+  // ✅ FIX: hooks must be inside component
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+
+
+  
+// 🔹 Fetch featured products from backend
+useEffect(() => {
+  const fetchFeaturedProducts = async () => {
+    try {
+      const response = await axios.post("http://localhost:8001/api/getFeaturedProducts");
+
+      if (response.data.success) {
+        // Extract just the IDs from API response
+        const featuredIds = response.data.data.map((p) => p.ID);
+        setFeaturedProducts(featuredIds);
+      }
+    } catch (err) {
+      console.error("Error fetching featured products:", err);
+    }
+  };
+
+  fetchFeaturedProducts();
+}, []);
+
+
+
+
   // Function to handle adding product via API
   const handleAddProductWithAPI = async (productData) => {
     setIsSaving(true);
@@ -103,25 +135,25 @@ const ProductAdmin = ({ isMobile }) => {
   };
 
   // Function to handle deleting product via API
-  
-const handleDeleteProductWithAPI = async () => {
-  setIsSaving(true);
-  try {
-    const response = await api.delete(`/deleteProduct/${deleteConfirmModal.productId}`);
-    
-    if (response.data.success) {
-      handleDeleteProduct(); // update state
-      alert("Product deleted successfully!");
-    } else {
-      alert(response.data.message || "Failed to delete product");
+
+  const handleDeleteProductWithAPI = async () => {
+    setIsSaving(true);
+    try {
+      const response = await api.delete(`/deleteProduct/${deleteConfirmModal.productId}`);
+
+      if (response.data.success) {
+        handleDeleteProduct(); // update state
+        alert("Product deleted successfully!");
+      } else {
+        alert(response.data.message || "Failed to delete product");
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      alert("Failed to delete product. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    alert("Failed to delete product. Please try again.");
-  } finally {
-    setIsSaving(false);
-  }
-};
+  };
 
 
 
@@ -172,6 +204,7 @@ const handleDeleteProductWithAPI = async () => {
       {/* Products Table */}
       <ProductTable
         products={filteredProducts}
+        featuredProducts={featuredProducts} // ✅ pass featured product IDs
         onView={viewProductDetails}
         onEdit={handleEditProduct}
         onDelete={openDeleteConfirm}
@@ -215,10 +248,10 @@ const handleDeleteProductWithAPI = async () => {
         <DeleteConfirmationModal
           productName={deleteConfirmModal.productName}
           onClose={() => setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" })}
-         onConfirm={() => {
-  handleDeleteProductWithAPI();
-  setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
-}}
+          onConfirm={() => {
+            handleDeleteProductWithAPI();
+            setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
+          }}
 
           isLoading={isSaving}
         />

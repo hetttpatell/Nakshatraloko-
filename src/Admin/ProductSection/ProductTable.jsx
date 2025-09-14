@@ -1,5 +1,8 @@
+import axios from "axios";
 import React, { useState } from "react";
 import { FaEye, FaEdit, FaTrash, FaChevronDown, FaChevronUp } from "react-icons/fa";
+
+import { ToastContainer } from "react-toastify";
 
 const ProductTable = ({ products, onView, onEdit, onDelete }) => {
   if (products.length === 0) {
@@ -15,7 +18,7 @@ const ProductTable = ({ products, onView, onEdit, onDelete }) => {
       <table className="w-full text-left">
         <thead>
           <tr className="bg-gray-50">
-            {["Product",  "Price", "Stock", "Status", "Actions"].map(
+            {["Product", "Price", "Stock", , "Featured", "Status", "Actions"].map(
               (header) => (
                 <th key={header} className="p-3 font-semibold text-gray-700">
                   {header}
@@ -42,6 +45,45 @@ const ProductTable = ({ products, onView, onEdit, onDelete }) => {
 
 const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(product.isFeatured || false); // ✅ local state
+
+  const handleToggle = async () => {
+    const newValue = !isFeatured;
+    setIsFeatured(newValue); // immediate UI feedback
+    console.log("Toggled Featured:", product.id, newValue);
+
+    try {
+      const token = localStorage.getItem("authToken"); // get token
+      const response = await axios.post(
+        `http://localhost:8001/api/toggleFeaturedProduct/${product.id}/feature`,
+        {}, // no body, so send empty object
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        }
+      );
+
+      console.log("API Response:", response.data);
+
+      if (!response.data.success) {
+        // rollback if API failed
+        setIsFeatured(!newValue);
+        // alert(response.data.message);
+        toast.error(response.data.message);
+      } else {
+         toast.success(response.data.message); // ✅ show success toast
+      }
+    } catch (err) {
+      // console.error("Error toggling featured:", err);
+      setIsFeatured(!newValue); // rollback
+      toast.error("Failed to toggle featured. Try again.");
+
+    } finally {
+      // setLoading(false);
+    }
+  };
+
 
   return (
     <>
@@ -86,24 +128,43 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
         {/* Stock */}
         <td className="p-3">
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
-              product.stock > 0
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
+            className={`px-2 py-1 rounded-full text-xs font-medium ${product.stock > 0
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+              }`}
           >
             {product.stock} in stock
           </span>
         </td>
 
+        {/* Featured Toggle */}
+        <td className="p-3">
+          <label className="inline-flex relative items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={isFeatured}
+              onChange={handleToggle}
+            // disabled={loading} // prevent spamming
+            />
+            <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 relative 
+                          after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                          after:bg-white after:border-gray-300 after:border after:rounded-full 
+                          after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full">
+            </div>
+          </label>
+        </td>
+
+
+
+
         {/* Status */}
         <td className="p-3">
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
-              product.isActive
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-            }`}
+            className={`px-2 py-1 rounded-full text-xs font-medium ${product.isActive
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+              }`}
           >
             {product.isActive ? "Active" : "Inactive"}
           </span>

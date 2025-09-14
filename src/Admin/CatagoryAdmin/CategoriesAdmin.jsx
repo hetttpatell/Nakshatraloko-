@@ -290,7 +290,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       setError("Failed to update category status. Please try again.");
     }
   };
-
+ 
   // Render loading state
   if (isLoading) {
     return (

@@ -4,11 +4,16 @@ import Header from "./Header/Header";
 import Footer from "./Footer/Footer";
 import { Outlet, useLocation } from "react-router-dom";
 import { CartProvider } from "./Context/CartContext";
-import { WishlistProvider } from "./Context/WishlistContext"; 
+import { WishlistProvider } from "./Context/WishlistContext";
 import LoginSignup from "./Components/Login/Login";
 import ScrollToTop from "./Scrollingfix";
 import { ConsultancyProvider } from "./Context/ConsultancyContext";
 import { ThemeProvider } from "./Context/ThemeContext";
+
+
+// ✅ Import toast
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 function App() {
@@ -30,7 +35,7 @@ function App() {
   // }, []);
 
 
-// SCROLL TO THE TOP WHEN CALL THE SECTION 
+  // SCROLL TO THE TOP WHEN CALL THE SECTION 
 
 
   useEffect(() => {
@@ -71,6 +76,10 @@ function App() {
               {!hideFooter && <Footer />}
               {showLogin && <LoginSignup onClose={() => setShowLogin(false)} />}
             </div>
+
+            {/* ✅ Add ToastContainer once here */}
+            <ToastContainer position="top-right" autoClose={3000} />
+
           </WishlistProvider>
         </CartProvider>
       </ThemeProvider>

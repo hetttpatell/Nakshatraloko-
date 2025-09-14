@@ -86,6 +86,9 @@ function ExpertCall({ className = "" }) {
 
     try {
       // Call your backend API using Axios
+
+      const token = localStorage.getItem("authToken");
+
       const response = await axios.post(
         "http://localhost:8001/api/saveConsultation",
         {
@@ -101,7 +104,8 @@ function ExpertCall({ className = "" }) {
           birthTime: birthTime,
           gender: gender,
           bookingTime: consultationTime,
-        }
+        },
+        { headers: { Authorization: `${token}` }}
       );
 
       if (!response.data.success) {
@@ -155,8 +159,8 @@ Preferred Consultation Time: ${consultationTime}`;
       console.error(error);
       setToastMessage(
         error.response?.data?.message ||
-          error.message ||
-          "Something went wrong. Please try again."
+        error.message ||
+        "Something went wrong. Please try again."
       );
       setToastType("error");
       setShowToast(true);
