@@ -57,11 +57,17 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                 : category.IsActive !== undefined
                   ? category.IsActive
                   : true,
-            isFeatured: category.isFeatured || false,
+            isFeatured:
+              category.isFeatured !== undefined
+                ? category.isFeatured
+                : category.IsFeatured !== undefined
+                  ? category.IsFeatured
+                  : false,
             image: category.Image
-              ? `http://localhost:8001/uploads/${category.Image}`
-              : category.Image || "/s1.jpeg",
+              ? `http://localhost:8001${category.Image}`
+              : "/s1.jpeg",
           }));
+
           console.log({ data: response });
 
           setCategories(formattedCategories);
@@ -76,6 +82,15 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
     fetchCategories();
   }, []);
+
+  const handleToggleFeatured = (id) => {
+    setCategories(prev =>
+      prev.map(cat =>
+        cat.id === id ? { ...cat, isFeatured: !cat.isFeatured } : cat
+      )
+    );
+  };
+
 
   const activeCount = products.filter(product => {
     return product.isActive && (product.categoryId?.toString() === category.id || product.category === category.name);
@@ -134,7 +149,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
         }]);
         setNewCategory({ name: "", description: "", isActive: true, isFeatured: false, image: "" });
         // ✅ Show success toast
-      toast.success(response.data.message || "Category Added successfully");
+        toast.success(response.data.message || "Category Added successfully");
         setImageFile(null);
         setImagePreview("");
         setError(null);
@@ -146,7 +161,40 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       setIsAdding(false);
     }
   };
+  // if toggeld then this function executes
 
+  const handleToggleFeaturedApi = async (category) => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const formData = new FormData();
+      formData.append("id", category.id);
+      formData.append("name", category.name);
+      formData.append("description", category.description);
+      formData.append("isActive", category.isActive);
+      formData.append("isFeatured", !category.isFeatured); // toggle value
+
+      if (category.image) {
+        formData.append("images", category.image);
+      }
+
+      const res = await axios.post("http://localhost:8001/api/saveCatogary", formData, {
+        headers: { Authorization: token, "Content-Type": "multipart/form-data" },
+      });
+
+      if (res.data.success) {
+        setCategories(prev =>
+          prev.map(cat =>
+            cat.id === category.id ? { ...cat, isFeatured: !cat.isFeatured } : cat
+          )
+        );
+        toast.success(res.data.message || "Category updated successfully");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update category");
+    }
+  };
 
 
   // Filter products for the selected category
@@ -210,7 +258,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
         setImageFile(null);
         setImagePreview("");
         // ✅ Show success toast
-      toast.success(response.data.message || "Category updated successfully");
+        toast.success(response.data.message || "Category updated successfully");
       }
     } catch (err) {
       console.error(err);
@@ -290,7 +338,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       setError("Failed to update category status. Please try again.");
     }
   };
- 
+
   // Render loading state
   if (isLoading) {
     return (
@@ -461,7 +509,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                 <th className="p-3 font-semibold text-gray-700">Image</th>
                 <th className="p-3 font-semibold text-gray-700">Products</th>
                 <th className="p-3 font-semibold text-gray-700">Name</th>
-                {/* <th className="p-3 font-semibold text-gray-700">Visibility</th> */}
+                <th className="p-3 font-semibold text-gray-700">Status</th>
+                <th className="p-3 font-semibold text-gray-700">Featured</th>
+                <th className="p-3 font-semibold text-gray-700">Visibilty</th>
                 <th className="p-3 font-semibold text-gray-700 text-right">Actions</th>
               </tr>
             </thead>
@@ -506,6 +556,27 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                       {category.isActive ? 'Active' : 'Inactive'}
                     </div>
                   </td>
+                  <td className="p-3">
+                    <div className="flex items-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent row click
+                          handleToggleFeaturedApi(category);
+                        }}
+                        type="button"
+                        className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${category.isFeatured ? "bg-blue-600" : "bg-gray-300"
+                          }`}
+                      >
+                        <div
+                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${category.isFeatured ? "translate-x-6" : "translate-x-0"
+                            }`}
+                        />
+                      </button>
+                      <span className="text-sm">Featured</span>
+
+                    </div>
+                  </td>
+
                   <td className="p-3">
                     <div className="flex items-center">
                       {category.isShown ? (
