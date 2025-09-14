@@ -25,7 +25,6 @@ const Recommendation = () => {
   };
 };
 
-
   // Fetch all products and select 4 random ones
   const fetchRecommendedProducts = async () => {
   try {
@@ -44,7 +43,6 @@ const Recommendation = () => {
     setLoading(false);
   }
 };
-
 
   useEffect(() => {
     fetchRecommendedProducts();

@@ -56,7 +56,7 @@ const ProductAdmin = ({ isMobile }) => {
     setIsAddModalOpen,
     setEditingProduct,
     setDeleteConfirmModal,
-    handleDeleteProduct,
+    handleDeleteProductWithAPI,
     handleSaveProduct,
     handleAddProduct,
     openDeleteConfirm,
@@ -136,24 +136,7 @@ useEffect(() => {
 
   // Function to handle deleting product via API
 
-  const handleDeleteProductWithAPI = async () => {
-    setIsSaving(true);
-    try {
-      const response = await api.delete(`/deleteProduct/${deleteConfirmModal.productId}`);
 
-      if (response.data.success) {
-        handleDeleteProduct(); // update state
-        alert("Product deleted successfully!");
-      } else {
-        alert(response.data.message || "Failed to delete product");
-      }
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      alert("Failed to delete product. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
 
 
@@ -245,16 +228,16 @@ useEffect(() => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmModal.isOpen && (
-        <DeleteConfirmationModal
-          productName={deleteConfirmModal.productName}
-          onClose={() => setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" })}
-          onConfirm={() => {
-            handleDeleteProductWithAPI();
-            setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
-          }}
+       <DeleteConfirmationModal
+  productName={deleteConfirmModal.productName}
+  onClose={() => setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" })}
+  onConfirm={() => {
+    handleDeleteProductWithAPI(deleteConfirmModal.productId); // Pass ID
+    setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
+  }}
+  isLoading={isSaving}
+/>
 
-          isLoading={isSaving}
-        />
       )}
     </div>
   );

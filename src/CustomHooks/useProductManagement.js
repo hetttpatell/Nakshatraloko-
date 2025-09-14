@@ -16,7 +16,7 @@ export const useProductManagement = () => {
 
   const [error, setError] = useState(null);
   const [featuredProducts, setFeaturedProducts] = useState([]);
-
+    const [isSaving, setIsSaving] = useState(false);
   // Simulate loading products from an API
 useEffect(() => {
   const loadProducts = async () => {
@@ -33,7 +33,9 @@ useEffect(() => {
         const featuredIds = featuredResponse.data.data.map(p => p.ID);
 
         // Normalize products and mark featured ones
-        const normalized = allResponse.data.data.map(item => ({
+        const normalized = allResponse.data.data
+        .sort((a, b) => a.ID - b.ID)
+        .map(item => ({
           id: item.ID,
           categoryId: item.CatogaryID,
           name: item.Name,
@@ -65,12 +67,32 @@ useEffect(() => {
   loadProducts();
 }, []);
 
-  const handleDeleteProduct = () => {
-    if (deleteConfirmModal.productId) {
-      setProducts(prev => prev.filter(product => product.id !== deleteConfirmModal.productId));
-      setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
+const handleDeleteProductWithAPI = async (productId) => {
+  setIsSaving(true);
+  try {
+    const token = localStorage.getItem("authToken")
+
+    const response = await axios.post(`http://localhost:8001/api/deleteProduct/${productId}`,{},{
+      headers:{
+       Authorization: `${token}`
+      }
+    });
+
+    if (response.data.success) {
+      // Remove deleted product from state
+      setProducts(prev => prev.filter(p => p.id !== productId));
+      alert("Product deleted successfully!");
+    } else {
+      alert(response.data.message || "Failed to delete product");
     }
-  };
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    alert("Failed to delete product. Please try again.");
+  } finally {
+    setIsSaving(false);
+  }
+};
+
 
   const handleSaveProduct = (updatedProduct) => {
     if (editingProduct && editingProduct.id) {
@@ -147,7 +169,7 @@ useEffect(() => {
     setIsAddModalOpen,
     setEditingProduct,
     setDeleteConfirmModal,
-    handleDeleteProduct,
+    handleDeleteProductWithAPI,
     handleSaveProduct,
     handleAddProduct,
     openDeleteConfirm,
