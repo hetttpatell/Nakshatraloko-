@@ -414,8 +414,8 @@ const ProductModal = ({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className=" space-y-6">
+            <div className="grid grid-cols-1  md:grid-cols-2 gap-6">
 
               {/* Category Name */}
               <div className="space-y-2">
@@ -627,21 +627,19 @@ const ProductModal = ({
                   <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border border-gray-200 rounded-lg">
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">Size</label>
-                      <select
+                      <input
+                        type="text"
                         value={size.size}
-                        onChange={(e) => handleSizeChange(index, "size", e.target.value)}
+                        onChange={(e) => handleSizeChange(index, "size", e.target.value)} // text instead of selected option
+                        placeholder="Enter size"
                         required
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
-                      >
-                        <option value="">Select Size</option>
-                        {sizeOptions.map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
+                      />
                       {errors[`size-${index}`] && (
                         <p className="text-red-500 text-xs">{errors[`size-${index}`]}</p>
                       )}
                     </div>
+
 
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">Price (₹)</label>
