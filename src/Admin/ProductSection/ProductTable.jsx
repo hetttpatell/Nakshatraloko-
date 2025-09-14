@@ -45,46 +45,25 @@ const ProductTable = ({ products, onView, onEdit, onDelete }) => {
 
 const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
-  const [isFeatured, setIsFeatured] = useState(product.isFeatured || false); // ✅ local state
+  const [isFeatured, setIsFeatured] = useState(product.isFeatured || false);
 
   const handleToggle = async () => {
-    const newValue = !isFeatured;
-    setIsFeatured(newValue); // immediate UI feedback
-    console.log("Toggled Featured:", product.id, newValue);
+  const newValue = !isFeatured;
+  setIsFeatured(newValue); // immediate feedback
 
-    try {
-      const token = localStorage.getItem("authToken"); // get token
-      const response = await axios.post(
-        `http://localhost:8001/api/toggleFeaturedProduct/${product.id}/feature`,
-        {}, // no body, so send empty object
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        }
-      );
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.post(
+      `http://localhost:8001/api/toggleFeaturedProduct/${product.id}/feature`,
+      {},
+      { headers: { Authorization: `${token}` } }
+    );
 
-      console.log("API Response:", response.data);
-
-      if (!response.data.success) {
-        // rollback if API failed
-        setIsFeatured(!newValue);
-        // alert(response.data.message);
-        toast.error(response.data.message);
-      } else {
-         toast.success(response.data.message); // ✅ show success toast
-      }
-    } catch (err) {
-      // console.error("Error toggling featured:", err);
-      setIsFeatured(!newValue); // rollback
-      toast.error("Failed to toggle featured. Try again.");
-
-    } finally {
-      // setLoading(false);
-    }
-  };
-
-
+    if (!response.data.success) setIsFeatured(!newValue); // rollback
+  } catch (err) {
+    setIsFeatured(!newValue); // rollback
+  }
+};
   return (
     <>
       <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">

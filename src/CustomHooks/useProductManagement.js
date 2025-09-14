@@ -40,7 +40,10 @@ export const useProductManagement = () => {
             advantages: item.Advantages,
             howToWear: item.HowToWear,
             isActive: item.IsActive,
+            isFeatured: item.IsFeatured || false, // <-- add this
+            primaryImage: item.PrimaryImage
           }));
+
           setProducts(normalized);
         }
         else {
