@@ -56,30 +56,38 @@ export default function Cart() {
   // };
 
   // Transform API data to component format and store in state
-  useEffect(() => {
-    const newTransformedCart = cart.map((item) => ({
-      id: item.productid || item.id,
-      cartId: item.cartid,
-      name: item.name,
-      description: item.description,
-      price: parseFloat(item.firstsizeprice || item.price),
-      originalPrice: parseFloat(item.firstdummyprice || item.originalPrice),
-      discount: parseFloat(item.discount || 0),
-      discountPercentage: parseFloat(item.discountpercentage || 0),
-      image: item.primaryimage
-        ? `http://localhost:8001/uploads/${item.primaryimage}`
-        : item.img || "/s1.jpeg",
-      category: item.catogaryname || item.category,
-      inStock: item.stock > 0,
-      stock: item.stock,
-      rating: parseFloat(item.avgrating || 0),
-      reviews: item.reviewcount || 0,
-      quantity: item.quantity || 1,
-      size: item.size || "Standard",
-      material: item.material || item.catogaryname,
-    }));
-    setTransformedCart(newTransformedCart);
-  }, [cart]); // ✅ updates whenever `cart` changes
+ useEffect(() => {
+  setTransformedCart(prevTransformed => 
+    cart.map(item => {
+      // Find if the item already exists in local transformedCart
+      const existingItem = prevTransformed.find(p => p.id === (item.productid || item.id));
+
+      return {
+        id: item.productid || item.id,
+        cartId: item.cartid,
+        name: item.name,
+        description: item.description,
+        price: parseFloat(item.firstsizeprice || item.price),
+        originalPrice: parseFloat(item.firstdummyprice || item.originalPrice),
+        discount: parseFloat(item.discount || 0),
+        discountPercentage: parseFloat(item.discountpercentage || 0),
+        image: item.primaryimage
+          ? `http://localhost:8001/uploads/${item.primaryimage}`
+          : item.img || "/s1.jpeg",
+        category: item.catogaryname || item.category,
+        inStock: item.stock > 0,
+        stock: item.stock,
+        rating: parseFloat(item.avgrating || 0),
+        reviews: item.reviewcount || 0,
+        quantity: existingItem ? existingItem.quantity : item.quantity || 1, // preserve local quantity
+        size: item.size || "Standard",
+        material: item.material || item.catogaryname,
+      };
+    })
+  );
+}, [cart]);
+
+// ✅ updates whenever `cart` changes
 
   // Calculations
   const subtotal = transformedCart.reduce(
@@ -90,19 +98,26 @@ export default function Cart() {
   const total = subtotal + (subtotal > 0 ? shipping : 0);
 
   // Handle quantity change
-  const handleQuantityChange = (item, newQuantity) => {
-    if (newQuantity <= 0) {
-      handleRemoveItem(item);
-      return;
-    }
+const handleQuantityChange = (item, newQuantity) => {
+  if (newQuantity <= 0) {
+    handleRemoveItem(item);
+    return;
+  }
 
-    if (newQuantity <= item.stock) {
-      updateQuantity(item.id, newQuantity); // ✅ updates CartContext state
-    } else {
-      console.warn(`Cannot add more than ${item.stock} items`);
-    }
-  };
+  if (newQuantity <= item.stock) {
+    // Update local state immediately
+    setTransformedCart(prev =>
+      prev.map(p =>
+        p.id === item.id ? { ...p, quantity: newQuantity } : p
+      )
+    );
 
+    // Update context / backend
+    updateQuantity(item.id, newQuantity); 
+  } else {
+    console.warn(`Cannot add more than ${item.stock} items`);
+  }
+};
 
   // Handle remove item
   const handleRemoveItem = async (product) => {

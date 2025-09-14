@@ -128,13 +128,48 @@ export function CartProvider({ children }) {
   };
 
   // ✅ Update quantity in cart state
-  const updateQuantity = (productId, newQuantity) => {
+ // ✅ Update quantity in cart state AND call backend API
+const updateQuantity = async (productId, newQuantity) => {
+  // 1️⃣ Optimistically update local state
+  setCart((prev) =>
+    prev.map((item) =>
+      item.id === productId ? { ...item, quantity: newQuantity } : item
+    )
+  );
+
+  try {
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+
+    // 2️⃣ Call backend API to persist quantity
+    const response = await axios.post(
+      "http://localhost:8001/api/updateCart",
+      {
+        productId,
+        quantity: newQuantity,
+      },
+      { headers: { Authorization: token } }
+    );
+
+    if (!response.data.success) {
+      console.warn("Failed to update quantity on server:", response.data.message);
+      // Optionally rollback local change
+      setCart((prev) =>
+        prev.map((item) =>
+          item.id === productId ? { ...item, quantity: prev.find(p => p.id === productId).quantity } : item
+        )
+      );
+    }
+  } catch (error) {
+    console.error("Error updating quantity on server:", error);
+    // Optionally rollback local change
     setCart((prev) =>
       prev.map((item) =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
+        item.id === productId ? { ...item, quantity: prev.find(p => p.id === productId).quantity } : item
       )
     );
-  };
+  }
+};
 
   return (
     <CartContext.Provider
