@@ -34,7 +34,7 @@ useEffect(() => {
 
         // Normalize products and mark featured ones
         const normalized = allResponse.data.data
-        .sort((a, b) => a.ID - b.ID)
+        .sort((a, b) => b.ID - a.ID)
         .map(item => ({
           id: item.ID,
           categoryId: item.CatogaryID,
