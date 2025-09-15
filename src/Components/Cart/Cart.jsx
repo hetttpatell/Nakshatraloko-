@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useCart } from "../../Context/CartContext";
 import Recommendations from "../Product/Recommendation";
 import { Minus, Plus, Trash2, ShoppingBag, Sparkles, Zap } from "lucide-react";
@@ -11,8 +11,11 @@ export default function Cart() {
   const [loading, setLoading] = useState(true);
   const [transformedCart, setTransformedCart] = useState([]);
 
+  const quantityUpdateTimers = useRef({});
+
   // Fetch cart on mount
   useEffect(() => {
+
     const fetchCartData = async () => {
       setLoading(true);
       try {
@@ -29,63 +32,36 @@ export default function Cart() {
 
 
 
-  // // Transform API data to component format
-  // const transformCartData = (apiData) => {
-  //   return apiData.map(item => ({
-  //     id: item.productid,
-  //     cartId: item.cartid,
-  //     name: item.name,
-  //     description: item.description,
-  //     price: parseFloat(item.firstsizeprice),
-  //     originalPrice: parseFloat(item.firstdummyprice),
-  //     discount: parseFloat(item.discount),
-  //     discountPercentage: parseFloat(item.discountpercentage),
-  //     // Fix: Use the image path directly from database, prepend your server URL if needed
-  //     image: item.primaryimage
-  //       ? `http://localhost:8001/uploads/${item.primaryimage}` // prepend /uploads
-  //       : '/s1.jpeg',
-  //     category: item.catogaryname,
-  //     inStock: item.stock > 0,
-  //     stock: item.stock,
-  //     rating: parseFloat(item.avgrating) || 0,
-  //     reviews: item.reviewcount || 0,
-  //     quantity: item.quantity || 1, // Default quantity if not provided
-  //     size: item.size || 'Standard',
-  //     material: item.material || item.catogaryname
-  //   }));
-  // };
-
-  // Transform API data to component format and store in state
 
 
   useEffect(() => {
-  setTransformedCart(
-    cart.map((item) => ({
-      id: item.ProductID || item.ID,
-      cartId: item.ID,
-      name: item.Name,
-      description: item.Description,
-      price: parseFloat(item.FirstSizePrice),
-      originalPrice: parseFloat(item.FirstDummyPrice),
-      discount: parseFloat(item.Discount),
-      discountPercentage: parseFloat(item.DiscountPercentage),
-      image: item.PrimaryImage
-        ? `http://localhost:8001/uploads/${item.PrimaryImage}` // prepend your server URL
-        : "/s1.jpeg",
-      category: item.CategoryName,
-      inStock: item.Stock > 0,
-      stock: item.Stock,
-      rating: parseFloat(item.AvgRating),
-      reviews: item.ReviewCount,
-      quantity: item.Quantity || 1,
-      size: "Standard", // your API doesn’t have size
-      material: item.CategoryName
-    }))
-  );
-}, [cart]);
+    setTransformedCart(
+      cart.map((item) => ({
+        id: item.ProductID || item.ID,
+        cartId: item.ID,
+        name: item.Name,
+        description: item.Description,
+        price: parseFloat(item.FirstSizePrice),
+        originalPrice: parseFloat(item.FirstDummyPrice),
+        discount: parseFloat(item.Discount),
+        discountPercentage: parseFloat(item.DiscountPercentage),
+        image: item.PrimaryImage
+          ? `http://localhost:8001/uploads/${item.PrimaryImage}` // prepend your server URL
+          : "/s1.jpeg",
+        category: item.CategoryName,
+        inStock: item.Stock > 0,
+        stock: item.Stock,
+        rating: parseFloat(item.AvgRating),
+        reviews: item.ReviewCount,
+        quantity: item.Quantity || 1,
+        size: "Standard", // your API doesn’t have size
+        material: item.CategoryName
+      }))
+    );
+  }, [cart]);
 
 
-// ✅ updates whenever `cart` changes
+  // ✅ updates whenever `cart` changes
 
   // Calculations
   const subtotal = transformedCart.reduce(
@@ -96,26 +72,36 @@ export default function Cart() {
   const total = subtotal + (subtotal > 0 ? shipping : 0);
 
   // Handle quantity change
-const handleQuantityChange = (item, newQuantity) => {
-  if (newQuantity <= 0) {
-    handleRemoveItem(item);
-    return;
-  }
+  const handleQuantityChange = (item, newQuantity) => {
+    if (newQuantity <= 0) {
+      handleRemoveItem(item);
+      return;
+    }
 
-  if (newQuantity <= item.stock) {
-    // Update local state immediately
-    setTransformedCart(prev =>
-      prev.map(p =>
-        p.id === item.id ? { ...p, quantity: newQuantity } : p
-      )
-    );
+    if (newQuantity <= item.stock) {
+      // 1️⃣ Update local state immediately
+      setTransformedCart(prev =>
+        prev.map((p) => (p.id === item.id ? { ...p, quantity: newQuantity } : p))
+      );
 
-    // Update context / backend
-    updateQuantity(item.id, newQuantity); 
-  } else {
-    console.warn(`Cannot add more than ${item.stock} items`);
-  }
-};
+
+
+      // 2️⃣ Debounce backend update
+      if (quantityUpdateTimers.current[item.id]) {
+        clearTimeout(quantityUpdateTimers.current[item.id]);
+      }
+
+      quantityUpdateTimers.current[item.id] = setTimeout(async () => {
+        await updateQuantity(item.id, newQuantity);
+        await getCart(); // fetch fresh cart including stock
+        delete quantityUpdateTimers.current[item.id];
+      }, 300);
+      ; // 300ms delay
+    } else {
+      console.warn(`Cannot add more than ${item.stock} items`);
+    }
+  };
+
 
   // Handle remove item
   const handleRemoveItem = async (product) => {
