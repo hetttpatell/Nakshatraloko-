@@ -18,44 +18,48 @@ export default function FeaturedProducts() {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-  let isMounted = true;
+    let isMounted = true;
 
-  axios.post("http://localhost:8001/api/getProduct")
-    .then((res) => {
-      console.log("Raw API response:", res.data);
+    axios.post("http://localhost:8001/api/getFeaturedProducts")
+      .then((res) => {
+        console.log("Raw API response:", res.data);
 
-      if (isMounted) {
-        // ✅ Extract from res.data.data
-        const apiProducts = Array.isArray(res.data?.data) ? res.data.data : [];
+        if (isMounted) {
+          // Extract the actual data array
+          const apiProducts = Array.isArray(res.data?.data) ? res.data.data : [];
 
-        // ✅ Map backend fields → frontend-friendly fields
-        const mappedProducts = apiProducts.map((p) => ({
-          id: p.ID,
-          name: p.Name,
-          description: p.Description,
-          category: p.CatogaryName,   // backend typo "CatogaryName"
-          price: p.Price || "N/A",
-          img: p.img || "/placeholder.jpg",    // replace with real image later
-          rating:p.rating || 4,                  // default rating
-          reviews: p.reviews || 10,                // default reviews
-          inStock:p.inStock || true               // assume in stock for now
-        }));
+          // Map backend fields to frontend-friendly fields
+          const mappedProducts = apiProducts.map((p) => ({
+            id: p.ID,
+            name: p.Name,
+            description: p.Description,
+            category: p.CatogaryName || "Uncategorized", // map to subcategory
+            subcategory: p.CatogaryName || "Uncategorized",
+            price: p.Price || "N/A",
+            originalPrice: p.DummyPrice || null,          // original price shown as line-through
+            img: `http://localhost:8001${p.ImageText}` || "/placeholder.jpg", // full URL
+            altText: p.Alt_Text || "product image",
+            discount: p["Discount Percentage"] || null,
+            rating: p.rating || 4,
+            reviews: p.reviews || 10,
+            inStock: p.inStock ?? true,
+          }));
 
-        setProducts(mappedProducts);
+
+          setProducts(mappedProducts);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching products:", err);
         setLoading(false);
-      }
-    })
-    .catch((err) => {
-      console.error("Error fetching products:", err);
-      setLoading(false);
-    });
+      });
 
-  return () => {
-    isMounted = false;
-  };
-}, []);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
 
   const filteredProducts =
@@ -258,11 +262,10 @@ export default function FeaturedProducts() {
 
                   {/* Add to Cart Button */}
                   <button
-                    className={`w-full py-1.5 md:py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-1 text-xs md:text-base ${
-                      product.inStock
+                    className={`w-full py-1.5 md:py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-1 text-xs md:text-base ${product.inStock
                         ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]"
                         : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    }`}
+                      }`}
                     disabled={!product.inStock}
                   >
                     <ShoppingCart size={12} />

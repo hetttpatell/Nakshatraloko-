@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Star, StarHalf, Filter, X, Sparkles, Eye, ArrowRight } from "lucide-react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-
+import img from"./s1.jpeg"
 const ProductsPage = () => {
   const { category } = useParams();
 
@@ -343,7 +343,7 @@ const filteredAndSortedProducts = useMemo(() => {
               {filteredAndSortedProducts.map(product => (
                 <Link key={product.id} to={`/product/${product.id}`} state={{ product }} className="group bg-[var(--color-surface)] rounded-2xl overflow-hidden border border-[var(--color-border)] transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                   <div className="relative w-full aspect-square overflow-hidden">
-                    <img src={product.img ? `http://localhost:8001/uploads/${product.img}` : "/s1.jpeg"} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onError={e => e.target.src = "/s1.jpeg"} loading="lazy" />
+                    <img src={product.img ? `http://localhost:8001/uploads/${product.img}` : img} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onError={e => e.target.src = img} loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   <div className="p-5">
