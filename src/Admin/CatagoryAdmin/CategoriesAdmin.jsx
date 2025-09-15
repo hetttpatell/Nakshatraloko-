@@ -164,38 +164,42 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   // if toggeld then this function executes
 
   const handleToggleFeaturedApi = async (category) => {
-    try {
-      const token = localStorage.getItem("authToken");
+  try {
+    const featuredCount = categories.filter(cat => cat.isFeatured).length;
 
-      const formData = new FormData();
-      formData.append("id", category.id);
-      formData.append("name", category.name);
-      formData.append("description", category.description);
-      formData.append("isActive", category.isActive);
-      formData.append("isFeatured", !category.isFeatured); // toggle value
-
-      if (category.image) {
-        formData.append("images", category.image);
-      }
-
-      const res = await axios.post("http://localhost:8001/api/saveCatogary", formData, {
-        headers: { Authorization: token, "Content-Type": "multipart/form-data" },
-      });
-
-      if (res.data.success) {
-        setCategories(prev =>
-          prev.map(cat =>
-            cat.id === category.id ? { ...cat, isFeatured: !cat.isFeatured } : cat
-          )
-        );
-        toast.success(res.data.message || "Category updated successfully");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to update category");
+    // If trying to enable a 5th category
+    if (!category.isFeatured && featuredCount >= 4) {
+      toast.error("You can only select up to 4 featured categories");
+      return;
     }
-  };
 
+    const token = localStorage.getItem("authToken");
+    const formData = new FormData();
+    formData.append("id", category.id);
+    formData.append("name", category.name);
+    formData.append("description", category.description);
+    formData.append("isActive", category.isActive);
+    formData.append("isFeatured", !category.isFeatured); // toggle value
+    if (category.image) formData.append("images", category.image);
+
+    const res = await axios.post("http://localhost:8001/api/saveCatogary", formData, {
+      headers: { Authorization: token, "Content-Type": "multipart/form-data" },
+    });
+
+    if (res.data.success) {
+      setCategories(prev =>
+        prev.map(cat =>
+          cat.id === category.id ? { ...cat, isFeatured: !cat.isFeatured } : cat
+        )
+      );
+      toast.success(res.data.message || "Category updated successfully");
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to update category");
+  }
+};
+    
 
   // Filter products for the selected category
   const filteredProducts = selectedCategory
