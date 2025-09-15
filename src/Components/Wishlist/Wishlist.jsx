@@ -14,7 +14,9 @@ export default function Wishlist() {
   const [actionLoading, setActionLoading] = useState({});
 
 
-
+  useEffect(()=>{
+    fetchWishlist()
+  },[])
   // Fetch wishlist on mount
   useEffect(() => {
     const loadWishlist = async () => {

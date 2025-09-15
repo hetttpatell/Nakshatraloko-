@@ -125,34 +125,47 @@ export function WishlistProvider({ children }) {
   }, []);
 
   // Add or remove from wishlist via API
-  const addToWishlist = async (product) => {
-    const token = getAuthToken();
-    if (!token) return { success: false, message: "Please login" };
+const addToWishlist = async (product) => {
+  const token = getAuthToken();
+  if (!token) {
+    return { success: false, message: "Please login" };
+  }
 
-    const productId = product.ID; // <-- always use product.id
-    if (!productId) return { success: false, message: "Invalid product" };
+  const productId = product.ID; // ✅ Use product.ID consistently
+  if (!productId) {
+    return { success: false, message: "Invalid product" };
+  }
 
-    try {
-      const response = await axios.post(
-        "http://localhost:8001/api/manageWishlist",
-        { ProductID: productId }, // <-- match DB column
-        { headers: { Authorization: token } }
-      );
-
-      if (response.data.success) {
-        await fetchWishlist();
-        return {
-          success: true,
-          message: response.data.message || `${product.name} updated in wishlist`
-        };
-      } else {
-        return { success: false, message: response.data.message || "Failed to update wishlist" };
+  try {
+    const { data } = await axios.post(
+      "http://localhost:8001/api/manageWishlist",
+      { ProductID: productId }, // ✅ Match DB column name
+      {
+        headers: { Authorization: token },
       }
-    } catch (error) {
-      console.error("Error updating wishlist:", error);
-      return { success: false, message: "Error updating wishlist" };
+    );
+
+    if (data.success) {
+      await fetchWishlist(); // ✅ Refresh wishlist after toggle
+      return {
+        success: true,
+        message: data.message || `${product.name} updated in wishlist`,
+      };
     }
-  };
+
+    return {
+      success: false,
+      message: data.message || "Failed to update wishlist",
+    };
+  } catch (error) {
+    console.error("Error updating wishlist:", error);
+    return {
+      success: false,
+      message: error.response?.data?.message || "Error updating wishlist",
+    };
+  }
+};
+
 
   const removeFromWishlist = async (id) => addToWishlist({ id }); // reuse manageWishlist
 
@@ -174,7 +187,7 @@ export function WishlistProvider({ children }) {
 
   return (
     <WishlistContext.Provider
-      value={{ wishlist, addToWishlist, setWishlist, removeFromWishlist, clearWishlist }}
+      value={{ wishlist,fetchWishlist, addToWishlist, setWishlist, removeFromWishlist, clearWishlist }}
     >
       {children}
     </WishlistContext.Provider>

@@ -66,65 +66,120 @@ function ExpertCall({ className = "" }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // console.log("ff")
+  const today = new Date().toISOString().split("T")[0];
 
-    // Create submission object for local use and WhatsApp
-    const submission = {
-      formType: "ExpertCall",
-      username,
-      phone: usernumber,
-      date: consultationDate,
-      time: consultationTime,
-      birthDate,
-      birthTime,
-      birthPlace,
-      gender,
-      status: "Pending",
-    };
+  // ✅ Validation
+  if (!username.trim()) {
+    setToastMessage("Full Name is required.");
+    setToastType("error");
+    setShowToast(true);
+    return;
+  }
 
-    try {
-      // Call your backend API using Axios
+  if (!/^[0-9]{10}$/.test(usernumber)) {
+    setToastMessage("Please enter a valid 10-digit phone number.");
+    setToastType("error");
+    setShowToast(true);
+    return;
+  }
 
-      const token = localStorage.getItem("authToken");
+  if (!birthDate || birthDate > today) {
+    setToastMessage("Please select a valid birth date.");
+    setToastType("error");
+    setShowToast(true);
+    return;
+  }
 
-      const response = await axios.post(
-        "http://localhost:8001/api/saveConsultation",
-        {
-          userId: null, // Replace dynamically if needed
-          bookingDate:
-            consultationDate || new Date().toISOString().split("T")[0],
-          status: "Pending",
-          isActive: true,
-          consultationType: "General", // Or set dynamically
-          fullName: username,
-          phoneNumber: usernumber,
-          dateOfBirth: birthDate,
-          birthTime: birthTime,
-          gender: gender,
-          bookingTime: consultationTime,
-        },
-        { headers: { Authorization: `${token}` }}
-      );
+  if (!birthTime) {
+    setToastMessage("Birth time is required.");
+    setToastType("error");
+    setShowToast(true);
+    return;
+  }
 
-      if (!response.data.success) {
-        throw new Error(response.data.message || "Failed to save consultation");
-      }
+  if (!birthPlace.trim()) {
+    setToastMessage("Birth place is required.");
+    setToastType("error");
+    setShowToast(true);
+    return;
+  }
 
-      // Store in localStorage for admin access
-      const existingSubmissions = JSON.parse(
-        localStorage.getItem("consultancySubmissions") || "[]"
-      );
-      const updatedSubmissions = [...existingSubmissions, submission];
-      localStorage.setItem(
-        "consultancySubmissions",
-        JSON.stringify(updatedSubmissions)
-      );
+  if (!gender) {
+    setToastMessage("Please select your gender.");
+    setToastType("error");
+    setShowToast(true);
+    return;
+  }
 
-      // Open WhatsApp chat
-      const clientWhatsapp = "918866378552";
-      const message = `New Consultation Request:
+  if (consultationDate && consultationDate < today) {
+    setToastMessage("Consultation date cannot be in the past.");
+    setToastType("error");
+    setShowToast(true);
+    return;
+  }
+
+  if (!consultationType) {
+    setToastMessage("Please select a consultation type.");
+    setToastType("error");
+    setShowToast(true);
+    return;
+  }
+
+  // ✅ Submission object
+  const submission = {
+    formType: "ExpertCall",
+    username,
+    phone: usernumber,
+    date: consultationDate,
+    time: consultationTime,
+    birthDate,
+    birthTime,
+    birthPlace,
+    gender,
+    status: "Pending",
+  };
+
+  try {
+    const token = localStorage.getItem("authToken");
+
+    // ✅ Save to backend
+    const response = await axios.post(
+      "http://localhost:8001/api/saveConsultation",
+      {
+        userId: null, // Replace dynamically if needed
+        bookingDate: consultationDate || today,
+        status: "Pending",
+        isActive: true,
+        consultationType,
+        fullName: username,
+        phoneNumber: usernumber,
+        dateOfBirth: birthDate,
+        birthTime: birthTime,
+        gender: gender,
+        bookingTime: consultationTime,
+      },
+      { headers: { Authorization: `${token}` } }
+    );
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || "Failed to save consultation");
+    }
+
+    // ✅ Save locally
+    const existingSubmissions = JSON.parse(
+      localStorage.getItem("consultancySubmissions") || "[]"
+    );
+    const updatedSubmissions = [...existingSubmissions, submission];
+    localStorage.setItem(
+      "consultancySubmissions",
+      JSON.stringify(updatedSubmissions)
+    );
+
+    // ✅ WhatsApp
+    const clientWhatsapp = "918866378552";
+    const message = `New Consultation Request:
 Name: ${username}
 Phone: ${usernumber}
 Birth Date: ${birthDate}
@@ -134,38 +189,40 @@ Gender: ${gender}
 Preferred Consultation Date: ${consultationDate}
 Preferred Consultation Time: ${consultationTime}`;
 
-      const encodedMessage = encodeURIComponent(message);
-      const whatsappURL = `https://wa.me/${clientWhatsapp}?text=${encodedMessage}`;
-      window.open(whatsappURL, "_blank");
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappURL = `https://wa.me/${clientWhatsapp}?text=${encodedMessage}`;
+    window.open(whatsappURL, "_blank");
 
-      // Show toast
-      setToastMessage(
-        "Thank you! Your consultation has been booked successfully."
-      );
-      setToastType("success");
-      setShowToast(true);
+    // ✅ Success toast
+    setToastMessage("Thank you! Your consultation has been booked successfully.");
+    setToastType("success");
+    setShowToast(true);
 
-      // Reset form
-      setUsername("");
-      setNumber("");
-      setConsultationDate("");
-      setConsultationTime("09:00");
-      setBirthDate("");
-      setBirthTime("");
-      setBirthPlace("");
-      setGender("");
-      setOpen(false);
-    } catch (error) {
-      console.error(error);
-      setToastMessage(
-        error.response?.data?.message ||
-        error.message ||
-        "Something went wrong. Please try again."
-      );
-      setToastType("error");
-      setShowToast(true);
-    }
-  };
+    // ✅ Reset form
+    setUsername("");
+    setNumber("");
+    setConsultationDate("");
+    setConsultationTime("09:00");
+    setBirthDate("");
+    setBirthTime("");
+    setBirthPlace("");
+    setGender("");
+    setConsultationType("");
+    setPrice("");
+    setOpen(false);
+
+  } catch (error) {
+    console.error(error);
+    setToastMessage(
+      error.response?.data?.message ||
+      error.message ||
+      "Something went wrong. Please try again."
+    );
+    setToastType("error");
+    setShowToast(true);
+  }
+};
+
 
   //     const handleSubmit = (e) => {
   //         e.preventDefault();
@@ -318,11 +375,14 @@ Preferred Consultation Time: ${consultationTime}`;
                   value={usernumber}
                   onChange={(e) => setNumber(e.target.value)}
                   placeholder="Enter your phone number"
+                  pattern="^[0-9]{10}$"  // allows only 10 digits
+                  maxLength="10"
                   className="w-full border-b-2 border-[var(--color-primary)]/50 bg-transparent 
-                                        focus:outline-none focus:border-[var(--color-primary)] py-2 
-                                        text-[var(--color-text)] placeholder-[var(--color-text-light)]"
+                            focus:outline-none focus:border-[var(--color-primary)] py-2 
+                            text-[var(--color-text)] placeholder-[var(--color-text-light)]"
                   required
                 />
+
               </div>
 
               {/* Birth Date */}
@@ -338,9 +398,10 @@ Preferred Consultation Time: ${consultationTime}`;
                   type="date"
                   value={birthDate}
                   onChange={(e) => setBirthDate(e.target.value)}
+                  max={new Date().toISOString().split("T")[0]} // birth date cannot be future
                   className="w-full border-b-2 border-[var(--color-primary)]/50 bg-transparent 
-                                        focus:outline-none focus:border-[var(--color-primary)] py-2 
-                                        text-[var(--color-text)]"
+                            focus:outline-none focus:border-[var(--color-primary)] py-2 
+                            text-[var(--color-text)]"
                   required
                 />
               </div>
@@ -423,9 +484,10 @@ Preferred Consultation Time: ${consultationTime}`;
                   type="date"
                   value={consultationDate}
                   onChange={(e) => setConsultationDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]} // today’s date only onwards
                   className="w-full border-b-2 border-[var(--color-primary)]/50 bg-transparent 
-                                        focus:outline-none focus:border-[var(--color-primary)] py-2 
-                                        text-[var(--color-text)]"
+                              focus:outline-none focus:border-[var(--color-primary)] py-2 
+                              text-[var(--color-text)]"
                 />
               </div>
 

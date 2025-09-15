@@ -40,6 +40,7 @@ const router = createBrowserRouter(
 
       <Route path="faqs" element={<FAQs />} />
       <Route path="cart" element={<Cart />} />
+      <Route path="payment" element={<PaymentForm />} />
       
       <Route
         path="/admin/*"

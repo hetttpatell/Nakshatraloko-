@@ -251,21 +251,28 @@ const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "" }) => (
 
 const fetchWishlist = async () => {
   try {
-    const token = localStorage.getItem("authToken")
-    const { data } = await axios.post("http://localhost:8001/api/listWishlist", {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setWishlist([]);
+      return;
+    }
+
+    const { data } = await axios.get("http://localhost:8001/api/getWishlist", {
       headers: {
-        Authorization: `${toke}`, // JWT token
+        Authorization: `${token}`,
       },
     });
 
     if (data.success) {
       console.log("✅ Wishlist fetched:", data.wishlist);
-      setWishlist(data.wishlist); // 👈 update context here
+      setWishlist(data.wishlist);
     } else {
       console.warn("⚠️ Wishlist fetch failed:", data.message);
+      setWishlist([]);
     }
   } catch (error) {
     console.error("❌ Wishlist fetch error:", error);
+    setWishlist([]);
   }
 };
 
@@ -287,10 +294,10 @@ export default function Header() {
 
   const navigate = useNavigate();
 
-  
-useEffect(() => {
-  fetchWishlist(); // ✅ fetch wishlist when page loads
-}, []);
+
+  useEffect(() => {
+    fetchWishlist(); // ✅ fetch wishlist when page loads
+  }, []);
 
   // Initialize menu items
   useEffect(() => {
@@ -322,6 +329,14 @@ useEffect(() => {
       })
       .catch((err) => console.log(err));
   }, []);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchWishlist();
+    } else {
+      setWishlist([]);
+    }
+  }, [isLoggedIn]);
 
   // Optional: log menuItems after it updates
   useEffect(() => {
