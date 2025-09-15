@@ -292,7 +292,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
           },
         }
       );
-
+      //toast
       if (response.data.success) {
         setCategories(categories.filter(cat => cat.id !== id));
         setDeleteConfirm(null);
