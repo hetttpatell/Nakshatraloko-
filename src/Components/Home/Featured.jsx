@@ -38,7 +38,7 @@ export default function FeaturedProducts() {
             subcategory: p.CatogaryName || "Uncategorized",
             price: p.Price || "N/A",
             originalPrice: p.DummyPrice || null,          // original price shown as line-through
-            img: `http://localhost:8001${p.ImageText}` || "/placeholder.jpg", // full URL
+            img: `http://localhost:8001/uploads/${p.ImageText}` || "/placeholder.jpg", // full URL
             altText: p.Alt_Text || "product image",
             discount: p["Discount Percentage"] || null,
             rating: p.rating || 4,
@@ -120,20 +120,20 @@ export default function FeaturedProducts() {
 
         {/* Category Filters */}
         {/* <div className="flex flex-wrap justify-center gap-1 md:gap-3 mb-6 md:mb-12 px-2">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategory(category.id)}
-              className={`px-2 py-1 md:px-5 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all ${
-                activeCategory === category.id
-                  ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-md)]"
-                  : "bg-white text-[var(--color-text)] border border-[var(--color-border)] hover:bg-[var(--color-primary)]/5"
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div> */}
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setActiveCategory(category.id)}
+                className={`px-2 py-1 md:px-5 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all ${
+                  activeCategory === category.id
+                    ? "bg-[var(--color-primary)] text-white shadow-[var(--shadow-md)]"
+                    : "bg-white text-[var(--color-text)] border border-[var(--color-border)] hover:bg-[var(--color-primary)]/5"
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div> */}
 
         {/* Loading State */}
         {loading ? (
@@ -148,132 +148,105 @@ export default function FeaturedProducts() {
             animate="visible"
           >
             {filteredProducts.map((product) => (
-              <motion.div
-                key={product.id}
-                variants={itemVariants}
-                className="group bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-300 border border-[var(--color-border)] hover:border-[var(--color-primary)]/20"
-              >
-                {/* Image Container */}
-                <div className="relative aspect-square overflow-hidden">
-                  <img
-                    src={product.img}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+  <Link
+    key={product.id}
+    to={`/product/${product.id}`}
+    state={{ product }}
+    className="group block bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-300 border border-[var(--color-border)] hover:border-[var(--color-primary)]/20"
+  >
+    {/* Image Container */}
+    <div className="relative aspect-square overflow-hidden">
+      <img
+        src={product.img}
+        alt={product.name}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+      />
 
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
 
-                  {/* Badges */}
-                  <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col items-start gap-1">
-                    {product.discount && (
-                      <span className="bg-[var(--color-primary)] text-white text-xs font-semibold px-1.5 py-0.5 md:px-2.5 md:py-1 rounded">
-                        {product.discount}
-                      </span>
-                    )}
+      {/* Badges */}
+      <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col items-start gap-1">
+        {product.discount && (
+          <span className="bg-[var(--color-primary)] text-white text-xs font-semibold px-1.5 py-0.5 md:px-2.5 md:py-1 rounded">
+            {product.discount}
+          </span>
+        )}
+        {product.tags?.map((tag, index) => (
+          <span
+            key={index}
+            className="bg-white text-[var(--color-primary)] text-xs font-semibold px-1.5 py-0.5 md:px-2.5 md:py-1 rounded"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
 
-                    {product.tags?.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="bg-white text-[var(--color-primary)] text-xs font-semibold px-1.5 py-0.5 md:px-2.5 md:py-1 rounded"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+      {/* Out of Stock Overlay */}
+      {!product.inStock && (
+        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+          <span className="text-white font-semibold bg-[var(--color-primary)] px-2 py-1 md:px-4 md:py-2 rounded text-xs">
+            Out of Stock
+          </span>
+        </div>
+      )}
+    </div>
 
-                  {/* Action Buttons */}
-                  <div className="absolute top-2 right-2 md:top-4 md:right-4 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button
-                      onClick={() => toggleWishlist(product.id)}
-                      className="p-1 md:p-2.5 bg-white rounded-full shadow-[var(--shadow-sm)] hover:bg-[var(--color-primary)]/10 transition-colors"
-                    >
-                      <Heart
-                        size={14}
-                        className={
-                          wishlist.includes(product.id)
-                            ? "fill-[var(--color-primary)] text-[var(--color-primary)]"
-                            : "text-[var(--color-text)]"
-                        }
-                      />
-                    </button>
+    {/* Product Details */}
+    <div className="p-3 md:p-6">
+      <h3 className="font-medium text-[var(--color-text)] line-clamp-2 mb-1 md:mb-2 group-hover:text-[var(--color-primary)] transition-colors text-xs md:text-base">
+        {product.name}
+      </h3>
 
-                    <button
-                      onClick={() => setQuickViewProduct(product)}
-                      className="p-1 md:p-2.5 bg-white rounded-full shadow-[var(--shadow-sm)] hover:bg-[var(--color-primary)]/10 transition-colors"
-                    >
-                      <Eye size={14} className="text-[var(--color-text)]" />
-                    </button>
-                  </div>
+      <p className="text-xs text-[var(--color-text-light)] mb-1 md:mb-3">
+        {product.subcategory}
+      </p>
 
-                  {/* Out of Stock Overlay */}
-                  {!product.inStock && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <span className="text-white font-semibold bg-[var(--color-primary)] px-2 py-1 md:px-4 md:py-2 rounded text-xs">
-                        Out of Stock
-                      </span>
-                    </div>
-                  )}
-                </div>
+      {/* Rating */}
+      <div className="flex items-center gap-1 mb-1 md:mb-3">
+        <div className="flex">
+          {[...Array(5)].map((_, i) => (
+            <Star
+              key={i}
+              size={10}
+              className={
+                i < Math.floor(product.rating)
+                  ? "text-amber-500 fill-amber-500"
+                  : "text-gray-300"
+              }
+            />
+          ))}
+        </div>
+        <span className="text-xs text-[var(--color-text-light)]">
+          ({product.reviews})
+        </span>
+      </div>
 
-                {/* Product Details */}
-                <div className="p-3 md:p-6">
-                  <Link to={`/product/${product.id}`}>
-                    <h3 className="font-medium text-[var(--color-text)] line-clamp-2 mb-1 md:mb-2 group-hover:text-[var(--color-primary)] transition-colors text-xs md:text-base">
-                      {product.name}
-                    </h3>
-                  </Link>
+      {/* Price */}
+      <div className="flex items-center gap-1 mb-2 md:mb-4">
+        <p className="text-sm md:text-lg font-semibold text-[var(--color-primary)]">
+          {product.price}
+        </p>
+        {product.originalPrice && (
+          <p className="text-xs text-[var(--color-text-light)] line-through">
+            {product.originalPrice}
+          </p>
+        )}
+      </div>
 
-                  <p className="text-xs text-[var(--color-text-light)] mb-1 md:mb-3">
-                    {product.subcategory}
-                  </p>
-
-                  {/* Rating */}
-                  <div className="flex items-center gap-1 mb-1 md:mb-3">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={10}
-                          className={
-                            i < Math.floor(product.rating)
-                              ? "text-amber-500 fill-amber-500"
-                              : "text-gray-300"
-                          }
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs text-[var(--color-text-light)]">
-                      ({product.reviews})
-                    </span>
-                  </div>
-
-                  {/* Price */}
-                  <div className="flex items-center gap-1 mb-2 md:mb-4">
-                    <p className="text-sm md:text-lg font-semibold text-[var(--color-primary)]">
-                      {product.price}
-                    </p>
-                    {product.originalPrice && (
-                      <p className="text-xs text-[var(--color-text-light)] line-through">
-                        {product.originalPrice}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Add to Cart Button */}
-                  <button
-                    className={`w-full py-1.5 md:py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-1 text-xs md:text-base ${product.inStock
-                        ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]"
-                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                      }`}
-                    disabled={!product.inStock}
-                  >
-                    <ShoppingCart size={12} />
-                    {product.inStock ? "Add to Cart" : "Out of Stock"}
-                  </button>
-                </div>
-              </motion.div>
-            ))}
+      {/* Browse Button */}
+      <div
+        className={`w-full py-1.5 md:py-3 rounded-lg font-medium flex items-center justify-center gap-1 text-xs md:text-base ${product.inStock
+          ? "bg-[var(--color-primary)] text-white"
+          : "bg-gray-200 text-gray-500 cursor-not-allowed"
+          }`}
+      >
+        {product.inStock ? "Browse" : "Out of Stock"}
+      </div>
+    </div>
+  </Link>
+))}
+  
           </motion.div>
         )}
       </div>

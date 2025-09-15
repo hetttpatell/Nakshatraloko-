@@ -251,7 +251,7 @@ const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "" }) => (
 
 const fetchWishlist = async () => {
   try {
-    const { data } = await axios.get("http://localhost:8001/api/getWishlist", {
+    const { data } = await axios.post("http://localhost:8001/api/listWishlist", {
       headers: {
         Authorization: `${localStorage.getItem("authToken")}`, // JWT token
       },

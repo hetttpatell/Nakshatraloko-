@@ -56,36 +56,34 @@ export default function Cart() {
   // };
 
   // Transform API data to component format and store in state
- useEffect(() => {
-  setTransformedCart(prevTransformed => 
-    cart.map(item => {
-      // Find if the item already exists in local transformedCart
-      const existingItem = prevTransformed.find(p => p.id === (item.productid || item.id));
 
-      return {
-        id: item.productid || item.id,
-        cartId: item.cartid,
-        name: item.name,
-        description: item.description,
-        price: parseFloat(item.firstsizeprice || item.price),
-        originalPrice: parseFloat(item.firstdummyprice || item.originalPrice),
-        discount: parseFloat(item.discount || 0),
-        discountPercentage: parseFloat(item.discountpercentage || 0),
-        image: item.primaryimage
-          ? `http://localhost:8001/uploads/${item.primaryimage}`
-          : item.img || "/s1.jpeg",
-        category: item.catogaryname || item.category,
-        inStock: item.stock > 0,
-        stock: item.stock,
-        rating: parseFloat(item.avgrating || 0),
-        reviews: item.reviewcount || 0,
-        quantity: existingItem ? existingItem.quantity : item.quantity || 1, // preserve local quantity
-        size: item.size || "Standard",
-        material: item.material || item.catogaryname,
-      };
-    })
+
+  useEffect(() => {
+  setTransformedCart(
+    cart.map((item) => ({
+      id: item.ProductID || item.ID,
+      cartId: item.ID,
+      name: item.Name,
+      description: item.Description,
+      price: parseFloat(item.FirstSizePrice),
+      originalPrice: parseFloat(item.FirstDummyPrice),
+      discount: parseFloat(item.Discount),
+      discountPercentage: parseFloat(item.DiscountPercentage),
+      image: item.PrimaryImage
+        ? `http://localhost:8001/uploads/${item.PrimaryImage}` // prepend your server URL
+        : "/s1.jpeg",
+      category: item.CategoryName,
+      inStock: item.Stock > 0,
+      stock: item.Stock,
+      rating: parseFloat(item.AvgRating),
+      reviews: item.ReviewCount,
+      quantity: item.Quantity || 1,
+      size: "Standard", // your API doesn’t have size
+      material: item.CategoryName
+    }))
   );
 }, [cart]);
+
 
 // ✅ updates whenever `cart` changes
 

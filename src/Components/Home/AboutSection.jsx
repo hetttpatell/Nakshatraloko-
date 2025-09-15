@@ -5,7 +5,7 @@ export default function AboutSection() {
   const aboutpara = {
     first: "About",
     second: "Nakshatraloka",
-    para: "Nakshatraloko brings you exquisite gemstones and jewelry crafted with precision and care. Each piece is thoughtfully designed to complement your unique style and energy, creating timeless elegance that lasts forever.",
+    para: "Nakshatraloka brings you exquisite gemstones and jewelry crafted with precision and care. Each piece is thoughtfully designed to complement your unique style and energy, creating timeless elegance that lasts forever.",
     img: "/abot.jpg",
   };
 
@@ -74,7 +74,7 @@ export default function AboutSection() {
               <div className="absolute -inset-2 md:-inset-4 bg-gradient-to-r from-[var(--color-primary)]/20 to-[var(--color-primary)]/10 rounded-xl md:rounded-2xl transform rotate-3"></div>
               <img
                 src={aboutpara.img}
-                alt="Nakshatraloko craftsmanship"
+                alt="Nakshatraloka craftsmanship"
                 className="relative w-full h-100 md:h-180 object-cover rounded-4xl shadow-xl"
               />
               
