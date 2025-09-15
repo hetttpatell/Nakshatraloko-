@@ -20,7 +20,7 @@ const Footer = () => {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   useEffect(() => {
     setIsHomePage(location.pathname === "/");
   }, [location]);
@@ -70,27 +70,41 @@ const Footer = () => {
   }, []);
 
   return (
-    <footer 
-      className={`relative overflow-hidden transition-all duration-500 ${isHomePage 
-        ? "bg-gradient-to-b from-[#f9f7f3] to-[#f5f2eb] border-t border-[var(--color-primary-light)]" 
+    <footer
+      className={`relative overflow-hidden transition-all duration-500 ${isHomePage
+        ? "bg-gradient-to-b from-[#f9f7f3] to-[#f5f2eb] border-t border-[var(--color-primary-light)]"
         : "bg-[var(--color-background-alt)] border-t border-[var(--color-border)]"
-      }`}
+        }`}
     >
       {/* Background pattern/image for homepage */}
       {isHomePage && (
         <div className="absolute inset-0 z-0 opacity-10 bg-[var(--color-primary)]"></div>
       )}
-      
+
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
         {/* Brand Section */}
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-4 items-start">
+          {/* Brand Logo */}
+          <div>
+            <img
+              src="/Logo.png"
+              alt="Nakshatraloka Logo"
+              className="w-24 h-auto object-contain filter invert"
+            />
+          </div>
+
+          {/* Brand Name */}
           <h3 className={`text-2xl font-playfair font-bold ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-text)]"}`}>
             Nakshatraloka
           </h3>
+
+          {/* Brand Description */}
           <p className="text-[var(--color-text-light)] text-sm leading-relaxed">
             Discover exquisite gemstones and jewelry crafted with precision. Each piece is thoughtfully designed to complement your unique style and energy.
           </p>
+
+          {/* Social Icons */}
           <div className="flex space-x-3 mt-2">
             {[
               { icon: FaInstagram, label: "Instagram" },
@@ -101,30 +115,29 @@ const Footer = () => {
               <a
                 key={idx}
                 href="#"
-                className={`p-2 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${isHomePage 
-                  ? "bg-white hover:bg-[var(--color-primary)]" 
+                className={`p-2 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${isHomePage
+                  ? "bg-white hover:bg-[var(--color-primary)]"
                   : "bg-[var(--color-surface)] hover:bg-[var(--color-primary)]"
-                }`}
+                  }`}
                 aria-label={social.label}
               >
-                <social.icon 
-                  size={16} 
-                  className={`${isHomePage 
-                    ? "text-[var(--color-primary-dark)] hover:text-white" 
+                <social.icon
+                  size={16}
+                  className={`${isHomePage
+                    ? "text-[var(--color-primary-dark)] hover:text-white"
                     : "text-[var(--color-text)] hover:text-white"
-                  }`} 
+                    }`}
                 />
               </a>
             ))}
           </div>
         </div>
-
         {/* Quick Links */}
         <div className="flex flex-col">
-          <h3 className={`font-semibold mb-4 text-lg pb-2 border-b ${isHomePage 
-            ? "text-[var(--color-primary-dark)] border-[var(--color-primary-light)]" 
+          <h3 className={`font-semibold mb-4 text-lg pb-2 border-b ${isHomePage
+            ? "text-[var(--color-primary-dark)] border-[var(--color-primary-light)]"
             : "text-[var(--color-text)] border-[var(--color-primary)]"
-          }`}>
+            }`}>
             Quick Links
           </h3>
           <ul className="space-y-3">
@@ -151,10 +164,10 @@ const Footer = () => {
 
         {/* Categories */}
         <div className="flex flex-col">
-          <h3 className={`font-semibold mb-4 text-lg pb-2 border-b ${isHomePage 
-            ? "text-[var(--color-primary-dark)] border-[var(--color-primary-light)]" 
+          <h3 className={`font-semibold mb-4 text-lg pb-2 border-b ${isHomePage
+            ? "text-[var(--color-primary-dark)] border-[var(--color-primary-light)]"
             : "text-[var(--color-text)] border-[var(--color-primary)]"
-          }`}>
+            }`}>
             Categories
           </h3>
           <ul className="space-y-3">
@@ -169,9 +182,8 @@ const Footer = () => {
                     to={`/categories/${cat.slug}`}
                     className="text-[var(--color-text-light)] hover:text-[var(--color-primary)] transition-colors duration-300 text-sm flex items-center group"
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity ${
-                      isHomePage ? "bg-[var(--color-primary-dark)]" : "bg-[var(--color-primary)]"
-                    }`}></span>
+                    <span className={`w-1.5 h-1.5 rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity ${isHomePage ? "bg-[var(--color-primary-dark)]" : "bg-[var(--color-primary)]"
+                      }`}></span>
                     {cat.name}
                   </Link>
                 </li>
@@ -183,72 +195,54 @@ const Footer = () => {
         </div>
 
         {/* Contact Info */}
-<div className="flex flex-col">
-  <h3 className={`font-semibold mb-4 text-lg pb-2 border-b ${isHomePage 
-    ? "text-[var(--color-primary-dark)] border-[var(--color-primary-light)]" 
-    : "text-[var(--color-text)] border-[var(--color-primary)]"
-  }`}>
-    Contact Us
-  </h3>
+        <div className="flex flex-col">
+          <h3 className={`font-semibold mb-4 text-lg pb-2 border-b ${isHomePage
+            ? "text-[var(--color-primary-dark)] border-[var(--color-primary-light)]"
+            : "text-[var(--color-text)] border-[var(--color-primary)]"
+            }`}>
+            Contact Us
+          </h3>
 
-  <div className="space-y-3 text-[var(--color-text-light)] text-sm">
-    {/* Address */}
-    <div className="flex items-start">
-      <FaMapMarkerAlt className={`mt-1 mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
-      <a 
-        href="https://www.google.com/maps/search/?api=1&query=ADDRESS_HERE" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="hover:underline"
-      >
-        Address here5
-      </a>
-    </div>
+          <div className="space-y-3 text-[var(--color-text-light)] text-sm">
+            {/* Address */}
+            <div className="flex items-start">
+              <FaMapMarkerAlt className={`mt-1 mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=ADDRESS_HERE"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                Address here5
+              </a>
+            </div>
 
-    {/* Phone */}
-    <div className="flex items-center">
-      <FaPhone className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
-      <a href="tel:+918866378552" className="hover:underline">
-        +91 8866378552
-      </a>
-    </div>
+            {/* Phone */}
+            <div className="flex items-center">
+              <FaPhone className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
+              <a href="tel:+918866378552" className="hover:underline">
+                +91 8866378552
+              </a>
+            </div>
 
-    {/* Email */}
-  <div className="flex items-center">
-  <FaEnvelope className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
-  <a
-    href="mailto:nakshatraloka.customercare@gmail.com?subject=Inquiry&body=Hello,"
-    target="_blank"   // optional, some browsers require it
-    rel="noopener noreferrer"
-    className="hover:underline"
-  >
-    nakshatraloka.customercare@gmail.com
-  </a>
-</div>
+            {/* Email */}
+            <div className="flex items-center">
+              <FaEnvelope className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
+              <a
+                href="mailto:nakshatraloka.customercare@gmail.com?subject=Inquiry&body=Hello,"
+                target="_blank"   // optional, some browsers require it
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                nakshatraloka.customercare@gmail.com
+              </a>
+            </div>
 
-  </div>
+          </div>
 
-  {/* Newsletter */}
-  <div className="mt-6">
-    <h4 className={`font-medium mb-2 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-text)]"}`}>
-      Newsletter
-    </h4>
-    <div className="flex">
-      <input 
-        type="email" 
-        placeholder="Your email"
-        className="flex-1 px-3 py-2 text-sm border border-[var(--color-border)] rounded-l-md focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
-      />
-      <button className={`px-3 py-2 text-sm rounded-r-md transition-colors ${
-        isHomePage 
-          ? "bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)]" 
-          : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)]"
-      }`}>
-        Subscribe
-      </button>
-    </div>
-  </div>
-</div>
+          {/* Newsletter */}
+
+        </div>
 
       </div>
 
@@ -260,7 +254,7 @@ const Footer = () => {
             <div className="flex items-center space-x-2 text-xs text-[var(--color-text-light)]">
               <span>© {new Date().getFullYear()} Nakshatraloka. All rights reserved.</span>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <span className="text-xs text-[var(--color-text-light)]">We accept:</span>
               <div className="flex space-x-2">

@@ -11,7 +11,7 @@ import axios from "axios";
 // ---------- MENU DATA ---------- 
 const initialMenuItems = [
   { label: "Home", to: "/" },
-  { label: "Gemstones", to: "/gemstones" },
+  { label: "Products", to: "/gemstones" },
   {
     label: "Categories",
     to: "/",
