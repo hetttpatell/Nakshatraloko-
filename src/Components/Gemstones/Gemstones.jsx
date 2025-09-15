@@ -47,56 +47,49 @@ const ProductsPage = () => {
     }
   }, [category]);
 
-  // Fetch all products initially
-  useEffect(() => {
-    const fetchAllProducts = async () => {
-      try {
-        const res = await axios.post("http://localhost:8001/api/getFilteredProducts", {
-          p_min_price: null,
-          p_max_price: null,
-          p_catogaryname: filters.Categories?.trim() || null,
-          p_rating: null,
-        });
+useEffect(() => {
+  const fetchAllProducts = async () => {
+    try {
+      const res = await axios.post("http://localhost:8001/api/getFilteredProducts", {
+        p_min_price: null,
+        p_max_price: null,
+        p_catogaryname: filters.Categories?.trim() || null,
+        p_rating: null,
+      });
 
-        if (res.data.success) {
-          const productsData = res.data.data.map(p => ({
-            id: p.productid,
-            name: p.name,
-            category: p.catogaryname,
-            description: p.description,
-            price: p.firstsizeprice
-              ? `₹ ${parseFloat(p.firstsizeprice).toLocaleString("en-IN")}`
-              : "₹ 0",
-            img: p.primaryimage || null,
-            rating: parseFloat(p.avgrating || 0),
-            stock: p.stock,
-            dummyPrice: p.firstdummyprice
-              ? `₹ ${parseFloat(p.firstdummyprice).toLocaleString("en-IN")}`
-              : null,
-            discount: p.discount
-              ? `₹ ${parseFloat(p.discount).toLocaleString("en-IN")}`
-              : null,
-            discountPercentage: p.discountpercentage || 0,
-            numericPrice: p.firstsizeprice ? parseFloat(p.firstsizeprice) : 0,
-          }));
+      if (res.data.success) {
+        const productsData = res.data.data.map(p => ({
+          id: p.productid,
+          name: p.name,
+          category: p.catogaryname,
+          description: p.description,
+          price: p.firstsizeprice ? `₹ ${parseFloat(p.firstsizeprice).toLocaleString("en-IN")}` : "₹ 0",
+          img: p.primaryimage || null,
+          rating: parseFloat(p.avgrating || 0),
+          stock: p.stock,
+          dummyPrice: p.firstdummyprice ? `₹ ${parseFloat(p.firstdummyprice).toLocaleString("en-IN")}` : null,
+          discount: p.discount ? `₹ ${parseFloat(p.discount).toLocaleString("en-IN")}` : null,
+          discountPercentage: p.discountpercentage || 0,
+          numericPrice: p.firstsizeprice ? parseFloat(p.firstsizeprice) : 0,
+        }));
 
-          setAllProducts(productsData);
-          setProducts(productsData);
-
-          // Extract categories dynamically
-          const categories = [...new Set(productsData.map(p => p.category))];
-          setCategoryData(categories.map(c => ({ CategoryName: c })));
-        } else {
-          setError("Failed to load products");
-        }
-      } catch (err) {
-        console.error(err);
+        setAllProducts(productsData);
+        setProducts(productsData);
+      } else {
         setError("Failed to load products");
       }
-    };
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load products");
+    }
+  };
 
-    fetchAllProducts();
-  }, [filters.Categories]); // ✅ Run whenever the category filter changes
+  fetchAllProducts();
+}, [filters.Categories]); // ✅ Run whenever category changes
+ // ✅ Run whenever the category filter changes
+  useEffect(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, [category]);
 
   // Fetch filtered products whenever filters change
   useEffect(() => {
@@ -422,7 +415,7 @@ const ProductsPage = () => {
           )}
         </div>
       </div>
-    </div>
+    </div> 
   );
 };
 

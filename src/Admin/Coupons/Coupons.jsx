@@ -152,24 +152,25 @@ const Coupons = () => {
   };
 
   // Toggle product selection for edit form
-  const toggleEditProductSelection = (productId) => {
-    setEditingCoupon(prev => {
-      const currentIds = prev.productIds || [];
-      const isSelected = currentIds.includes(productId);
-
-      if (isSelected) {
-        return {
-          ...prev,
-          productIds: currentIds.filter(id => id !== productId)
-        };
-      } else {
-        return {
-          ...prev,
-          productIds: [...currentIds, productId]
-        };
-      }
-    });
-  };
+ // Toggle product selection for edit form
+const toggleEditProductSelection = (productId) => {
+  setEditingCoupon(prev => {
+    const currentIds = prev.productIds || [];
+    const isSelected = currentIds.includes(productId);
+    
+    if (isSelected) {
+      return {
+        ...prev,
+        productIds: currentIds.filter(id => id !== productId)
+      };
+    } else {
+      return {
+        ...prev,
+        productIds: [...currentIds, productId]
+      };
+    }
+  });
+};
 
   useEffect(() => {
     console.log("Component mounted, fetching coupons and products...");
@@ -177,18 +178,20 @@ const Coupons = () => {
     fetchProducts();
   }, []);
 
-  const handleSaveCoupon = async (couponData) => {
+const handleSaveCoupon = async (couponData) => {
   try {
+    // Trim and validate coupon code
     const code = couponData.code?.trim();
     if (!code) {
       setToast({ message: "Coupon code is required", type: "error", visible: true });
       return false;
     }
 
+    // Prepare backend payload
     const backendCoupon = {
       id: couponData.id || 0,
       code,
-      description: couponData.description || "",
+      description: couponData.description?.trim() || "",
       discountType: couponData.discountType,
       discountValue: parseFloat(couponData.discountValue) || 0,
       startDate: couponData.startDate ? new Date(couponData.startDate).toISOString() : null,
@@ -200,12 +203,23 @@ const Coupons = () => {
       minOrderAmount: parseFloat(couponData.minOrderAmount) || 0,
       maxDiscountAmount: couponData.maxDiscountAmount ? parseFloat(couponData.maxDiscountAmount) : null,
       isActive: couponData.isActive ?? true,
-      // Convert productIds array to the format backend expects
-      products: Array.isArray(couponData.productIds) ? couponData.productIds.map(id => ({
-        ProductID: id
-      })) : []
     };
 
+    // ✅ Fix product IDs: ensure we get only selected product IDs
+    // couponData.productIds can be array of objects [{ID: 52, Name: "het"}] or just IDs [52]
+    if (Array.isArray(couponData.productIds) && couponData.productIds.length > 0) {
+      backendCoupon.productIDs = couponData.productIds.map(product => {
+        if (typeof product === "object" && product.ID !== undefined) return product.ID;
+        if (typeof product === "number") return product;
+        return null;
+      }).filter(id => id !== null); // remove any nulls
+    } else {
+      backendCoupon.productIDs = []; // fallback
+    }
+
+    console.log("Sending coupon to backend:", backendCoupon);
+
+    // Call backend API
     const response = await axios.post("http://localhost:8001/api/saveCoupon", backendCoupon);
 
     if (response.status === 200 && response.data.success) {
@@ -216,16 +230,22 @@ const Coupons = () => {
       setToast({ message: response.data.message || "Failed to save coupon.", type: "error", visible: true });
       return false;
     }
+
   } catch (err) {
     console.error("Error saving coupon:", err);
-    setToast({ 
-      message: err.response?.data?.message || "Failed to save coupon. Please try again.", 
-      type: "error", 
-      visible: true 
+    if (err.response) {
+      console.error("Error response data:", err.response.data);
+      console.error("Error response status:", err.response.status);
+    }
+    setToast({
+      message: err.response?.data?.message || "Failed to save coupon. Please try again.",
+      type: "error",
+      visible: true
     });
     return false;
   }
 };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
