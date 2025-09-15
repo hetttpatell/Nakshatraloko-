@@ -101,7 +101,7 @@ const Recommendation = () => {
             >
               <div className="relative overflow-hidden">
                 <img
-                  src={product.image}
+                  src={`http://localhost:8001/uploads/${product.image}`}
                   alt={product.name}
                   className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
                 />

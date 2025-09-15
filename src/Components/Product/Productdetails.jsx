@@ -138,7 +138,7 @@ const ProductDetails = () => {
           reviewList: productData.reviewList || [],
 
           images: productData.images.map((img, i) => ({
-            src: img.imageData || "/placeholder.png",   // ✅ use imageData
+            src: `http://localhost:8001/uploads/${img.imageData}`|| "/placeholder.png",   // ✅ use imageData
             alt: img.altText || `${productData.name} ${i + 1}`, // ✅ use altText
           })),
 
