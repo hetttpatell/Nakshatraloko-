@@ -13,8 +13,11 @@ import {
   FaRupeeSign,
   FaCalendarAlt,
   FaHashtag,
-  FaSync
+  FaSync,
+  FaChevronDown,
+  FaCheck
 } from "react-icons/fa";
+import Toast from "../../Components/Product/Toast";
 
 const Coupons = () => {
   const [coupons, setCoupons] = useState([]);
@@ -26,6 +29,7 @@ const Coupons = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [toast, setToast] = useState({ message: "", type: "success", visible: false });
   const [couponForm, setCouponForm] = useState({
     code: "",
     description: "",
@@ -40,16 +44,27 @@ const Coupons = () => {
     coupenType: "GENERAL",
     productIds: []
   });
+  const [products, setProducts] = useState([]);
+  const [showProductDropdown, setShowProductDropdown] = useState(false);
+  const [productSearchTerm, setProductSearchTerm] = useState("");
+  const [showEditProductDropdown, setShowEditProductDropdown] = useState(false);
+  const [editProductSearchTerm, setEditProductSearchTerm] = useState("");
 
   const couponTypes = ["GENERAL", "NEW_USER", "SPECIAL_OFFER", "SEASONAL"];
 
   // Fetch coupons from API
   const fetchCoupons = async () => {
     try {
+      const token = localStorage.getItem("authToken")
       setLoading(true);
       const response = await axios.post(
         "http://localhost:8001/api/getAllCoupons",
-        {}
+        {},
+        {
+          headers: {
+            Authorization: `${token}`
+          }
+        }
       );
 
       if (response.status !== 200) {
@@ -76,8 +91,7 @@ const Coupons = () => {
         coupenType: coupon.CoupenType,
         productIds: coupon.productids || []
       }));
-      console.log(fetchedCoupons.code);
-      console.log("hELLO");
+
       setCoupons(fetchedCoupons);
       setError(null);
     } catch (err) {
@@ -86,6 +100,25 @@ const Coupons = () => {
       setCoupons([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch products for dropdown
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem("authToken")
+      const response = await axios.post("http://localhost:8001/api/GetProductForCoupon", {},
+        {
+          headers: {
+            Authorization: `${token}`
+          }
+        });
+      if (response.data.success) {
+        setProducts(response.data.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      setToast({ message: "Failed to load products", type: "error", visible: true });
     }
   };
 
@@ -98,40 +131,63 @@ const Coupons = () => {
     }));
   };
 
-  const handleProductIdsChange = (e) => {
-    const inputValue = e.target.value;
+  // Toggle product selection for add form
+  const toggleProductSelection = (productId) => {
+    setCouponForm(prev => {
+      const currentIds = prev.productIds || [];
+      const isSelected = currentIds.includes(productId);
 
-    // Parse comma-separated values and convert to numbers
-    const idsArray = inputValue
-      .split(',')
-      .map(id => id.trim())
-      .filter(id => id !== '')
-      .map(id => parseInt(id))
-      .filter(id => !isNaN(id));
+      if (isSelected) {
+        return {
+          ...prev,
+          productIds: currentIds.filter(id => id !== productId)
+        };
+      } else {
+        return {
+          ...prev,
+          productIds: [...currentIds, productId]
+        };
+      }
+    });
+  };
 
-    setCouponForm((prev) => ({
-      ...prev,
-      productIds: idsArray
-    }));
+  // Toggle product selection for edit form
+  const toggleEditProductSelection = (productId) => {
+    setEditingCoupon(prev => {
+      const currentIds = prev.productIds || [];
+      const isSelected = currentIds.includes(productId);
+
+      if (isSelected) {
+        return {
+          ...prev,
+          productIds: currentIds.filter(id => id !== productId)
+        };
+      } else {
+        return {
+          ...prev,
+          productIds: [...currentIds, productId]
+        };
+      }
+    });
   };
 
   useEffect(() => {
-    console.log("Component mounted, fetching coupons...");
+    console.log("Component mounted, fetching coupons and products...");
     fetchCoupons();
+    fetchProducts();
   }, []);
 
- const handleSaveCoupon = async (couponData) => {
+  const handleSaveCoupon = async (couponData) => {
   try {
-    // Ensure code is non-empty
     const code = couponData.code?.trim();
     if (!code) {
-      setError("Coupon code is required");
+      setToast({ message: "Coupon code is required", type: "error", visible: true });
       return false;
     }
 
     const backendCoupon = {
       id: couponData.id || 0,
-      code, // must not be null
+      code,
       description: couponData.description || "",
       discountType: couponData.discountType,
       discountValue: parseFloat(couponData.discountValue) || 0,
@@ -139,30 +195,37 @@ const Coupons = () => {
       endDate: couponData.endDate ? new Date(couponData.endDate).toISOString() : null,
       coupenType: couponData.coupenType || "GENERAL",
       usageLimit: parseInt(couponData.usageLimit) || 0,
-      createdBy: 1, // hardcoded for now; replace with logged-in user ID
-      updatedBy: 1, // same as above
+      createdBy: 1,
+      updatedBy: 1,
       minOrderAmount: parseFloat(couponData.minOrderAmount) || 0,
       maxDiscountAmount: couponData.maxDiscountAmount ? parseFloat(couponData.maxDiscountAmount) : null,
       isActive: couponData.isActive ?? true,
-      productIds: Array.isArray(couponData.productIds) ? couponData.productIds : []
+      // Convert productIds array to the format backend expects
+      products: Array.isArray(couponData.productIds) ? couponData.productIds.map(id => ({
+        ProductID: id
+      })) : []
     };
 
-    const response = await axios.post(
-      "http://localhost:8001/api/saveCoupon",
-      backendCoupon
-    );
+    const response = await axios.post("http://localhost:8001/api/saveCoupon", backendCoupon);
 
-    if (response.status === 200) {
+    if (response.status === 200 && response.data.success) {
+      setToast({ message: "Coupon saved successfully!", type: "success", visible: true });
       fetchCoupons();
       return true;
+    } else {
+      setToast({ message: response.data.message || "Failed to save coupon.", type: "error", visible: true });
+      return false;
     }
   } catch (err) {
     console.error("Error saving coupon:", err);
-    setError("Failed to save coupon. Please try again.");
+    setToast({ 
+      message: err.response?.data?.message || "Failed to save coupon. Please try again.", 
+      type: "error", 
+      visible: true 
+    });
     return false;
   }
 };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -220,8 +283,8 @@ const Coupons = () => {
   const filteredCoupons = coupons.filter(coupon => {
     // Search filter
     if (searchTerm &&
-      !coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !coupon.description.toLowerCase().includes(searchTerm.toLowerCase())) {
+      !coupon.code.includes(searchTerm) &&
+      !coupon.description.includes(searchTerm)) {
       return false;
     }
 
@@ -281,37 +344,32 @@ const Coupons = () => {
     }
   };
 
-const handleDeleteCoupon = async (id) => {
-  try {
-    const token = localStorage.getItem("authToken"); // get token
+  const handleDeleteCoupon = async (id) => {
+    try {
+      const token = localStorage.getItem("authToken");
 
-    console.log(token);
-    const response = await axios.post(
-      `http://localhost:8001/api/deleteCoupon/${id}`, // API endpoint
-      {}, // body can be empty if backend doesn't expect data
-      {
-        headers: {
-          Authorization: token ? `${token}` : "", // correct header
-        },
+      const response = await axios.post(
+        `http://localhost:8001/api/deleteCoupon/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: token ? `${token}` : "",
+          },
+        }
+      );
+
+      if (response.status === 200 && response.data.success) {
+        setToast({ message: "Coupon deleted successfully!", type: "error", visible: true });
+        fetchCoupons();
+        setDeleteConfirm(null);
+      } else {
+        setToast({ message: response.data.message || "Failed to delete coupon.", type: "error", visible: true });
       }
-    );
-    console.log(token);
-    console.log("Delete response:", response.data);
-
-    if (response.status === 200 && response.data.success) {
-      fetchCoupons();
-      setDeleteConfirm(null);
-    } else {
-      setError(response.data.message || "Failed to delete coupon.");
+    } catch (err) {
+      console.error("Error deleting coupon:", err.response?.data || err);
+      setToast({ message: err.response?.data?.error || "Failed to delete coupon. Please try again.", type: "error", visible: true });
     }
-  } catch (err) {
-    console.error("Error deleting coupon:", err.response?.data || err);
-    setError(err.response?.data?.error || "Failed to delete coupon. Please try again.");
-  }
-};
-
-
-
+  };
 
   const toggleCouponStatus = async (id) => {
     try {
@@ -351,6 +409,18 @@ const handleDeleteCoupon = async (id) => {
   const isCouponExpired = (endDate) => {
     return new Date(endDate) < new Date();
   };
+
+  // Filter products based on search term for add form
+  const filteredProducts = products.filter(product =>
+    product && (product.name || product.Name || "").toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+    product && product.id.toString().includes(productSearchTerm)
+  );
+
+  // Filter products based on search term for edit form
+  const filteredEditProducts = products.filter(product =>
+    product && (product.name || product.Name || "").toLowerCase().includes(editProductSearchTerm.toLowerCase()) ||
+    product && product.id.toString().includes(editProductSearchTerm)
+  );
 
   if (loading) {
     return (
@@ -604,14 +674,62 @@ const handleDeleteCoupon = async (id) => {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Product IDs (comma separated)</label>
-                <input
-                  type="text"
-                  value={couponForm.productIds.join(', ')}
-                  onChange={handleProductIdsChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., 101, 202, 305"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Products</label>
+                <div className="relative">
+                  <div
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer flex justify-between items-center"
+                    onClick={() => setShowProductDropdown(!showProductDropdown)}
+                  >
+                    <span>
+                      {couponForm.productIds.length > 0
+                        ? `${couponForm.productIds.length} product(s) selected`
+                        : "Select products (optional)"}
+                    </span>
+                    <FaChevronDown className={`transition-transform ${showProductDropdown ? 'rotate-180' : ''}`} />
+                  </div>
+
+                  {showProductDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                      <div className="p-2 border-b">
+                        <input
+                          type="text"
+                          placeholder="Search products..."
+                          className="w-full px-3 py-1 border border-gray-300 rounded"
+                          value={productSearchTerm}
+                          onChange={(e) => setProductSearchTerm(e.target.value)}
+                        />
+                      </div>
+                      <div className="py-1">
+                        {filteredProducts.length > 0 ? (
+                          filteredProducts.map(product => (
+                            <div
+                              key={product.id}
+                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                              onClick={() => toggleProductSelection(product.id)}
+                            >
+                              <div className={`w-5 h-5 border rounded mr-2 flex items-center justify-center ${couponForm.productIds.includes(product.id) ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
+                                {couponForm.productIds.includes(product.id) && <FaCheck className="text-white text-xs" />}
+                              </div>
+                              <span className="flex-1">{(product.name || product.Name || "Unknown Product")} (ID: {product.id})</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-2 text-gray-500">No products found</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Display selected product IDs */}
+                {couponForm.productIds.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600 mb-1">Selected Product IDs:</p>
+                    <div className="bg-gray-100 p-2 rounded text-sm">
+                      {couponForm.productIds.join(', ')}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex items-center">
                 <input
@@ -810,22 +928,62 @@ const handleDeleteCoupon = async (id) => {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Product IDs (comma separated)</label>
-                <input
-                  type="text"
-                  value={Array.isArray(editingCoupon.productIds) ? editingCoupon.productIds.join(', ') : ''}
-                  onChange={(e) => {
-                    const ids = e.target.value
-                      .split(',')
-                      .map(id => id.trim())
-                      .filter(id => id !== '')
-                      .map(id => parseInt(id))
-                      .filter(id => !isNaN(id));
-                    setEditingCoupon({ ...editingCoupon, productIds: ids });
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., 101, 202, 305"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Products</label>
+                <div className="relative">
+                  <div
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer flex justify-between items-center"
+                    onClick={() => setShowEditProductDropdown(!showEditProductDropdown)}
+                  >
+                    <span>
+                      {editingCoupon.productIds.length > 0
+                        ? `${editingCoupon.productIds.length} product(s) selected`
+                        : "Select products (optional)"}
+                    </span>
+                    <FaChevronDown className={`transition-transform ${showEditProductDropdown ? 'rotate-180' : ''}`} />
+                  </div>
+
+                  {showEditProductDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                      <div className="p-2 border-b">
+                        <input
+                          type="text"
+                          placeholder="Search products..."
+                          className="w-full px-3 py-1 border border-gray-300 rounded"
+                          value={editProductSearchTerm}
+                          onChange={(e) => setEditProductSearchTerm(e.target.value)}
+                        />
+                      </div>
+                      <div className="py-1">
+                        {filteredEditProducts.length > 0 ? (
+    filteredEditProducts.map(product => (
+      <div
+        key={product.id}
+        className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+        onClick={() => toggleEditProductSelection(product.id)}
+      >
+        <div className={`w-5 h-5 border rounded mr-2 flex items-center justify-center ${editingCoupon.productIds.includes(product.id) ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
+          {editingCoupon.productIds.includes(product.id) && <FaCheck className="text-white text-xs" />}
+        </div>
+        <span className="flex-1">{(product.name || product.Name || "Unknown Product")} (ID: {product.id})</span>
+      </div>
+    ))
+  ) : (
+                          <div className="px-4 py-2 text-gray-500">No products found</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Display selected product IDs */}
+                {editingCoupon.productIds.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600 mb-1">Selected Product IDs:</p>
+                    <div className="bg-gray-100 p-2 rounded text-sm">
+                      {editingCoupon.productIds.join(', ')}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex items-center">
                 <input
@@ -970,13 +1128,6 @@ const handleDeleteCoupon = async (id) => {
                       >
                         <FaEdit />
                       </button>
-                      {/* <button
-                        onClick={() => duplicateCoupon(coupon)}
-                        className="text-purple-600 hover:text-purple-900 p-1"
-                        title="Duplicate"
-                      >
-                        <FaCopy />
-                      </button> */}
                       <button
                         onClick={() => setDeleteConfirm(coupon.id)}
                         className="text-red-600 hover:text-red-900 p-1"
@@ -995,29 +1146,36 @@ const handleDeleteCoupon = async (id) => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-  <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[9999]">
-    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full pointer-events-auto">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Confirm Deletion</h3>
-      <p className="text-gray-500 mb-6">
-        Are you sure you want to delete this coupon? This action cannot be undone.
-      </p>
-      <div className="flex justify-end space-x-3">
-        <button
-          onClick={() => setDeleteConfirm(null)}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => handleDeleteCoupon(deleteConfirm)}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full pointer-events-auto">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Confirm Deletion</h3>
+            <p className="text-gray-500 mb-6">
+              Are you sure you want to delete this coupon? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteCoupon(deleteConfirm)}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {toast.visible && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, visible: false })}
+        />
+      )}
 
     </div>
   );

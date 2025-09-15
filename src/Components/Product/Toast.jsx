@@ -30,7 +30,7 @@ const Toast = ({ message, type = "success", onClose }) => {
       bg: "bg-green-50 border-green-200",
       text: "text-green-800",
       progress: "bg-green-500"
-    },
+    }, 
     error: {
       icon: <XCircle size={20} className="text-red-500" />,
       bg: "bg-red-50 border-red-200",
