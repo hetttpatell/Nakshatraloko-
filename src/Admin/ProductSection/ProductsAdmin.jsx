@@ -8,12 +8,6 @@ import { useProductManagement } from "../../CustomHooks/useProductManagement";
 import { filterProducts } from "../ProductSection/productFilters";
 import api from '../../Utils/api'; // Import the api utility
 import axios from "axios";
-
-
-
-
-
-
 // Constants for options
 const BRAND_OPTIONS = ["STYLIUM", "PEARLIX", "DIAMONDX", "GOLDEN"];
 const SIZE_OPTIONS = [
@@ -75,7 +69,7 @@ useEffect(() => {
   const fetchFeaturedProducts = async () => {
     try {
       const response = await axios.post("http://localhost:8001/api/getFeaturedProducts");
-
+ 
       if (response.data.success) {
         // Extract just the IDs from API response
         const featuredIds = response.data.data.map((p) => p.ID);

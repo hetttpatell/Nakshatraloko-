@@ -108,7 +108,7 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
             <>
               <span className="line-through mr-2">₹{product.dummyPrice}</span>
               <span className="text-green-600">₹{product.price}</span>
-            </>
+            </> 
           ) : (
             `₹${product.price}`
           )}
@@ -171,7 +171,7 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
             <ActionButton
               icon={FaEdit}
               color="green"
-              onClick={() => onEdit(product)}
+              onClick={() => onEdit(product.id)}
               title="Edit product"
             />
 

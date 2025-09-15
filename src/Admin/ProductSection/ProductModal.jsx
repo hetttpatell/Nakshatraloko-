@@ -116,7 +116,7 @@ const ProductModal = ({
       } else {
         validFiles.push(file);
       }
-    });
+    }); 
 
     if (Object.keys(newErrors).length > 0) {
       setErrors({ ...errors, ...newErrors });
