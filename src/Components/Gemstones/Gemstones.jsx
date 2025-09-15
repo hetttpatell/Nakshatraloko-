@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Star, StarHalf, Filter, X, Sparkles, Eye, ArrowRight } from "lucide-react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import img from"./s1.jpeg"
+import img from "./s1.jpeg"
 const ProductsPage = () => {
   const { category } = useParams();
 
@@ -36,64 +36,65 @@ const ProductsPage = () => {
 
     fetchCategories();
   }, []);
-useEffect(() => {
-  if (category) {
-    // Map URL param back to your category name
-    const formattedCategory = category.replace(/-/g, ' ');
-    setFilters(prev => ({ ...prev, Categories: formattedCategory }));
-  }
-}, [category]);
+  useEffect(() => {
+    if (category) {
+      // Map URL param back to your category name
+      const formattedCategory = category.replace(/-/g, ' ');
+      setFilters(prev => ({ ...prev, Categories: formattedCategory }));
+    }
+  }, [category]);
 
   // Fetch all products initially
-  useEffect(() => {
-    const fetchAllProducts = async () => {
-      try {
-        const res = await axios.post("http://localhost:8001/api/getFilteredProducts", {
-          p_min_price: null,
-          p_max_price: null,
-          p_catogaryname:  filters.Categories || null,
-          p_rating: null,
-        });
+useEffect(() => {
+  const fetchAllProducts = async () => {
+    try {
+      const res = await axios.post("http://localhost:8001/api/getFilteredProducts", {
+        p_min_price: null,
+        p_max_price: null,
+        p_catogaryname: filters.Categories?.trim() || null,
+        p_rating: null,
+      });
 
-        if (res.data.success) {
-          const productsData = res.data.data.map(p => ({
-            id: p.productid,
-            name: p.name,
-            category: p.catogaryname,
-            description: p.description,
-            price: p.firstsizeprice
-              ? `₹ ${parseFloat(p.firstsizeprice).toLocaleString("en-IN")}`
-              : "₹ 0",
-            img: p.primaryimage || null,
-            rating: parseFloat(p.avgrating || 0),
-            stock: p.stock,
-            dummyPrice: p.firstdummyprice
-              ? `₹ ${parseFloat(p.firstdummyprice).toLocaleString("en-IN")}`
-              : null,
-            discount: p.discount
-              ? `₹ ${parseFloat(p.discount).toLocaleString("en-IN")}`
-              : null,
-            discountPercentage: p.discountpercentage || 0,
-            numericPrice: p.firstsizeprice ? parseFloat(p.firstsizeprice) : 0,
-          }));
+      if (res.data.success) {
+        const productsData = res.data.data.map(p => ({
+          id: p.productid,
+          name: p.name,
+          category: p.catogaryname,
+          description: p.description,
+          price: p.firstsizeprice
+            ? `₹ ${parseFloat(p.firstsizeprice).toLocaleString("en-IN")}`
+            : "₹ 0",
+          img: p.primaryimage || null,
+          rating: parseFloat(p.avgrating || 0),
+          stock: p.stock,
+          dummyPrice: p.firstdummyprice
+            ? `₹ ${parseFloat(p.firstdummyprice).toLocaleString("en-IN")}`
+            : null,
+          discount: p.discount
+            ? `₹ ${parseFloat(p.discount).toLocaleString("en-IN")}`
+            : null,
+          discountPercentage: p.discountpercentage || 0,
+          numericPrice: p.firstsizeprice ? parseFloat(p.firstsizeprice) : 0,
+        }));
 
-          setAllProducts(productsData);
-          setProducts(productsData);
+        setAllProducts(productsData);
+        setProducts(productsData);
 
-          // Extract categories dynamically
-          const categories = [...new Set(productsData.map(p => p.category))];
-          setCategoryData(categories.map(c => ({ CategoryName: c })));
-        } else {
-          setError("Failed to load products");
-        }
-      } catch (err) {
-        console.error(err);
+        // Extract categories dynamically
+        const categories = [...new Set(productsData.map(p => p.category))];
+        setCategoryData(categories.map(c => ({ CategoryName: c })));
+      } else {
         setError("Failed to load products");
       }
-    };
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load products");
+    }
+  };
 
-    fetchAllProducts();
-  }, []);
+  fetchAllProducts();
+}, [filters.Categories]); // ✅ Run whenever the category filter changes
+
 
   // Fetch filtered products whenever filters change
   useEffect(() => {
@@ -113,7 +114,7 @@ useEffect(() => {
         const res = await axios.post("http://localhost:8001/api/getFilteredProducts", {
           p_min_price: minPrice,
           p_max_price: maxPrice,
-          p_catogaryname: filters.Categories,
+          p_catogaryname: filters.Categories?.trim() || null,
           p_rating: minRating,
         });
 
@@ -186,51 +187,50 @@ useEffect(() => {
   ];
 
   // Filtered & sorted products
-// Filtered & sorted products
-const filteredAndSortedProducts = useMemo(() => {
-  let filtered = products.filter(product => {
-    return Object.keys(filters).every(key => {
-      if (!filters[key] || filters[key] === "") return true;
+  // Filtered & sorted products
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = products.filter(product => {
+      return Object.keys(filters).every(key => {
+        if (!filters[key] || filters[key] === "") return true;
 
-      if (key === "Categories") {
-  return product.category.toLowerCase() === filters[key].toLowerCase();
-}
+        if (key === "Categories") {
+          return product.category?.trim().toLowerCase() === filters[key]?.trim().toLowerCase();
+        }
 
+        if (key === "Ratings") {
+          const [min, max] = filters[key].split(" - ").map(Number);
+          return product.rating >= min && product.rating < max;
+        }
 
-      if (key === "Ratings") {
-        const [min, max] = filters[key].split(" - ").map(Number);
-        return product.rating >= min && product.rating < max;
-      }
+        if (key === "Price") {
+          const [min, max] = filters[key].split(" - ").map(Number);
+          return product.numericPrice >= min && product.numericPrice <= max;
+        }
 
-      if (key === "Price") {
-        const [min, max] = filters[key].split(" - ").map(Number);
-        return product.numericPrice >= min && product.numericPrice <= max;
-      }
-
-      return true;
+        return true;
+      });
     });
-  });
 
-  let sorted = [...filtered];
-  switch (sortBy) {
-    case "price-asc":
-      sorted.sort((a, b) => a.numericPrice - b.numericPrice);
-      break;
-    case "price-desc":
-      sorted.sort((a, b) => b.numericPrice - a.numericPrice);
-      break;
-    case "rating-desc":
-      sorted.sort((a, b) => b.rating - a.rating);
-      break;
-    case "name-asc":
-      sorted.sort((a, b) => a.name.localeCompare(b.name));
-      break;
-    default:
-      break;
-  }
+    let sorted = [...filtered];
+    switch (sortBy) {
+      case "price-asc":
+        sorted.sort((a, b) => a.numericPrice - b.numericPrice);
+        break;
+      case "price-desc":
+        sorted.sort((a, b) => b.numericPrice - a.numericPrice);
+        break;
+      case "rating-desc":
+        sorted.sort((a, b) => b.rating - a.rating);
+        break;
+      case "name-asc":
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      default:
+        break;
+    }
 
-  return sorted;
-}, [products, filters, sortBy]);
+    return sorted;
+  }, [products, filters, sortBy]);
 
 
   // Handle filter change
@@ -264,18 +264,18 @@ const filteredAndSortedProducts = useMemo(() => {
 
         {/* Controls */}
         {/* <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-8 p-6 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow"> */}
-          <div className="flex items-center gap-4 relative">
-            <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2 px-6 py-3 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-xl hover:bg-[var(--color-primary)] hover:text-white transition-all">
-              <Filter size={18} /> Filters
-              {hasActiveFilters && <span className="w-2 h-2 bg-[var(--color-primary)] rounded-full"></span>}
+        <div className="flex items-center gap-4 relative">
+          <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2 px-6 py-3 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-xl hover:bg-[var(--color-primary)] hover:text-white transition-all">
+            <Filter size={18} /> Filters
+            {hasActiveFilters && <span className="w-2 h-2 bg-[var(--color-primary)] rounded-full"></span>}
+          </button>
+          {hasActiveFilters && (
+            <button onClick={resetFilters} className="flex items-center gap-2 px-4 py-2 text-[var(--color-text-light)] hover:text-[var(--color-primary)] transition-colors">
+              <X size={16} /> Clear All
             </button>
-            {hasActiveFilters && (
-              <button onClick={resetFilters} className="flex items-center gap-2 px-4 py-2 text-[var(--color-text-light)] hover:text-[var(--color-primary)] transition-colors">
-                <X size={16} /> Clear All
-              </button>
-            )}
-          </div>
-          {/* <div className="flex items-center gap-3">
+          )}
+        </div>
+        {/* <div className="flex items-center gap-3">
             <span className="text-[var(--color-text-light)] text-sm">Sort by:</span>
             <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="px-4 py-2 border border-[var(--color-border)] rounded-xl bg-white text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)]/50">
               {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -343,7 +343,7 @@ const filteredAndSortedProducts = useMemo(() => {
               {filteredAndSortedProducts.map(product => (
                 <Link key={product.id} to={`/product/${product.id}`} state={{ product }} className="group bg-[var(--color-surface)] rounded-2xl overflow-hidden border border-[var(--color-border)] transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                   <div className="relative w-full aspect-square overflow-hidden">
-                    <img src={product.img ? `http://localhost:8001/uploads/${product.img}` : img} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onError={e => e.target.src = img} loading="lazy" />
+                    <img src={product.img ? `http://localhost:8001/uploads/${product.img}` : "/s1.jpeg"} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onError={e => e.target.src = "/s1.jpeg"} loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   <div className="p-5">

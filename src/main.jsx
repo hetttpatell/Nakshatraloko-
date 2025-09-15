@@ -19,6 +19,7 @@ import AuthSuccess from "./Components/Login/AuthSucess.jsx";
 import Admin from "./Admin/Admin.jsx";
 import ProtectedRoute from "./Components/ProtectedRoute.jsx";
 import ProductsPage from "./Components/Gemstones/Gemstones.jsx";
+import AboutSection from "./Components/Home/AboutSection.jsx";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />} >
@@ -39,6 +40,7 @@ const router = createBrowserRouter(
 
       <Route path="faqs" element={<FAQs />} />
       <Route path="cart" element={<Cart />} />
+      
       <Route
         path="/admin/*"
         element={

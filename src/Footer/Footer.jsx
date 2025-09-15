@@ -130,10 +130,10 @@ const Footer = () => {
           <ul className="space-y-3">
             {[
               { label: "Home", to: "/" },
-              { label: "Collections", to: "/collections" },
-              { label: "Gemstones", to: "/gemstones" },
+              { label: "Product", to: "/gemstones" },
               { label: "About Us", to: "/about" },
-              { label: "FAQs", to: "/faqs" }
+              { label: "FAQs", to: "/faqs" },
+              { label: "Blogs", to: "/blogs" }
             ].map((item) => (
               <li key={item.label}>
                 <Link
@@ -183,48 +183,73 @@ const Footer = () => {
         </div>
 
         {/* Contact Info */}
-        <div className="flex flex-col">
-          <h3 className={`font-semibold mb-4 text-lg pb-2 border-b ${isHomePage 
-            ? "text-[var(--color-primary-dark)] border-[var(--color-primary-light)]" 
-            : "text-[var(--color-text)] border-[var(--color-primary)]"
-          }`}>
-            Contact Us
-          </h3>
-          <div className="space-y-3 text-[var(--color-text-light)] text-sm">
-            <div className="flex items-start">
-              <FaMapMarkerAlt className={`mt-1 mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
-              <span>123 Jewelry Street, Gem City, GC 12345</span>
-            </div>
-            <div className="flex items-center">
-              <FaPhone className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
-              <span>+1 (555) 123-4567</span>
-            </div>
-            <div className="flex items-center">
-              <FaEnvelope className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
-              <span>info@nakshatraloka.com</span>
-            </div>
-          </div>
-          
-          <div className="mt-6">
-            <h4 className={`font-medium mb-2 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-text)]"}`}>
-              Newsletter
-            </h4>
-            <div className="flex">
-              <input 
-                type="email" 
-                placeholder="Your email"
-                className="flex-1 px-3 py-2 text-sm border border-[var(--color-border)] rounded-l-md focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
-              />
-              <button className={`px-3 py-2 text-sm rounded-r-md transition-colors ${
-                isHomePage 
-                  ? "bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)]" 
-                  : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)]"
-              }`}>
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </div>
+<div className="flex flex-col">
+  <h3 className={`font-semibold mb-4 text-lg pb-2 border-b ${isHomePage 
+    ? "text-[var(--color-primary-dark)] border-[var(--color-primary-light)]" 
+    : "text-[var(--color-text)] border-[var(--color-primary)]"
+  }`}>
+    Contact Us
+  </h3>
+
+  <div className="space-y-3 text-[var(--color-text-light)] text-sm">
+    {/* Address */}
+    <div className="flex items-start">
+      <FaMapMarkerAlt className={`mt-1 mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
+      <a 
+        href="https://www.google.com/maps/search/?api=1&query=ADDRESS_HERE" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="hover:underline"
+      >
+        Address here5
+      </a>
+    </div>
+
+    {/* Phone */}
+    <div className="flex items-center">
+      <FaPhone className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
+      <a href="tel:+918866378552" className="hover:underline">
+        +91 8866378552
+      </a>
+    </div>
+
+    {/* Email */}
+  <div className="flex items-center">
+  <FaEnvelope className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
+  <a
+    href="mailto:nakshatraloka.customercare@gmail.com?subject=Inquiry&body=Hello,"
+    target="_blank"   // optional, some browsers require it
+    rel="noopener noreferrer"
+    className="hover:underline"
+  >
+    nakshatraloka.customercare@gmail.com
+  </a>
+</div>
+
+  </div>
+
+  {/* Newsletter */}
+  <div className="mt-6">
+    <h4 className={`font-medium mb-2 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-text)]"}`}>
+      Newsletter
+    </h4>
+    <div className="flex">
+      <input 
+        type="email" 
+        placeholder="Your email"
+        className="flex-1 px-3 py-2 text-sm border border-[var(--color-border)] rounded-l-md focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
+      />
+      <button className={`px-3 py-2 text-sm rounded-r-md transition-colors ${
+        isHomePage 
+          ? "bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)]" 
+          : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)]"
+      }`}>
+        Subscribe
+      </button>
+    </div>
+  </div>
+</div>
+
       </div>
 
       {/* Payment Methods & Copyright */}
