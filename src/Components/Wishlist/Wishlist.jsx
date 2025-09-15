@@ -6,17 +6,28 @@ import { Heart, ShoppingBag, Trash2, Sparkles } from "lucide-react";
 import { useWishlist } from "../../Context/WishlistContext";
 import { toast } from "react-toastify";
 import axios from "axios";
+import Toast from "../Product/Toast"; // adjust path if needed
+
 
 export default function Wishlist() {
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, clearWishlist, setWishlist, fetchWishlist } = useWishlist();
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
+  const [customToast, setCustomToast] = useState({
+    message: "",
+    type: "success",
+    visible: false,
+  });
+
+  const showToast = (message, type = "success") => {
+    setCustomToast({ message, type, visible: true });
+  };
 
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchWishlist()
-  },[])
+  }, [])
   // Fetch wishlist on mount
   useEffect(() => {
     const loadWishlist = async () => {
@@ -118,12 +129,11 @@ export default function Wishlist() {
   // };
 
   const handleRemove = async (item) => {
-    if (!item.productId) return toast.error("Invalid product");
+    if (!item.productId) return showToast("Invalid product", "error");
 
     setItemLoading(item.id, true);
 
     try {
-      // Toggle wishlist
       const { data } = await axios.post(
         "http://localhost:8001/api/manageWishlist",
         { productId: item.productId },
@@ -131,20 +141,19 @@ export default function Wishlist() {
       );
 
       if (data.success) {
-        toast.success(data.message || `${item.name} removed from wishlist`);
-
-        // Update context immediately without fetching
+        showToast(data.message || `${item.name} removed from wishlist`, "error");
         setWishlist(prev => prev.filter(w => w.ProductID !== item.productId));
       } else {
-        toast.error(data.message || "Failed to remove item");
+        showToast(data.message || "Failed to remove item", "error");
       }
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Something went wrong!");
+      showToast(error.response?.data?.message || "Something went wrong!", "error");
     } finally {
       setItemLoading(item.id, false);
     }
   };
+
 
 
 
@@ -166,10 +175,11 @@ export default function Wishlist() {
   const handleMoveToCart = async (item) => {
     if (actionLoading[item.id]) return;
     if (!item.inStock) {
-      toast.error("Item is out of stock");
-      return;
+      return showToast("Item is out of stock", "error");
     }
+
     setItemLoading(item.id, true);
+
     try {
       const res = await addToCart({
         productid: item.productId,
@@ -177,20 +187,22 @@ export default function Wishlist() {
         price: item.price,
         mainImage: item.mainImage || "/s1.jpeg",
       });
+
       if (res.success) {
-        toast.success(`${item.name} added to cart successfully!`);
-        await addToWishlist({ productId: item.productId }); // toggle off wishlist
+        showToast(`${item.name} added to cart successfully!`, "success");
+        await addToWishlist({ productId: item.productId });
         await fetchWishlist();
       } else {
-        toast.error(res.error || "Failed to add item to cart");
+        showToast(res.error || "Failed to add item to cart", "error");
       }
     } catch (error) {
       console.error("Error moving to cart:", error);
-      toast.error("Something went wrong!");
+      showToast("Something went wrong!", "error");
     } finally {
       setItemLoading(item.id, false);
     }
   };
+
 
   // Loading UI
   if (loading) {
@@ -360,6 +372,16 @@ export default function Wishlist() {
           )}
         </AnimatePresence>
       </div>
+      {customToast.visible && (
+        <Toast
+          message={customToast.message}
+          type={customToast.type}
+          onClose={() =>
+            setCustomToast((prev) => ({ ...prev, visible: false }))
+          }
+        />
+      )}
+
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { Minus, Plus, Trash2, ShoppingBag, Sparkles, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-
+import Toast from "../Product/Toast"; // adjust path if needed
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -13,6 +13,16 @@ export default function Cart() {
   const { cart, addToCart, removeFromCart, updateQuantity, getCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [transformedCart, setTransformedCart] = useState([]);
+  const [customToast, setCustomToast] = useState({
+    message: "",
+    type: "success",
+    visible: false,
+  });
+
+  const showToast = (message, type = "success") => {
+    setCustomToast({ message, type, visible: true });
+  };
+
 
   const quantityUpdateTimers = useRef({});
 
@@ -127,16 +137,21 @@ export default function Cart() {
 
       if (res.data.success) {
         console.log(`${product.name} removed successfully from server`);
-
-        // // Remove from client-side cart state
-        // removeFromCart(product.id); // <-- use product.id, not cartId
         await getCart();
 
+        // ✅ Show success toast
+        showToast(`${product.name} removed from cart`, "error");
       } else {
         console.warn(res.data.message);
+
+        // ❌ Show error toast
+        showToast(res.data.message || "Failed to remove item", "error");
       }
     } catch (err) {
       console.error("Failed to remove product:", err);
+
+      // ❌ Show error toast
+      showToast("Something went wrong while removing item", "error");
     }
   };
 
@@ -218,8 +233,8 @@ export default function Cart() {
             onClick={handleCheckout}
             disabled={subtotal === 0}
             className={`w-full max-w-xs mx-auto py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
               }`}
           >
             <Sparkles size={16} />
@@ -467,6 +482,16 @@ export default function Cart() {
           </motion.div>
         )}
       </div>
+      {customToast.visible && (
+        <Toast
+          message={customToast.message}
+          type={customToast.type}
+          onClose={() =>
+            setCustomToast((prev) => ({ ...prev, visible: false }))
+          }
+        />
+      )}
+
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, Info, X } from "lucide-react";
-
+ 
 const Toast = ({ message, type = "success", onClose }) => {
   const [progress, setProgress] = useState(100);
 
