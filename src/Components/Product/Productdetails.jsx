@@ -8,8 +8,10 @@ import Button from "../Button/Button";
 import { useWishlist } from "../../Context/WishlistContext";
 import { useCart } from "../../Context/CartContext";
 import Toast from "./Toast";
+
 import axios from "axios";
 
+import { toast } from "react-toastify";
 const productquestions = [
   {
     title: "What is the return policy?",
@@ -43,7 +45,7 @@ const ProductDetails = () => {
   const [selectedMaterial, setSelectedMaterial] = useState("");
   const [likedReviews, setLikedReviews] = useState([]);
   const [activeTab, setActiveTab] = useState("description");
-  const [toast, setToast] = useState({
+  const [customToast, setCustomToast] = useState({
     message: "",
     type: "success",
     visible: false,
@@ -246,6 +248,33 @@ const ProductDetails = () => {
       </div>
     );
   }
+
+
+  // ✅ Function to toggle wishlist
+  const toggleWishlist = async (productId) => {
+    try {
+
+      const { data } = await axios.post(
+        "http://localhost:8001/api/manageWishlist",
+        { productId }, // body
+        {
+          headers: {
+            Authorization: `${localStorage.getItem("authToken")}`, // JWT
+          },
+        }
+      );
+
+      return data; // { success, message }
+    } catch (error) {
+      console.error("Wishlist API Error:", error);
+      return {
+        success: false,
+        message: error.response?.data?.message || "Error updating wishlist",
+      };
+    }
+  };
+
+
   return (
     <div className="bg-color-background min-h-screen">
       <div className="w-full max-w-[1400px] mx-auto px-5 md:px-12 py-10">
@@ -414,7 +443,7 @@ const ProductDetails = () => {
               {/* //   showToast(`${product.name} added to Bag`, "success"); */}
               {/* // }} */}
               <Button
-                 onClick={() => {
+                onClick={() => {
                   addToCart({ productid: product.id }); // wrap in object
                   showToast(`${product.name} added to Bag`, "success");
                 }}
@@ -425,13 +454,21 @@ const ProductDetails = () => {
 
               <Button
                 onClick={async () => {
-                  const res = await addToWishlist(product);
-                  console.log(res);
-                  showToast(res.message, res.success ? "success" : "error");
+                  console.log("👉 Product object:", product); // debug full product
+                  console.log("👉 Sending ProductID:", product.ID); // log actual ID
+
+                  const res = await toggleWishlist(product.id); // ✅ use product.ID
+                  console.log("API Response:", res);
+
+                  if (res.success) {
+                    toast.success(res.message);
+                  } else {
+                    toast.error(res.message);
+                  }
                 }}
                 className={`px-6 py-3.5 font-medium text-sm transition-all duration-300 shadow-md hover:shadow-lg border ${isWishlisted
-                    ? "bg-color-primary border-color-primary text-color-surface"
-                    : "border-color-primary text-color-primary hover:bg-color-primary hover:text-color-surface"
+                  ? "bg-color-primary border-color-primary text-color-surface"
+                  : "border-color-primary text-color-primary hover:bg-color-primary hover:text-color-surface"
                   }`}
               >
                 {isWishlisted ? (

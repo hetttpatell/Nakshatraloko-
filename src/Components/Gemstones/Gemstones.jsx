@@ -39,10 +39,11 @@ const ProductsPage = () => {
 useEffect(() => {
   if (category) {
     // Map URL param back to your category name
-    const formattedCategory = category.replace(/-/g, ' '); 
+    const formattedCategory = category.replace(/-/g, ' ');
     setFilters(prev => ({ ...prev, Categories: formattedCategory }));
   }
 }, [category]);
+
   // Fetch all products initially
   useEffect(() => {
     const fetchAllProducts = async () => {
@@ -50,7 +51,7 @@ useEffect(() => {
         const res = await axios.post("http://localhost:8001/api/getFilteredProducts", {
           p_min_price: null,
           p_max_price: null,
-          p_catogaryname: "",
+          p_catogaryname:  filters.Categories || null,
           p_rating: null,
         });
 
@@ -185,14 +186,16 @@ useEffect(() => {
   ];
 
   // Filtered & sorted products
+// Filtered & sorted products
 const filteredAndSortedProducts = useMemo(() => {
   let filtered = products.filter(product => {
     return Object.keys(filters).every(key => {
       if (!filters[key] || filters[key] === "") return true;
 
       if (key === "Categories") {
-        return product.category === filters[key];
-      }
+  return product.category.toLowerCase() === filters[key].toLowerCase();
+}
+
 
       if (key === "Ratings") {
         const [min, max] = filters[key].split(" - ").map(Number);

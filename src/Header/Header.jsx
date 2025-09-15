@@ -7,10 +7,11 @@ import LoginSignup from "../Components/Login/Login";
 import logo from "/Logo.png";
 import axios from "axios";
 
+
 // ---------- MENU DATA ---------- 
 const initialMenuItems = [
   { label: "Home", to: "/" },
-  { label: "Products", to: "/gemstones" },
+  { label: "Gemstones", to: "/gemstones" },
   {
     label: "Categories",
     to: "/",
@@ -22,7 +23,7 @@ const initialMenuItems = [
 
 const userMenuItems = [
   { to: "/cart", icon: ShoppingBag, badgeType: "cart" },
-  { to: "/wishlist", icon: Heart, badgeType: "wishlist" },
+  { to: "/wishlist", icon: Heart, badgeType: "wishlist", },
   { to: "/account", icon: User },
 ];
 
@@ -106,6 +107,10 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const itemRef = useRef(null);
+  const clickTimeoutRef = useRef(null);
+
+
+
 
   const handleMouseEnter = () => {
     if (item.subMenu && !isMobile) {
@@ -124,7 +129,10 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
 
   const handleClick = () => {
     if (item.subMenu && isMobile) {
-      setDropdownOpen(!dropdownOpen);
+      // Delay toggling the dropdown
+      clickTimeoutRef.current = setTimeout(() => {
+        setDropdownOpen(prev => !prev);
+      }, 200); // 200ms delay
     } else if (isMobile) {
       closeMenu();
     }
@@ -165,37 +173,37 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 -z-10" />
       </NavLink>
 
-   
-{item.subMenu && (
-  <ul
-    className={`bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)] ${isMobile
-      ? `pl-6 transition-all duration-300 ease-out ${dropdownOpen ? "max-h-96 mt-2" : "max-h-0"
-      }`
-      : `absolute left-0 mt-2 min-w-[280px] transform transition-all duration-300 ease-out z-50 ${dropdownOpen
-        ? "opacity-100 translate-y-0 scale-100"
-        : "opacity-0 -translate-y-2 scale-95 pointer-events-none"
-      }`
-      }`}
-  >
-    {item.subMenu.map((subItem, index) => (
-      <li key={subItem.label}>
-        <NavLink
-          to={subItem.to}
-          onClick={closeMenu}
-          className={({ isActive }) =>
-            `group/sub block px-6 py-4 text-sm transition-all duration-300 border-b [var(--color-border)] last:border-b-0 relative overflow-hidden ${isActive
-              ? "bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 text-[var(--color-primary)] font-semibold"
-              : "text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/50 hover:to-[var(--color-primary-light)]/30 hover:text-[var(--color-primary)]"
+
+      {item.subMenu && (
+        <ul
+          className={`bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)] ${isMobile
+            ? `pl-6 transition-all duration-300 ease-out ${dropdownOpen ? "max-h-96 mt-2" : "max-h-0"
+            }`
+            : `absolute left-0 mt-2 min-w-[280px] transform transition-all duration-300 ease-out z-50 ${dropdownOpen
+              ? "opacity-100 translate-y-0 scale-100"
+              : "opacity-0 -translate-y-2 scale-95 pointer-events-none"
+            }`
             }`}
-          style={{ animationDelay: `${index * 50}ms` }}
         >
-          <div className="font-medium">{subItem.label}</div>
-          <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-[var(--color-primary)] to-[var(--color-primary-dark)] transform -translate-x-full group-hover/sub:translate-x-0 transition-transform duration-300" />
-        </NavLink>
-      </li>
-    ))}
-  </ul>
-)}
+          {item.subMenu.map((subItem, index) => (
+            <li key={subItem.label}>
+              <NavLink
+                to={subItem.to}
+                onClick={closeMenu}
+                className={({ isActive }) =>
+                  `group/sub block px-6 py-4 text-sm transition-all duration-300 border-b [var(--color-border)] last:border-b-0 relative overflow-hidden ${isActive
+                    ? "bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 text-[var(--color-primary)] font-semibold"
+                    : "text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/50 hover:to-[var(--color-primary-light)]/30 hover:text-[var(--color-primary)]"
+                  }`}
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="font-medium">{subItem.label}</div>
+                <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-[var(--color-primary)] to-[var(--color-primary-dark)] transform -translate-x-full group-hover/sub:translate-x-0 transition-transform duration-300" />
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      )}
     </li>
   );
 };
@@ -216,7 +224,50 @@ const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "" }) => (
   </NavLink>
 );
 
+
+// const fetchWishlist = async () => {
+//   try {
+//     const { data } = await axios.get("http://localhost:8001/api/getWishlist", {
+//       headers: {
+//         Authorization: `${localStorage.getItem("authToken")}`, // JWT token
+//       },
+//     });
+
+//     if (data.success) {
+//       console.log("✅ Wishlist fetched:", data.wishlist);
+//       // if you use context, update it here:
+//       // setWishlist(data.wishlist);
+//     } else {
+//       console.warn("⚠️ Wishlist fetch failed:", data.message);
+//     }
+//   } catch (error) {
+//     console.error("❌ Wishlist fetch error:", error);
+//   }
+// };
+
+
+
 // ---------- MAIN HEADER ----------
+
+const fetchWishlist = async () => {
+  try {
+    const { data } = await axios.get("http://localhost:8001/api/getWishlist", {
+      headers: {
+        Authorization: `${localStorage.getItem("authToken")}`, // JWT token
+      },
+    });
+
+    if (data.success) {
+      console.log("✅ Wishlist fetched:", data.wishlist);
+      setWishlist(data.wishlist); // 👈 update context here
+    } else {
+      console.warn("⚠️ Wishlist fetch failed:", data.message);
+    }
+  } catch (error) {
+    console.error("❌ Wishlist fetch error:", error);
+  }
+};
+
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -235,35 +286,41 @@ export default function Header() {
 
   const navigate = useNavigate();
 
+  
+useEffect(() => {
+  fetchWishlist(); // ✅ fetch wishlist when page loads
+}, []);
+
   // Initialize menu items
   useEffect(() => {
     axios
-      .post("http://localhost:8001/api/getCategories")
+      .post("http://localhost:8001/api/getAllCatogary")
       .then((res) => {
         if (res.data.success) {
           const transformedData = res.data.data.map((category) => ({
-            CategoryName: category.CategoryName,
+            CategoryName: category.Name,
             Image: category.Image || "/abot.jpg",
           }));
           setCategoryData(transformedData);
-          
+
           // Update the Categories menu item with subMenu data
-          setMenuItems(prevItems => 
-            prevItems.map(item => 
-              item.label === "Categories" 
-                ? { 
-                    ...item, 
-                    subMenu: transformedData.map(cat => ({
-                      label: cat.CategoryName,
-                      to: `/category/${cat.CategoryName.toLowerCase().replace(/\s+/g, '-')}`
-                    }))
-                  }
+          setMenuItems(prevItems =>
+            prevItems.map(item =>
+              item.label === "Categories"
+                ? {
+                  ...item,
+                  subMenu: transformedData.map(cat => ({
+                    label: cat.CategoryName,
+                    to: `/category/${cat.CategoryName}`
+                  }))
+                }
                 : item
             )
           );
-        }})
+        }
+      })
       .catch((err) => console.log(err));
-  }, []); 
+  }, []);
 
   // Optional: log menuItems after it updates
   useEffect(() => {
@@ -299,7 +356,7 @@ export default function Header() {
       setUserrole(false);
     }
   }, [showLogin]);
-    
+
   // Check login state when modal closes
   useEffect(() => {
     if (!showLogin) {
@@ -337,7 +394,8 @@ export default function Header() {
   const navRef = useRef(null);
 
   const { cart } = useCart();
-  const { wishlist } = useWishlist();
+  const { wishlist, setWishlist } = useWishlist();
+
   const location = useLocation();
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -403,14 +461,14 @@ export default function Header() {
       setSearchResults([]);
       return;
     }
-    
+
     setIsSearching(true);
     try {
       // Call your search API endpoint
       const response = await axios.post("http://localhost:8001/api/search", {
         query: query,
       });
-      
+
       if (response.data.success) {
         setSearchResults(response.data.results);
       } else {
@@ -570,6 +628,11 @@ export default function Header() {
                         : 0
                   }
                   closeMenu={closeMenu}
+                  onClick={
+                    item.badgeType === "wishlist"
+                      ? fetchWishlist // 👈 call API only on wishlist click
+                      : undefined
+                  }
                 />
               ))}
 
@@ -684,14 +747,14 @@ export default function Header() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                
+
                 {/* Loading indicator */}
                 {isSearching && (
                   <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[var(--color-primary)]"></div>
                   </div>
                 )}
-                
+
                 {/* Clear search button */}
                 {searchQuery && (
                   <button
@@ -706,7 +769,7 @@ export default function Header() {
                   </button>
                 )}
               </form>
-              
+
               {/* Search results dropdown */}
               {searchResults.length > 0 && (
                 <div className="max-w-2xl mx-auto mt-4 bg-white rounded-xl shadow-lg border border-[var(--color-border)] overflow-hidden">
@@ -728,7 +791,7 @@ export default function Header() {
                   </div>
                 </div>
               )}
-              
+
               {/* No results message */}
               {searchQuery && !isSearching && searchResults.length === 0 && (
                 <div className="max-w-2xl mx-auto mt-4 text-center text-[var(--color-text-muted)]">

@@ -1,3 +1,93 @@
+// import React, { createContext, useContext, useState, useEffect } from "react";
+// import axios from "axios";
+
+// const WishlistContext = createContext();
+
+// export function WishlistProvider({ children }) {
+//   const [wishlist, setWishlist] = useState([]);
+
+//   // Helper function to get auth token
+//   const getAuthToken = () => localStorage.getItem("authToken");
+
+//   // Fetch wishlist from server
+//   const fetchWishlist = async () => {
+//     const token = getAuthToken();
+//     if (!token) {
+//       setWishlist([]);
+//       return;
+//     }
+//     try {
+//       const response = await axios.post(
+//         "http://localhost:8001/api/listWishlist",
+//         {},
+//         { headers: { Authorization: token } }
+//       );
+//       if (response.data.success) {
+//         setWishlist(response.data.data || []);
+//       }
+//     } catch (error) {
+//       console.error("Error fetching wishlist:", error);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchWishlist();
+//   }, []);
+
+//   // Add or remove from wishlist via API
+//   const addToWishlist = async (product) => {
+//     const token = getAuthToken();
+//     if (!token) return { success: false, message: "Please login" };
+
+//     const productId = product._id || product.id;
+//     if (!productId) return { success: false, message: "Invalid product" };
+
+//     try {
+//       const response = await axios.post(
+//         "http://localhost:8001/api/manageWishlist",
+//         { productId },
+//         { headers: { Authorization: token } }
+//       );
+
+//       if (response.data.success) {
+//         await fetchWishlist();
+//         return { success: true, message: response.data.message || `${product.name} updated in wishlist` };
+//       } else {
+//         return { success: false, message: "Failed to update wishlist" };
+//       }
+//     } catch (error) {
+//       console.error("Error updating wishlist:", error);
+//       return { success: false, message: "Error updating wishlist" };
+//     }
+//   };
+
+//   const removeFromWishlist = async (id) => addToWishlist({ _id: id }); // reuse manageWishlist endpoint
+
+//   const clearWishlist = async () => {
+//     const token = getAuthToken();
+//     if (!token) return { success: false, message: "Please login" };
+
+//     try {
+//       await axios.post(
+//         "http://localhost:8001/api/clearWishlist",
+//         {},
+//         { headers: { Authorization: token } }
+//       );
+//       await fetchWishlist();
+//     } catch (error) {
+//       console.error(error);
+//     }
+//   };
+
+//   return (
+//     <WishlistContext.Provider value={{ wishlist, addToWishlist, removeFromWishlist, clearWishlist }}>
+//       {children}
+//     </WishlistContext.Provider>
+//   );
+// }
+
+// export const useWishlist = () => useContext(WishlistContext);
+// WishlistContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
@@ -39,21 +129,24 @@ export function WishlistProvider({ children }) {
     const token = getAuthToken();
     if (!token) return { success: false, message: "Please login" };
 
-    const productId = product._id || product.id;
+    const productId = product.ID; // <-- always use product.id
     if (!productId) return { success: false, message: "Invalid product" };
 
     try {
       const response = await axios.post(
         "http://localhost:8001/api/manageWishlist",
-        { productId },
+        { ProductID: productId }, // <-- match DB column
         { headers: { Authorization: token } }
       );
 
       if (response.data.success) {
         await fetchWishlist();
-        return { success: true, message: response.data.message || `${product.name} updated in wishlist` };
+        return {
+          success: true,
+          message: response.data.message || `${product.name} updated in wishlist`
+        };
       } else {
-        return { success: false, message: "Failed to update wishlist" };
+        return { success: false, message: response.data.message || "Failed to update wishlist" };
       }
     } catch (error) {
       console.error("Error updating wishlist:", error);
@@ -61,7 +154,7 @@ export function WishlistProvider({ children }) {
     }
   };
 
-  const removeFromWishlist = async (id) => addToWishlist({ _id: id }); // reuse manageWishlist endpoint
+  const removeFromWishlist = async (id) => addToWishlist({ id }); // reuse manageWishlist
 
   const clearWishlist = async () => {
     const token = getAuthToken();
@@ -80,7 +173,9 @@ export function WishlistProvider({ children }) {
   };
 
   return (
-    <WishlistContext.Provider value={{ wishlist, addToWishlist, removeFromWishlist, clearWishlist }}>
+    <WishlistContext.Provider
+      value={{ wishlist, addToWishlist, setWishlist, removeFromWishlist, clearWishlist }}
+    >
       {children}
     </WishlistContext.Provider>
   );
