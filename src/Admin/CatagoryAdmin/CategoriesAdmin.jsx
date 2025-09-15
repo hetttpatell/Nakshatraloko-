@@ -64,7 +64,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   ? category.IsFeatured
                   : false,
             image: category.Image
-              ? `http://localhost:8001${category.Image}`
+              ? `http://localhost:8001/uploads/${category.Image}`
               : "/s1.jpeg",
           }));
 
@@ -156,7 +156,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to add category.");
+      // setError("Failed to add category.");
     } finally {
       setIsAdding(false);
     }

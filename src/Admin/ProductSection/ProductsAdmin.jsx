@@ -8,6 +8,7 @@ import { useProductManagement } from "../../CustomHooks/useProductManagement";
 import { filterProducts } from "../ProductSection/productFilters";
 import api from '../../Utils/api'; // Import the api utility
 import axios from "axios";
+import { toast } from "react-toastify";
 // Constants for options
 const BRAND_OPTIONS = ["STYLIUM", "PEARLIX", "DIAMONDX", "GOLDEN"];
 const SIZE_OPTIONS = [
@@ -94,13 +95,13 @@ useEffect(() => {
 
       if (response.data.success) {
         handleAddProduct(response.data.data); // update state
-        alert("Product added successfully!");
+        toast.success("Product added successfully!");
       } else {
         alert(response.data.message || "Failed to save product");
       }
     } catch (error) {
       console.error("Error saving product:", error);
-      alert("Failed to save product. Please try again.");
+      
       throw error; // Re-throw to handle in the component if needed
     } finally {
       setIsSaving(false);

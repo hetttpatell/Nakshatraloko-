@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 export const useProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,13 +82,13 @@ const handleDeleteProductWithAPI = async (productId) => {
     if (response.data.success) {
       // Remove deleted product from state
       setProducts(prev => prev.filter(p => p.id !== productId));
-      alert("Product deleted successfully!");
+      toast.success("Product deleted successfully!");
     } else {
       alert(response.data.message || "Failed to delete product");
     }
   } catch (error) {
     console.error("Error deleting product:", error);
-    alert("Failed to delete product. Please try again.");
+    toast.error("Failed to delete product. Please try again.");
   } finally {
     setIsSaving(false);
   }

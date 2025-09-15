@@ -6,12 +6,23 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
 export default function Cart() {
   const { cart, addToCart, removeFromCart, updateQuantity, getCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [transformedCart, setTransformedCart] = useState([]);
 
   const quantityUpdateTimers = useRef({});
+
+  const handleCheckout = () => {
+    if (subtotal === 0) {
+      toast.error("Your cart is empty!");
+      return;
+    }
+    navigate("/payment");
+  };
 
   // Fetch cart on mount
   useEffect(() => {
@@ -178,21 +189,42 @@ export default function Cart() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
+          {/* Badge */}
           <motion.div
             className="inline-flex items-center gap-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-4 py-2 rounded-full mb-5"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <Zap size={16} className="fill-[var(--color-primary)] text-[var(--color-primary)]" />
+            <Zap
+              size={16}
+              className="fill-[var(--color-primary)] text-[var(--color-primary)]"
+            />
             <span className="text-sm font-medium">Shopping Bag</span>
           </motion.div>
+
+          {/* Title */}
           <h2 className="text-4xl font-bold text-[var(--color-text)] mb-2">
             My Shopping Bag
           </h2>
-          <p className="text-[var(--color-text-light)]">
+
+          {/* Subtitle */}
+          <p className="text-[var(--color-text-light)] mb-6">
             Review your items and proceed to checkout
           </p>
+
+          {/* Checkout button */}
+          <button
+            onClick={handleCheckout}
+            disabled={subtotal === 0}
+            className={`w-full max-w-xs mx-auto py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+              }`}
+          >
+            <Sparkles size={16} />
+            Proceed to Checkout
+          </button>
         </motion.div>
 
         <AnimatePresence>

@@ -970,13 +970,13 @@ const handleDeleteCoupon = async (id) => {
                       >
                         <FaEdit />
                       </button>
-                      <button
+                      {/* <button
                         onClick={() => duplicateCoupon(coupon)}
                         className="text-purple-600 hover:text-purple-900 p-1"
                         title="Duplicate"
                       >
                         <FaCopy />
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => setDeleteConfirm(coupon.id)}
                         className="text-red-600 hover:text-red-900 p-1"
