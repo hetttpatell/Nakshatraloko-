@@ -4,7 +4,7 @@ import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaTimes, FaCheck, FaArrowLe
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
-
+import Toast from "../../Components/Product/Toast";
 
 const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   // State for categories
@@ -21,7 +21,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     image: "",          // ✅ new field
     active_product_count: 0
   });
-
+  const [toasts, setToasts] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -30,6 +30,13 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [imagePreview, setImagePreview] = useState(""); // For image preview
   const [imageFile, setImageFile] = useState(null);
+  const showToast = (message, type = "success") => {
+    const id = Date.now(); // unique id
+    setToasts(prev => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
 
   // Fetch categories from API
   useEffect(() => {
@@ -148,12 +155,12 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
           image: res.data.image
         }]);
         setNewCategory({ name: "", description: "", isActive: true, isFeatured: false, image: "" });
-        // ✅ Show success toast
-        toast.success(response.data.message || "Category Added successfully");
+        showToast(res.data.message || "Category added successfully", "success");
         setImageFile(null);
         setImagePreview("");
         setError(null);
       }
+
     } catch (err) {
       console.error(err);
       // setError("Failed to add category.");
@@ -164,42 +171,44 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   // if toggeld then this function executes
 
   const handleToggleFeaturedApi = async (category) => {
-  try {
-    const featuredCount = categories.filter(cat => cat.isFeatured).length;
+    try {
+      const featuredCount = categories.filter(cat => cat.isFeatured).length;
 
-    // If trying to enable a 5th category
-    if (!category.isFeatured && featuredCount >= 4) {
-      toast.error("You can only select up to 4 featured categories");
-      return;
+      // If trying to enable a 5th category
+      if (!category.isFeatured && featuredCount >= 4) {
+        showToast("You can only select up to 4 featured categories", "error");
+        return;
+      }
+
+
+      const token = localStorage.getItem("authToken");
+      const formData = new FormData();
+      formData.append("id", category.id);
+      formData.append("name", category.name);
+      formData.append("description", category.description);
+      formData.append("isActive", category.isActive);
+      formData.append("isFeatured", !category.isFeatured); // toggle value
+      if (category.image) formData.append("images", category.image);
+
+      const res = await axios.post("http://localhost:8001/api/saveCatogary", formData, {
+        headers: { Authorization: token, "Content-Type": "multipart/form-data" },
+      });
+
+      if (res.data.success) {
+        setCategories(prev =>
+          prev.map(cat =>
+            cat.id === category.id ? { ...cat, isFeatured: !cat.isFeatured } : cat
+          )
+        );
+        showToast(res.data.message || "Category updated successfully", "success");
+      }
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update category");
     }
+  };
 
-    const token = localStorage.getItem("authToken");
-    const formData = new FormData();
-    formData.append("id", category.id);
-    formData.append("name", category.name);
-    formData.append("description", category.description);
-    formData.append("isActive", category.isActive);
-    formData.append("isFeatured", !category.isFeatured); // toggle value
-    if (category.image) formData.append("images", category.image);
-
-    const res = await axios.post("http://localhost:8001/api/saveCatogary", formData, {
-      headers: { Authorization: token, "Content-Type": "multipart/form-data" },
-    });
-
-    if (res.data.success) {
-      setCategories(prev =>
-        prev.map(cat =>
-          cat.id === category.id ? { ...cat, isFeatured: !cat.isFeatured } : cat
-        )
-      );
-      toast.success(res.data.message || "Category updated successfully");
-    }
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to update category");
-  }
-};
-    
 
   // Filter products for the selected category
   const filteredProducts = selectedCategory
@@ -287,14 +296,15 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       if (response.data.success) {
         setCategories(categories.filter(cat => cat.id !== id));
         setDeleteConfirm(null);
-        // ✅ Show success toast
-        toast.success(response.data.message || "Category deleted successfully");
+        // ✅ Show success toast using your custom Toast component
+        showToast(response.data.message || "Category deleted successfully", "success");
 
         // If the deleted category was selected, go back to categories list
         if (selectedCategory && selectedCategory.id === id) {
           setSelectedCategory(null);
         }
       }
+
     } catch (err) {
       console.error("Error deleting category:", err);
       setError("Failed to delete category. Please try again.");
@@ -336,7 +346,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
         setCategories(categories.map(cat =>
           cat.id === id ? { ...cat, isActive: newStatus } : cat
         ));
+        showToast(`Category ${newStatus ? "activated" : "deactivated"} successfully`, "success");
       }
+
     } catch (err) {
       console.error("Error updating category status:", err);
       setError("Failed to update category status. Please try again.");
@@ -780,6 +792,17 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
           </div>
         </div>
       )}
+      <div className="fixed top-6 right-6 z-50 flex flex-col gap-2">
+        {toasts.map(toastItem => (
+          <Toast
+            key={toastItem.id}
+            message={toastItem.message}
+            type={toastItem.type}
+            onClose={() => removeToast(toastItem.id)}
+          />
+        ))}
+      </div>
+
     </div>
   );
 };
