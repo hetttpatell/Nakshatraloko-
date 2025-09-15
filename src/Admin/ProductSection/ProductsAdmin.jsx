@@ -88,25 +88,41 @@ useEffect(() => {
 
 
   // Function to handle adding product via API
-  const handleAddProductWithAPI = async (productData) => {
-    setIsSaving(true);
-    try {
-      const response = await api.post('/admin/products', productData);
+const handleAddProductWithAPI = async (productData) => {
+  setIsSaving(true);
+  try {
+    // 🔹 Build payload with correct keys and types
+    const payload = {
+      Name: productData.name,
+      Description: productData.description,
+      Price: Number(productData.price),
+      DummyPrice: Number(productData.dummyPrice),
+      Stock: Number(productData.stock),
+      CategoryID: productData.categoryId,
+      PrimaryImage: productData.primaryImage || null,
+      Advantages: productData.advantages || "",
+      HowToWear: productData.howToWear || "",
+      IsActive: true
+    };
 
-      if (response.data.success) {
-        handleAddProduct(response.data.data); // update state
-        toast.success("Product added successfully!");
-      } else {
-        alert(response.data.message || "Failed to save product");
-      }
-    } catch (error) {
-      console.error("Error saving product:", error);
-      
-      throw error; // Re-throw to handle in the component if needed
-    } finally {
-      setIsSaving(false);
+    console.log("📦 Sending payload:", payload); // debug
+
+    const response = await api.post('/admin/products', payload);
+
+    if (response.data.success) {
+      handleAddProduct(response.data.data);
+      toast.success("Product added successfully!");
+    } else {
+      toast.error(response.data.message || "Failed to save product");
     }
-  };
+  } catch (error) {
+    console.error("❌ Request failed:", error.response?.data || error.message);
+    toast.error("Something went wrong while saving product");
+  } finally {
+    setIsSaving(false);
+  }
+};
+
 
   // Function to handle editing product via API
   const handleEditProductWithAPI = async (productData) => {

@@ -137,7 +137,7 @@ const addToWishlist = async (product) => {
   }
 
   try {
-    const { data } = await axios.post(
+    const { data } = await axios.post( 
       "http://localhost:8001/api/manageWishlist",
       { ProductID: productId }, // ✅ Match DB column name
       {

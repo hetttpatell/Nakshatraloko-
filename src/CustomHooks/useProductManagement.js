@@ -17,82 +17,86 @@ export const useProductManagement = () => {
 
   const [error, setError] = useState(null);
   const [featuredProducts, setFeaturedProducts] = useState([]);
-    const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   // Simulate loading products from an API
-useEffect(() => {
-  const loadProducts = async () => {
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch all products
+        const allResponse = await axios.post('http://localhost:8001/api/getAllProducts');
+        // Fetch featured products
+        const featuredResponse = await axios.post('http://localhost:8001/api/getFeaturedProducts');
+
+        if (allResponse.data.success && featuredResponse.data.success) {
+          const featuredIds = featuredResponse.data.data.map(p => p.ID);
+
+          // Normalize products and mark featured ones
+          // ✅ Default to empty array if no products
+          const allProducts = Array.isArray(allResponse.data.data) ? allResponse.data.data : [];
+
+          const normalized = allProducts
+            .sort((a, b) => b.ID - a.ID)
+            .map(item => ({
+              id: item.ID,
+              categoryId: item.CatogaryID,
+              name: item.Name,
+              description: item.Description,
+              price: item.Price,
+              dummyPrice: item.DummyPrice,
+              discountPercentage: item.DiscountPercentage,
+              stock: item.Stock,
+              advantages: item.Advantages,
+              howToWear: item.HowToWear,
+              isActive: item.IsActive,
+              isFeatured: featuredIds.includes(item.ID),
+              primaryImage: item.PrimaryImage
+            }));
+
+
+          setProducts(normalized);
+          setFeaturedProducts(featuredIds); // update featured state too
+        } else {
+          throw new Error('Failed to fetch products or featured products');
+        }
+      } catch (error) {
+        console.error("Failed to load products:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  const handleDeleteProductWithAPI = async (productId) => {
+    setIsSaving(true);
     try {
-      setLoading(true);
-      setError(null);
+      const token = localStorage.getItem("authToken")
 
-      // Fetch all products
-      const allResponse = await axios.post('http://localhost:8001/api/getAllProducts');
-      // Fetch featured products
-      const featuredResponse = await axios.post('http://localhost:8001/api/getFeaturedProducts');
+      const response = await axios.post(`http://localhost:8001/api/deleteProduct/${productId}`, {}, {
+        headers: {
+          Authorization: `${token}`
+        }
+      });
 
-      if (allResponse.data.success && featuredResponse.data.success) {
-        const featuredIds = featuredResponse.data.data.map(p => p.ID);
-
-        // Normalize products and mark featured ones
-        const normalized = allResponse.data.data
-        .sort((a, b) => b.ID - a.ID)
-        .map(item => ({
-          id: item.ID,
-          categoryId: item.CatogaryID,
-          name: item.Name,
-          description: item.Description,
-          price: item.Price,
-          dummyPrice: item.DummyPrice,
-          discountPercentage: item.DiscountPercentage,
-          stock: item.Stock,
-          advantages: item.Advantages,
-          howToWear: item.HowToWear,
-          isActive: item.IsActive,
-          isFeatured: featuredIds.includes(item.ID), // <-- mark featured
-          primaryImage: item.PrimaryImage
-        }));
-
-        setProducts(normalized);
-        setFeaturedProducts(featuredIds); // update featured state too
+      if (response.data.success) {
+        // Remove deleted product from state
+        setProducts(prev => prev.filter(p => p.id !== productId));
+        toast.success("Product deleted successfully!");
       } else {
-        throw new Error('Failed to fetch products or featured products');
+        alert(response.data.message || "Failed to delete product");
       }
     } catch (error) {
-      console.error("Failed to load products:", error);
-      setError(error.message);
+      console.error("Error deleting product:", error);
+      toast.error("Failed to delete product. Please try again.");
     } finally {
-      setLoading(false);
+      setIsSaving(false);
     }
   };
-
-  loadProducts();
-}, []);
-
-const handleDeleteProductWithAPI = async (productId) => {
-  setIsSaving(true);
-  try {
-    const token = localStorage.getItem("authToken")
-
-    const response = await axios.post(`http://localhost:8001/api/deleteProduct/${productId}`,{},{
-      headers:{
-       Authorization: `${token}`
-      }
-    });
-
-    if (response.data.success) {
-      // Remove deleted product from state
-      setProducts(prev => prev.filter(p => p.id !== productId));
-      toast.success("Product deleted successfully!");
-    } else {
-      alert(response.data.message || "Failed to delete product");
-    }
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    toast.error("Failed to delete product. Please try again.");
-  } finally {
-    setIsSaving(false);
-  }
-};
 
 
   const handleSaveProduct = (updatedProduct) => {
@@ -129,40 +133,40 @@ const handleDeleteProductWithAPI = async (productId) => {
     });
   };
 
-const handleEditProduct = async (productId) => {
-  try {
-    setIsSaving(true);
-    const response = await axios.post(`http://localhost:8001/api/getProductById/${productId}`);
-    if (response.data.success) {
-      const product = response.data.data.product; // Access product correctly
-      const normalizedProduct = {
-        id: product.id,
-        categoryId: product.categoryId,
-        Name: product.name,
-        Description: product.description,
-        Advantages: product.advantages,
-        HowToWear: product.howToWear,
-        IsActive: product.isActive,
-        sizes: product.sizes || [],
-        images: product.images || [],
-        price: product.price || 0,
-        dummyPrice: product.dummyPrice || 0,
-        discountPercentage: product.discountPercentage || 0,
-        stock: product.stock || 0,
-        primaryImage: product.primaryImage || null,
-      };
-      setEditingProduct(normalizedProduct);
-      setIsEditModalOpen(true);
-    } else {
-      alert(response.data.message || "Failed to fetch product details");
+  const handleEditProduct = async (productId) => {
+    try {
+      setIsSaving(true);
+      const response = await axios.post(`http://localhost:8001/api/getProductById/${productId}`);
+      if (response.data.success) {
+        const product = response.data.data.product; // Access product correctly
+        const normalizedProduct = {
+          id: product.id,
+          categoryId: product.categoryId,
+          Name: product.name,
+          Description: product.description,
+          Advantages: product.advantages,
+          HowToWear: product.howToWear,
+          IsActive: product.isActive,
+          sizes: product.sizes || [],
+          images: product.images || [],
+          price: product.price || 0,
+          dummyPrice: product.dummyPrice || 0,
+          discountPercentage: product.discountPercentage || 0,
+          stock: product.stock || 0,
+          primaryImage: product.primaryImage || null,
+        };
+        setEditingProduct(normalizedProduct);
+        setIsEditModalOpen(true);
+      } else {
+        alert(response.data.message || "Failed to fetch product details");
+      }
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      alert("Failed to fetch product details. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
-  } catch (error) {
-    console.error("Error fetching product details:", error);
-    alert("Failed to fetch product details. Please try again.");
-  } finally {
-    setIsSaving(false);
-  }
-};
+  };
 
 
   const viewProductDetails = (product) => {

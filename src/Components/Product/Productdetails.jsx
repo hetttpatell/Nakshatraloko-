@@ -50,6 +50,7 @@ const ProductDetails = () => {
     type: "success",
     visible: false,
   });
+
   const [zoomStyle, setZoomStyle] = useState({});
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const [product, setProduct] = useState(null);
@@ -64,6 +65,10 @@ const ProductDetails = () => {
   // Helper function to map product data from API to our expected format
   const mapProductData = (data) => {
     console.log("Raw API data:", data); // Debug log
+
+
+
+
 
     return {
       id: data.id || data.ID || data._id || id,
@@ -110,7 +115,7 @@ const ProductDetails = () => {
   //     const recommended = filtered.map(p => mapProductData(p));
   //     setRecommendedProducts(recommended.slice(0, 4)); // pick first 4
   //   } catch (err) {
-  //     console.error("Error fetching recommended products:", err);
+  //     console.error("Error fetching recommended products: ", err);
   //   }
   // };
 
@@ -138,7 +143,7 @@ const ProductDetails = () => {
           reviewList: productData.reviewList || [],
 
           images: productData.images.map((img, i) => ({
-            src: `http://localhost:8001/uploads/${img.imageData}`|| "/placeholder.png",   // ✅ use imageData
+            src: `http://localhost:8001/uploads/${img.imageData}` || "/placeholder.png",   // ✅ use imageData
             alt: img.altText || `${productData.name} ${i + 1}`, // ✅ use altText
           })),
 
@@ -182,8 +187,11 @@ const ProductDetails = () => {
 
   const isWishlisted = wishlist.some((item) => item.id === product?.id);
 
-  const showToast = (message, type = "success") =>
-    setToast({ message, type, visible: true });
+
+  const showToast = (message, type = "success") => {
+    setCustomToast({ message, type, visible: true });
+  };
+
 
   const toggleLike = (idx) =>
     setLikedReviews((prev) =>
@@ -444,32 +452,25 @@ const ProductDetails = () => {
               {/* // }} */}
               <Button
                 onClick={() => {
-                  addToCart({ productid: product.id }); // wrap in object
+                  addToCart({ productid: product.id });
                   showToast(`${product.name} added to Bag`, "success");
                 }}
-                className="bg-color-primary text-color-surface px-10 py-3.5 font-medium text-sm hover:bg-color-primary-dark transition-all duration-300 shadow-md hover:shadow-lg flex-1"
+                className="bg-color-primary text-color-surface px-10 py-3.5 font-medium text-sm"
               >
                 ADD TO BAG
               </Button>
 
               <Button
                 onClick={async () => {
-                  console.log("👉 Product object:", product); // debug full product
-                  console.log("👉 Sending ProductID:", product.ID); // log actual ID
-
-                  const res = await toggleWishlist(product.id); // ✅ use product.ID
-                  console.log("API Response:", res);
+                  const res = await toggleWishlist(product.id);
 
                   if (res.success) {
-                    toast.success(res.message);
+                    showToast(res.message, "success");
                   } else {
-                    toast.error(res.message);
+                    showToast(res.message, "error");
                   }
                 }}
-                className={`px-6 py-3.5 font-medium text-sm transition-all duration-300 shadow-md hover:shadow-lg border ${isWishlisted
-                  ? "bg-color-primary border-color-primary text-color-surface"
-                  : "border-color-primary text-color-primary hover:bg-color-primary hover:text-color-surface"
-                  }`}
+                className="px-6 py-3.5 font-medium text-sm"
               >
                 {isWishlisted ? (
                   <AiFillHeart className="inline mr-2 text-lg" />
@@ -478,6 +479,7 @@ const ProductDetails = () => {
                 )}
                 Wishlist
               </Button>
+
 
             </div>
 
@@ -605,13 +607,17 @@ const ProductDetails = () => {
           onClose={() => setToast({ ...toast, visible: false })}
         />
       )}
-      {/* // Add this near the end of your return statement, before the closing div
-      {product && (
-        <div className="mt-8 p-4 bg-gray-100 rounded">
-          <h3>Debug Info (remove in production):</h3>
-          <pre>{JSON.stringify(product, null, 2)}</pre>
-        </div>
-      )} */}
+
+      {customToast.visible && (
+        <Toast
+          message={customToast.message}
+          type={customToast.type}
+          onClose={() =>
+            setCustomToast((prev) => ({ ...prev, visible: false }))
+          }
+        />
+      )}
+
     </div>
   );
 };

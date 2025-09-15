@@ -16,7 +16,7 @@ const Toast = ({ message, type = "success", onClose }) => {
           clearInterval(interval);
           onClose();
           return 0;
-        }
+        } 
         return prev - decrement;
       });
     }, intervalTime);

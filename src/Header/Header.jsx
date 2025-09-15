@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+  import React, { useState, useRef, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingBag, Heart, User, ChevronDown, Menu, X, UserCog, Search, Sparkles, LogOut } from "lucide-react";
 import { useCart } from "../Context/CartContext";
@@ -257,7 +257,7 @@ const fetchWishlist = async () => {
       return;
     }
 
-    const { data } = await axios.get("http://localhost:8001/api/getWishlist", {
+    const { data } = await axios.post("http://localhost:8001/api/listWishlist", {},{
       headers: {
         Authorization: `${token}`,
       },
