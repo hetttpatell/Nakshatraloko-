@@ -50,7 +50,7 @@ const ProductDetails = () => {
     type: "success",
     visible: false,
   });
-
+  const [loadingCoupons, setLoadingCoupons] = useState(true);
   const [zoomStyle, setZoomStyle] = useState({});
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const [product, setProduct] = useState(null);
@@ -58,66 +58,53 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [recommendedProducts, setRecommendedProducts] = useState([]);
-
+  const [featuredCategories, setFeaturedCategories] = useState([]);
+  const [applicableCoupons, setApplicableCoupons] = useState([]);
   const { addToWishlist, wishlist } = useWishlist();
   const { addToCart } = useCart();
+  const [copied, setCopied] = useState(false);
 
   // Helper function to map product data from API to our expected format
-  const mapProductData = (data) => {
-    console.log("Raw API data:", data); // Debug log
+
+  // Fetch featured categories with coupons
+// Add this to your useState declarations
 
 
+// Update your useEffect for fetching featured categories
+useEffect(() => {
+  const fetchFeaturedCategories = async () => {
+    try {
+      setLoadingCoupons(true);
+      const token = localStorage.getItem("authToken");
 
-
-
-    return {
-      id: data.id || data.ID || data._id || id,
-      name: data.name || data.Name || data.productName || "Gemstone Product",
-      brand: data.brand || data.Brand || data.seller || "STYLIUM",
-      rating: parseFloat(data.rating || data.Rating || data.avgRating || 4.5),
-      reviews: data.reviews || data.Reviews || data.reviewCount || 0,
-      price: typeof data.price === 'string'
-        ? parseFloat(data.price.replace(/[^\d.]/g, ""))
-        : parseFloat(data.price || data.Price || data.amount || 0),
-      inStock: data.inStock !== undefined ? data.inStock :
-        (data.InStock !== undefined ? data.InStock :
-          (data.stock !== undefined ? data.stock > 0 : true)),
-      mainImage: data.mainImage || data.image || data.Image || data.img || data.imageUrl || "/default-gemstone.jpg",
-      size: Array.isArray(data.size) ? data.size :
-        (Array.isArray(data.Size) ? data.Size :
-          (data.size ? [data.size] : ["5 Ratti", "15 Ratti", "6 Ratti"])),
-      material: Array.isArray(data.material) ? data.material :
-        (Array.isArray(data.Material) ? data.Material :
-          (data.material ? [data.material] : ["Gemstone", "Pendant", "Necklace"])),
-      images: Array.isArray(data.images) ? data.images.map((img) =>
-        (typeof img === 'string' ? { src: img, alt: "Product Image" } : img)) :
-        (Array.isArray(data.Images) ? data.Images.map((img) =>
-          (typeof img === 'string' ? { src: img, alt: "Product Image" } : img)) :
-          [{ src: data.mainImage || data.image || data.Image || "/s1.jpeg", alt: "Product Image" }]),
-      description: data.description || data.Description || data.productDescription || "Lightweight and comfortable",
-      advantages: Array.isArray(data.advantages) ? data.advantages :
-        (Array.isArray(data.Advantages) ? data.Advantages :
-          (typeof data.Advantages === 'string' ? [data.Advantages] :
-            (data.features ? data.features : ["Feature 1", "Feature 2", "Feature 3"]))),
-      shipping: data.shipping || data.Shipping || data.shippingInfo || "Free standard shipping on orders over ₹5,000",
-      reviewList: Array.isArray(data.reviewList) ? data.reviewList :
-        (Array.isArray(data.ReviewList) ? data.ReviewList :
-          (data.reviewsList ? data.reviewsList : [])),
-    };
+      const response = await axios.post(
+        "http://localhost:8001/api/activeCouponProducts",
+        {},
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        }
+      );
+      
+      if (response.data.success) {
+        setFeaturedCategories(response.data.data);
+        
+        // Find coupons applicable to this product
+        const applicable = response.data.data.filter(
+          item => item.productid === parseInt(id)
+        );
+        setApplicableCoupons(applicable);
+      }
+    } catch (error) {
+      console.error("Error fetching featured categories:", error);
+    } finally {
+      setLoadingCoupons(false);
+    }
   };
-
-  // Fetch recommended products
-  // const fetchRecommendedProducts = async () => {
-  //   try {
-  //     const res = await axios.post("http://localhost:8001/api/getAllProducts");
-  //     const apiProducts = Array.isArray(res.data) ? res.data : res.data?.products || [];
-  //     const filtered = apiProducts.filter(p => (p.ID || p.id) !== id);
-  //     const recommended = filtered.map(p => mapProductData(p));
-  //     setRecommendedProducts(recommended.slice(0, 4)); // pick first 4
-  //   } catch (err) {
-  //     console.error("Error fetching recommended products: ", err);
-  //   }
-  // };
+  
+  fetchFeaturedCategories();
+}, [id]);
 
   useEffect(() => {
     let isMounted = true;
@@ -132,32 +119,41 @@ const ProductDetails = () => {
         if (!isMounted || !productData) return;
 
         // Map API response to UI-friendly structure
-       const mapped = {
-  id: productData.id,
-  name: productData.name,
-  description: productData.description,
-  howToWear: productData.howToWear || "",
-  brand: "Unknown Brand", // if not coming from API
-  rating: productData.rating || 4.5, // fallback rating
-  reviews: productData.reviews || 0,
-  reviewList: productData.reviewList || [],
+        const mapped = {
+          id: productData.id,
+          name: productData.name,
+          description: productData.description,
+          howToWear: productData.howToWear || "",
+          brand: "Unknown Brand", // if not coming from API
+          rating: productData.rating || 4.5, // fallback rating
+          reviews: productData.reviews || 0,
+          reviewList: productData.reviewList || [],
 
-  images: productData.images.map((img, i) => ({
-    src: img.imageData || "/placeholder.png",   // ✅ use directly
-    alt: img.altText || `${productData.name} ${i + 1}`,
-  })),
+          images: productData.images.map((img) => ({
+            src: img.imageData.startsWith("http")
+              ? img.imageData
+              : `http://localhost:8001/${img.imageData.replace(/^\/+/, "")}`,
+            alt: img.altText || productData.name,
+          })),
+          mainImage: productData.images[0]
+            ? (productData.images[0].imageData.startsWith("http")
+              ? productData.images[0].imageData
+              : `http://localhost:8001/${productData.images[0].imageData.replace(/^\/+/, "")}`
+            )
+            : "/s1.jpeg",
 
-  // ✅ Keep only one mainImage
-  mainImage: productData.images[0]?.imageData || "/placeholder.png",
 
-  size: productData.sizes.map((s) => s.size), // extract just size
-  sizeDetails: productData.sizes, // keep full details
-  material: ["Leather", "Synthetic"], // fallback until API provides
-  advantages: productData.advantages
-    ? productData.advantages.split(",").map((a) => a.trim())
-    : [],
-  shipping: "Delivered in 5-7 business days",
-};
+          // ✅ Keep only one mainImage
+          // mainImage: productData.images[0]?.imageData || "/placeholder.png",
+
+          size: productData.sizes.map((s) => s.size), // extract just size
+          sizeDetails: productData.sizes, // keep full details
+          material: ["Leather", "Synthetic"], // fallback until API provides
+          advantages: productData.advantages
+            ? productData.advantages.split(",").map((a) => a.trim())
+            : [],
+          shipping: "Delivered in 5-7 business days",
+        };
 
         console.log(productData);
         setProduct(mapped);
@@ -484,44 +480,119 @@ const ProductDetails = () => {
             </div>
 
             {/* Delivery Section */}
-            <div className="bg-color-surface border border-color-border rounded-sm p-5 flex flex-col gap-4 text-sm mb-8">
-              <div className="flex gap-3 items-center">
-                <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
-                  🚚
-                </span>
-                <div>
-                  <div className="font-semibold text-color-text">Free Shipping</div>
-                  <div className="text-xs text-color-text-muted">
-                    On orders over ₹5,000
-                  </div>
-                </div>
-              </div>
+{/* Delivery Section */}
+<div className="bg-color-surface border border-color-border rounded-sm p-5 flex flex-col gap-4 text-sm mb-6">
+  <div className="flex gap-3 items-center">
+    <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
+      🚚
+    </span>
+    <div>
+      <div className="font-semibold text-color-text">Free Shipping</div>
+      <div className="text-xs text-color-text-muted">
+        On orders over ₹5,000
+      </div>
+    </div>
+  </div>
 
-              <div className="flex gap-3 items-center">
-                <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
-                  ↩️
-                </span>
-                <div>
-                  <div className="font-semibold text-color-text">Return Delivery</div>
-                  <div className="text-xs text-color-text-muted">
-                    Free 30 days Delivery Return
-                  </div>
-                </div>
-              </div>
+  <div className="flex gap-3 items-center">
+    <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
+      ↩️
+    </span>
+    <div>
+      <div className="font-semibold text-color-text">Return Delivery</div>
+      <div className="text-xs text-color-text-muted">
+        Free 30 days Delivery Return
+      </div>
+    </div>
+  </div>
 
-              <div className="flex gap-3 items-center">
-                <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
-                  🔒
-                </span>
-                <div>
-                  <div className="font-semibold text-color-text">Secure Payment</div>
-                  <div className="text-xs text-color-text-muted">
-                    Your transaction is secured with SSL encryption
-                  </div>
-                </div>
-              </div>
-            </div>
+  <div className="flex gap-3 items-center">
+    <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
+      🔒
+    </span>
+    <div>
+      <div className="font-semibold text-color-text">Secure Payment</div>
+      <div className="text-xs text-color-text-muted">
+        Your transaction is secured with SSL encryption
+      </div>
+    </div>
+  </div>
+</div>
 
+{/* Coupon Section */}
+<div className="bg-color-surface border border-color-border rounded-sm p-5 flex flex-col gap-4 text-sm mb-6">
+  <div className="flex gap-3 items-center">
+    <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
+      🎫
+    </span>
+    <div>
+      <div className="font-semibold text-color-text">Special Offers</div>
+      <div className="text-xs text-color-text-muted">
+        Available discounts for your order
+      </div>
+    </div>
+  </div>
+
+  {!loadingCoupons && applicableCoupons.map((coupon, index) => {
+    const copyToClipboard = () => {
+      navigator.clipboard.writeText(coupon.couponcode)
+        .then(() => {
+          // Show feedback that code was copied
+          const element = document.getElementById(`coupon-${index}`);
+          if (element) {
+            element.textContent = "✓ Copied!";
+            setTimeout(() => {
+              element.textContent = "Double tap to copy";
+            }, 2000);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to copy: ', err);
+        });
+    };
+    
+    return (
+      <div key={index} className="flex gap-3 items-center mt-2">
+        <span className="inline-flex items-center justify-center w-8 h-8 bg-color-accent-green/20 rounded-full text-center text-color-accent-green">
+          🔖
+        </span>
+        <div className="flex-1">
+          <div 
+            className="font-semibold text-color-text cursor-pointer"
+            onDoubleClick={copyToClipboard}
+          >
+            Use code: <span className="text-color-primary">{coupon.couponcode}</span>
+            <span 
+              id={`coupon-${index}`}
+              className="ml-2 text-xs text-color-text-muted"
+            >
+              Double tap to copy
+            </span>
+          </div>
+          <div className="text-xs text-color-text-muted">
+            Save {coupon.DiscountType === 'PERCENTAGE' 
+              ? `${coupon.DiscountValue}%` 
+              : `₹${coupon.DiscountValue}`}
+          </div>
+        </div>
+      </div>
+    );
+  })}
+  
+  {loadingCoupons && (
+    <div className="flex gap-3 items-center">
+      <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
+        🎫
+      </span>
+      <div>
+        <div className="font-semibold text-color-text">Checking for offers...</div>
+        <div className="text-xs text-color-text-muted">
+          Loading available discounts
+        </div>
+      </div>
+    </div>
+  )}
+</div>
             {/* Accordion FAQs */}
             <div className="mt-2">
               {productquestions.map((item, index) => (
