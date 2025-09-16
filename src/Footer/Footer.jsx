@@ -152,7 +152,7 @@ const Footer = () => {
                 <Link
                   to={item.to}
                   className="text-[var(--color-text-light)] hover:text-[var(--color-primary)] transition-colors duration-300 text-sm flex items-center group"
-                >
+                > 
                   <span className={`w-1.5 h-1.5 rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity 
                     "bg-[var(--color-primary)]"`}></span>
                   {item.label}

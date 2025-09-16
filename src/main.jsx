@@ -50,7 +50,7 @@ const router = createBrowserRouter(
             <Admin />
           </ProtectedRoute>
         }
-      />
+      /> 
       <Route path="login" element={<LoginSignup />} />
       <Route path="auth/success" element={<AuthSuccess />} />
 
