@@ -9,6 +9,7 @@ import { filterProducts } from "../ProductSection/productFilters";
 import api from '../../Utils/api'; // Import the api utility
 import axios from "axios";
 import { toast } from "react-toastify";
+import Toast from "../../Components/Product/Toast";
 // Constants for options
 const BRAND_OPTIONS = ["STYLIUM", "PEARLIX", "DIAMONDX", "GOLDEN"];
 const SIZE_OPTIONS = [
@@ -45,6 +46,7 @@ const ProductAdmin = ({ isMobile }) => {
     editingProduct,
     deleteConfirmModal,
     setSearchTerm,
+    refreshProducts,
     setBrandFilter,
     setStatusFilter,
     setIsEditModalOpen,
@@ -56,7 +58,9 @@ const ProductAdmin = ({ isMobile }) => {
     handleAddProduct,
     openDeleteConfirm,
     handleEditProduct,
-    viewProductDetails
+    viewProductDetails,
+    toastData,
+  closeToast,
   } = useProductManagement();
 
   const [isSaving, setIsSaving] = useState(false);
@@ -84,14 +88,15 @@ useEffect(() => {
   fetchFeaturedProducts();
 }, []);
 
+useEffect(()=>{
 
+})
 
 
   // Function to handle adding product via API
 const handleAddProductWithAPI = async (productData) => {
   setIsSaving(true);
   try {
-    // 🔹 Build payload with correct keys and types
     const payload = {
       Name: productData.name,
       Description: productData.description,
@@ -102,16 +107,15 @@ const handleAddProductWithAPI = async (productData) => {
       PrimaryImage: productData.primaryImage || null,
       Advantages: productData.advantages || "",
       HowToWear: productData.howToWear || "",
-      IsActive: true
+      IsActive: true,
     };
 
-    console.log("📦 Sending payload:", payload); // debug
-
-    const response = await api.post('/admin/products', payload);
+    const response = await api.post("/admin/products", payload);
 
     if (response.data.success) {
-      handleAddProduct(response.data.data);
       toast.success("Product added successfully!");
+      // ✅ Refresh the list from backend
+      await refreshProducts();
     } else {
       toast.error(response.data.message || "Failed to save product");
     }
@@ -250,6 +254,13 @@ const handleAddProductWithAPI = async (productData) => {
 />
 
       )}
+      {toastData && (
+      <Toast
+        type={toastData.type}
+        message={toastData.message}
+        onClose={closeToast}
+      />
+    )}
     </div>
   );
 };

@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
+
+import Toast from "../Components/Product/Toast";
 export const useProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,85 +19,93 @@ export const useProductManagement = () => {
   const [error, setError] = useState(null);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
-  // Simulate loading products from an API
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const [toastData, setToastData] = useState(null);
 
-        // Fetch all products
-        const allResponse = await axios.post('http://localhost:8001/api/getAllProducts');
-        // Fetch featured products
-        const featuredResponse = await axios.post('http://localhost:8001/api/getFeaturedProducts');
+  const showToast = (type, message) => {
+    setToastData({ type, message });
+  };
 
-        if (allResponse.data.success && featuredResponse.data.success) {
-          const featuredIds = featuredResponse.data.data.map(p => p.ID);
+  const closeToast = () => {
+    setToastData(null);
+  };
 
-          // Normalize products and mark featured ones
-          // ✅ Default to empty array if no products
-          const allProducts = Array.isArray(allResponse.data.data) ? allResponse.data.data : [];
+  const loadProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-          const normalized = allProducts
-            .sort((a, b) => b.ID - a.ID)
-            .map(item => ({
-              id: item.ID,
-              categoryId: item.CatogaryID,
-              name: item.Name,
-              description: item.Description,
-              price: item.Price,
-              dummyPrice: item.DummyPrice,
-              discountPercentage: item.DiscountPercentage,
-              stock: item.Stock,
-              advantages: item.Advantages,
-              howToWear: item.HowToWear,
-              isActive: item.IsActive,
-              isFeatured: featuredIds.includes(item.ID),
-              primaryImage: item.PrimaryImage
-            }));
+      const allResponse = await axios.post("http://localhost:8001/api/getAllProducts");
+      const featuredResponse = await axios.post("http://localhost:8001/api/getFeaturedProducts");
 
+      if (allResponse.data.success && featuredResponse.data.success) {
+        const featuredIds = featuredResponse.data.data.map((p) => p.ID);
 
-          setProducts(normalized);
-          setFeaturedProducts(featuredIds); // update featured state too
-        } else {
-          throw new Error('Failed to fetch products or featured products');
-        }
-      } catch (error) {
-        console.error("Failed to load products:", error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
+        const allProducts = Array.isArray(allResponse.data.data) ? allResponse.data.data : [];
+
+        const normalized = allProducts
+          .sort((a, b) => b.ID - a.ID)
+          .map((item) => ({
+            id: item.ID,
+            categoryId: item.CatogaryID,
+            name: item.Name,
+            description: item.Description,
+            price: item.Price,
+            dummyPrice: item.DummyPrice,
+            discountPercentage: item.DiscountPercentage,
+            stock: item.Stock,
+            advantages: item.Advantages,
+            howToWear: item.HowToWear,
+            isActive: item.IsActive,
+            isFeatured: featuredIds.includes(item.ID),
+            primaryImage: item.PrimaryImage,
+          }));
+
+        setProducts(normalized);
+        setFeaturedProducts(featuredIds);
+      } else {
+        throw new Error("Failed to fetch products or featured products");
       }
-    };
-
-    loadProducts();
+    } catch (error) {
+      console.error("Failed to load products:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   const handleDeleteProductWithAPI = async (productId) => {
     setIsSaving(true);
     try {
-      const token = localStorage.getItem("authToken")
+      const token = localStorage.getItem("authToken");
 
-      const response = await axios.post(`http://localhost:8001/api/deleteProduct/${productId}`, {}, {
-        headers: {
-          Authorization: `${token}`
+      const response = await axios.post(
+        `http://localhost:8001/api/deleteProduct/${productId}`,
+        {},
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
         }
-      });
+      );
 
       if (response.data.success) {
-        // Remove deleted product from state
-        setProducts(prev => prev.filter(p => p.id !== productId));
-        toast.success("Product deleted successfully!");
+        setProducts((prev) => prev.filter((p) => p.id !== productId));
+        showToast("success", "Product deleted successfully!");
       } else {
-        alert(response.data.message || "Failed to delete product");
+        showToast("error", response.data.message || "Failed to delete product");
       }
     } catch (error) {
       console.error("Error deleting product:", error);
-      toast.error("Failed to delete product. Please try again.");
+      showToast("error", "Failed to delete product. Please try again.");
     } finally {
       setIsSaving(false);
     }
   };
+
 
 
   const handleSaveProduct = (updatedProduct) => {
@@ -158,11 +167,11 @@ export const useProductManagement = () => {
         setEditingProduct(normalizedProduct);
         setIsEditModalOpen(true);
       } else {
-        alert(response.data.message || "Failed to fetch product details");
+        showToast("error", response.data.message || "Failed to fetch product details");
       }
     } catch (error) {
       console.error("Error fetching product details:", error);
-      alert("Failed to fetch product details. Please try again.");
+      showToast("error", "Failed to fetch product details. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -185,6 +194,7 @@ export const useProductManagement = () => {
     isAddModalOpen,
     editingProduct,
     deleteConfirmModal,
+    refreshProducts: loadProducts,
     setSearchTerm,
     setBrandFilter,
     setStatusFilter,
@@ -198,6 +208,8 @@ export const useProductManagement = () => {
     handleAddProduct,
     openDeleteConfirm,
     handleEditProduct,
-    viewProductDetails
+    viewProductDetails,
+    toastData,
+    closeToast,
   };
 };
