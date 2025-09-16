@@ -132,33 +132,33 @@ const ProductDetails = () => {
         if (!isMounted || !productData) return;
 
         // Map API response to UI-friendly structure
-        const mapped = {
-          id: productData.id,
-          name: productData.name,
-          description: productData.description,
-          howToWear: productData.howToWear || "",
-          brand: "Unknown Brand", // if not coming from API
-          rating: productData.rating || 4.5, // fallback rating
-          reviews: productData.reviews || 0,
-          reviewList: productData.reviewList || [],
+       const mapped = {
+  id: productData.id,
+  name: productData.name,
+  description: productData.description,
+  howToWear: productData.howToWear || "",
+  brand: "Unknown Brand", // if not coming from API
+  rating: productData.rating || 4.5, // fallback rating
+  reviews: productData.reviews || 0,
+  reviewList: productData.reviewList || [],
 
-          images: productData.images.map((img, i) => ({
-            src: `http://localhost:8001/uploads/${img.imageData}` || "/placeholder.png",   // ✅ use imageData
-            alt: img.altText || `${productData.name} ${i + 1}`, // ✅ use altText
-          })),
+  images: productData.images.map((img, i) => ({
+    src: img.imageData || "/placeholder.png",   // ✅ use directly
+    alt: img.altText || `${productData.name} ${i + 1}`,
+  })),
 
-          mainImage: productData.images[0]?.imageData || "/placeholder.png", // ✅
+  // ✅ Keep only one mainImage
+  mainImage: productData.images[0]?.imageData || "/placeholder.png",
 
-          size: productData.sizes.map((s) => s.size), // extract just size
-          sizeDetails: productData.sizes, // keep full details
-          material: ["Leather", "Synthetic"], // fallback until API provides
-          advantages: productData.advantages
-            ? productData.advantages.split(",").map((a) => a.trim())
-            : [],
-          shipping: "Delivered in 5-7 business days",
-          mainImage: productData.images[0]?.imageData || "/placeholder.png", // ✅ correct
-          // mainImage: productData.images[0]?.src || "/placeholder.png",
-        };
+  size: productData.sizes.map((s) => s.size), // extract just size
+  sizeDetails: productData.sizes, // keep full details
+  material: ["Leather", "Synthetic"], // fallback until API provides
+  advantages: productData.advantages
+    ? productData.advantages.split(",").map((a) => a.trim())
+    : [],
+  shipping: "Delivered in 5-7 business days",
+};
+
         console.log(productData);
         setProduct(mapped);
         setMainImage(mapped.mainImage);

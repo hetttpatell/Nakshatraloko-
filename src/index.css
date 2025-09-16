@@ -17,7 +17,7 @@
   animation: ring 1.2s infinite;
   transform-origin: center;
 }
-
+  
 :root {
   /* Primary Colors */
   --color-primary: #b89f7a;
