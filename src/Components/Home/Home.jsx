@@ -8,11 +8,13 @@ import Testimonials from "./Testimonals";
 import ConsultationForm from "./HelpingForm";
 import ExpertCall from "./ExpertCall";
 import axios from "axios";
+import CouponsBanner from "../Coupons/CouponsBanner";
 
 export default function Home() {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
+      <CouponsBanner />
       <HeroSection />
       <ValueProposition />
       <FeaturedProducts />

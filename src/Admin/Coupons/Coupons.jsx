@@ -141,23 +141,19 @@ const Coupons = () => {
   // Toggle product selection for add form
   // Toggle product selection for add form
   const toggleProductSelection = (productId) => {
-    setCouponForm(prev => {
-      const currentIds = prev.productIds || [];
-      const isSelected = currentIds.includes(productId);
+  setCouponForm(prev => {
+    const currentIds = prev.productIds || [];
+    const isSelected = currentIds.includes(productId);
 
-      if (isSelected) {
-        return {
-          ...prev,
-          productIds: currentIds.filter(id => id !== productId)
-        };
-      } else {
-        return {
-          ...prev,
-          productIds: [...currentIds, productId]
-        };
-      }
-    });
-  };
+    const newIds = isSelected
+      ? currentIds.filter(id => id !== productId)
+      : [...currentIds, productId];
+
+    console.log("Selected product IDs:", newIds); // ✅ logs only on toggle
+
+    return { ...prev, productIds: newIds };
+  });
+};
 
 
   // Toggle product selection for edit form
@@ -786,21 +782,18 @@ const Coupons = () => {
                 {/* Product List with Checkboxes */}
                 <div className="max-h-40 overflow-y-auto border rounded-md p-2">
                   <div className="max-h-40 overflow-y-auto border rounded-md p-2">
-                    {filteredProducts.map((product) => {
-                      console.log("Product in list:", product);
-                      return (
-                        <label key={product.id} className="flex items-center gap-2 mb-2">
-                          <input
-                            type="checkbox"
-                            checked={couponForm.productIds.includes(product.id)}
-                            onChange={() => toggleProductSelection(product.id)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
+                   {filteredProducts.map((product) => (
+  <label key={product.id} className="flex items-center gap-2 mb-2">
+    <input
+      type="checkbox"
+      checked={couponForm.productIds.includes(product.id)}
+      onChange={() => toggleProductSelection(product.id)}
+      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+    />
+    <span>{product.name}</span>
+  </label>
+))}
 
-                          <span>{product.name}</span>
-                        </label>
-                      );
-                    })}
 
                   </div>
 
