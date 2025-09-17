@@ -523,7 +523,7 @@ const ProductDetails = () => {
             </div>
 
             {/* Material Picker */}
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <label className="block text-xs font-semibold mb-3 text-color-text tracking-wider uppercase">SELECT JEWELRY TYPE</label>
               <div className="flex flex-wrap gap-3">
                 {product.material.map((item) => (
@@ -539,7 +539,7 @@ const ProductDetails = () => {
                   </button>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {/* Quantity & Price */}
             <div className="flex items-center gap-10 mb-6">
@@ -586,21 +586,23 @@ const ProductDetails = () => {
               <Button
                 onClick={async () => {
                   const res = await toggleWishlist(product.id);
-
                   if (res.success) {
                     showToast(res.message, "success");
                   } else {
                     showToast(res.message, "error");
                   }
                 }}
-                className="px-6 py-3.5 font-medium text-sm"
+                className={`px-6 py-3.5 font-medium text-sm border transition-all duration-200 ${isWishlisted
+                    ? "bg-color-primary text-color-surface border-color-primary"
+                    : "bg-color-surface text-color-text border-color-border hover:border-color-primary"
+                  }`}
               >
                 {isWishlisted ? (
                   <AiFillHeart className="inline mr-2 text-lg" />
                 ) : (
                   <AiOutlineHeart className="inline mr-2 text-lg" />
                 )}
-                Wishlist
+                {isWishlisted ? "WISHLISTED" : "WISHLIST"}
               </Button>
             </div>
 
@@ -1039,7 +1041,7 @@ const ProductDetails = () => {
                     {/* Review Content */}
                     <div className="mb-6">
                       <h5 className="font-semibold text-color-text mb-3 text-lg">
-                        Product Name : {review.ProductName}
+                       Review Title
                       </h5>
                       <p className="text-color-text-light leading-relaxed">
                         {review.ReviewText}
