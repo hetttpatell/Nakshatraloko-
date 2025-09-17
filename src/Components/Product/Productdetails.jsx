@@ -3,6 +3,7 @@ import AccordionItem from "./AccordionItem";
 import { useParams, useLocation } from "react-router-dom";
 import { AiOutlineLike, AiFillLike, AiFillHeart, AiOutlineHeart, AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { FiChevronRight, FiZoomIn, FiUser } from "react-icons/fi";
+import { BsStarHalf } from "react-icons/bs";
 import Recommendation from "./Recommendation";
 import Button from "../Button/Button";
 import { useWishlist } from "../../Context/WishlistContext";
@@ -218,11 +219,11 @@ const ProductDetails = () => {
           name: productData.name,
           description: productData.description,
           howToWear: productData.howToWear || "",
-          brand: "Unknown Brand", // if not coming from API
+          brand: "Unknown Brand",
 
           // ⭐ Rating setup
-          rating: productData.rating && productData.rating <= 5
-            ? productData.rating
+          rating: productData.avgRating && productData.avgRating <= 5
+            ? productData.avgRating
             : 0, // fallback: no rating yet, safe default
           reviews: productData.reviews || 0,
           reviewList: productData.reviewList || [],
@@ -271,6 +272,31 @@ const ProductDetails = () => {
       isMounted = false;
     };
   }, [id]);
+
+  // Add this function to your component
+  const renderStars = (rating) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    // Full stars
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(<AiFillStar key={`full-${i}`} className="text-lg" />);
+    }
+
+    // Half star
+    if (hasHalfStar) {
+      stars.push(<BsStarHalf key="half" className="text-lg" />);
+    }
+
+    // Empty stars
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(<AiOutlineStar key={`empty-${i}`} className="text-lg" />);
+    }
+
+    return stars;
+  };
 
   const isWishlisted = wishlist.some((item) => item.id === product?.id);
 
@@ -463,13 +489,10 @@ const ProductDetails = () => {
               <h2 className="text-sm font-medium text-color-primary uppercase tracking-wider mb-2">{product.brand}</h2>
               <h1 className="text-3xl font-serif font-normal text-color-text leading-tight mb-4">{product.name}</h1>
 
+             // In the product header section:
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex items-center text-color-rating">
-                  {[...Array(5)].map((_, i) => (
-                    i < Math.floor(product.rating) ?
-                      <AiFillStar key={i} className="text-lg" /> :
-                      <AiOutlineStar key={i} className="text-lg" />
-                  ))}
+                  {renderStars(product.rating)}
                 </div>
                 <span className="text-sm text-color-text-muted">({reviews.length} reviews)</span>
                 <span className="text-sm font-medium text-color-accent-green ml-4">In Stock</span>
@@ -799,11 +822,18 @@ const ProductDetails = () => {
                 <h2 className="text-2xl font-serif font-normal text-color-text mb-2">Customer Reviews</h2>
                 <div className="flex items-center">
                   <div className="flex text-color-rating mr-2">
-                    {[...Array(5)].map((_, i) => (
-                      i < Math.floor(product.rating) ?
-                        <AiFillStar key={i} className="text-lg" /> :
-                        <AiOutlineStar key={i} className="text-lg" />
-                    ))}
+                    {[...Array(5)].map((_, i) => {
+                      if (i < Math.floor(product.rating)) {
+                        // Full star
+                        return <AiFillStar key={i} className="text-lg" />;
+                      } else if (i === Math.floor(product.rating) && product.rating % 1 !== 0) {
+                        // Half star
+                        return <BsStarHalf key={i} className="text-lg" />;
+                      } else {
+                        // Empty star
+                        return <AiOutlineStar key={i} className="text-lg" />;
+                      }
+                    })}
                   </div>
                   <span className="text-color-text-muted text-sm">Based on {reviews.length} reviews</span>
                 </div>
@@ -973,17 +1003,17 @@ const ProductDetails = () => {
                         <div>
                           <h4 className="font-semibold text-color-text">{review.UserName}</h4>
                           <div className="flex items-center gap-2 mt-1">
+
                             <div className="flex text-color-rating">
-                              {[...Array(5)].map((_, i) =>
-                                i < review.Rating ? (
-                                  <AiFillStar key={i} className="text-sm" />
-                                ) : (
-                                  <AiOutlineStar
-                                    key={i}
-                                    className="text-sm text-color-text-muted"
-                                  />
-                                )
-                              )}
+                              {[...Array(5)].map((_, i) => {
+                                if (i < Math.floor(review.Rating)) {
+                                  return <AiFillStar key={i} className="text-sm" />;
+                                } else if (i === Math.floor(review.Rating) && review.Rating % 1 !== 0) {
+                                  return <BsStarHalf key={i} className="text-sm" />;
+                                } else {
+                                  return <AiOutlineStar key={i} className="text-sm text-color-text-muted" />;
+                                }
+                              })}
                             </div>
                             <span className="text-sm text-color-text-muted">
                               {formatDate(review.Created_Date)}
@@ -993,7 +1023,7 @@ const ProductDetails = () => {
                       </div>
 
                       {/* Like Button (optional since API doesn’t return likes yet) */}
-                      <button
+                      {/* <button
                         onClick={() => toggleLike(review.ReviewID)}
                         className="flex items-center gap-2 text-sm text-color-text-muted hover:text-color-primary transition-colors duration-200"
                       >
@@ -1003,13 +1033,13 @@ const ProductDetails = () => {
                           <AiOutlineLike className="text-lg" />
                         )}
                         <span>Helpful</span>
-                      </button>
+                      </button> */}
                     </div>
 
                     {/* Review Content */}
                     <div className="mb-6">
                       <h5 className="font-semibold text-color-text mb-3 text-lg">
-                        {review.ProductName}
+                        Product Name : {review.ProductName}
                       </h5>
                       <p className="text-color-text-light leading-relaxed">
                         {review.ReviewText}
@@ -1018,13 +1048,13 @@ const ProductDetails = () => {
 
                     {/* Review Metadata */}
                     <div className="flex flex-wrap gap-4 text-xs text-color-text-muted">
-                      <span>Review ID: {review.ReviewID}</span>
-                      <span>•</span>
-                      <span>User ID: {review.UserID}</span>
-                      <span>•</span>
-                      <span>Product ID: {review.ProductID}</span>
-                      <span>•</span>
-                      <span>Product: {review.ProductName}</span>
+                      {/* <span>Review ID: {review.ReviewID}</span> */}
+                      {/* <span>•</span> */}
+                      {/* <span>User ID: {review.UserID}</span> */}
+                      {/* <span>•</span> */}
+                      {/* <span>Product Name:  {review.UserName}</span> */}
+                      {/* <span>•</span>
+                      <span>Product: {review.ProductName}</span> */}
                     </div>
                   </div>
                 ))
