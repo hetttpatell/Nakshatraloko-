@@ -27,6 +27,7 @@ const router = createBrowserRouter(
 
       {/* Product Page */}
       <Route path="product/:id" element={<Productdetails />} />
+      
       <Route path="blog/:id" element={<DetailBlog />} />
 
       {/* Gemstones Page */}

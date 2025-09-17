@@ -44,6 +44,7 @@ import ProductAdmin from "./ProductSection/ProductsAdmin";
 import CategoriesAdmin from "./CatagoryAdmin/CategoriesAdmin";
 import Coupons from "./Coupons/Coupons";
 import Consultancy from "./Consultancy/Consultancy";
+import Reviews from "./Reviews/Reviews";
 
 // API utility
 import api from "../Utils/api";
@@ -257,6 +258,10 @@ const Admin = () => {
 
           {activePage === "Consultancy" && (
             <Consultancy isMobile={isMobile} />
+          )}
+         
+          {activePage === "Reviews" && (
+            <Reviews isMobile={isMobile} />
           )}
 
           {activePage === "Settings" && (

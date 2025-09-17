@@ -2,16 +2,15 @@ import React, { useState, useEffect } from "react";
 import AccordionItem from "./AccordionItem";
 import { useParams, useLocation } from "react-router-dom";
 import { AiOutlineLike, AiFillLike, AiFillHeart, AiOutlineHeart, AiFillStar, AiOutlineStar } from "react-icons/ai";
-import { FiChevronRight, FiZoomIn } from "react-icons/fi";
+import { FiChevronRight, FiZoomIn, FiUser } from "react-icons/fi";
 import Recommendation from "./Recommendation";
 import Button from "../Button/Button";
 import { useWishlist } from "../../Context/WishlistContext";
 import { useCart } from "../../Context/CartContext";
 import Toast from "./Toast";
-
 import axios from "axios";
-
 import { toast } from "react-toastify";
+
 const productquestions = [
   {
     title: "What is the return policy?",
@@ -32,14 +31,23 @@ const productquestions = [
 ];
 
 const ProductDetails = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // id must match productId
   const { state } = useLocation();
   const passedProduct = state?.product;
 
-  const [rating, setRating] = useState(0);
-  const [hover, setHover] = useState(0);
-  const [title, setTitle] = useState("");
-  const [comment, setComment] = useState("");
+  // Review states
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewForm, setReviewForm] = useState({
+    rating: 0,
+    title: "",
+    content: "",
+    hoverRating: 0
+  });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+
+  // Existing states
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState("");
@@ -62,49 +70,135 @@ const ProductDetails = () => {
   const [applicableCoupons, setApplicableCoupons] = useState([]);
   const { addToWishlist, wishlist } = useWishlist();
   const { addToCart } = useCart();
-  const [copied, setCopied] = useState(false);
-
-  // Helper function to map product data from API to our expected format
-
-  // Fetch featured categories with coupons
-// Add this to your useState declarations
 
 
-// Update your useEffect for fetching featured categories
-useEffect(() => {
-  const fetchFeaturedCategories = async () => {
+  // Fetch reviews
+  const fetchReviews = async () => {
+    if (!id) return; // don't call API if id is missing
+    console.log("Fetching reviews for product:", id);
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      console.warn("No auth token found!");
+      return;
+    }
+
     try {
-      setLoadingCoupons(true);
+      const response = await axios.post(
+        `http://localhost:8001/api/getReviewsByProduct/${id}`,
+        {},
+        {
+          headers:
+          {
+            Authorization: `${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setReviews(Array.isArray(response.data.reviews) ? response.data.reviews : []);
+      } else {
+        console.warn(response.data.message);
+        setReviews([]);
+      }
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === "reviews") {
+      fetchReviews();
+    }
+  };
+
+
+  // Submit review
+  const submitReview = async () => {
+    if (!reviewForm.rating || !reviewForm.title.trim() || !reviewForm.content.trim()) {
+      showToast("Please fill in all fields and provide a rating", "error");
+      return;
+    }
+
+    try {
+      setIsSubmittingReview(true);
       const token = localStorage.getItem("authToken");
 
+      const productId = product.id;
       const response = await axios.post(
-        "http://localhost:8001/api/activeCouponProducts",
-        {},
+        `http://localhost:8001/api/saveProductReview`,
+        {
+          productId: productId, // You need to define productId from your component's context
+          rating: reviewForm.rating,
+          reviewText: reviewForm.content.trim()
+        },
         {
           headers: {
             Authorization: `${token}`,
           },
         }
       );
-      
+
       if (response.data.success) {
-        setFeaturedCategories(response.data.data);
-        
-        // Find coupons applicable to this product
-        const applicable = response.data.data.filter(
-          item => item.productid === parseInt(id)
-        );
-        setApplicableCoupons(applicable);
+        showToast("Review submitted successfully!", "success");
+        setReviewForm({
+          rating: 0,
+          title: "",
+          content: "",
+          hoverRating: 0
+        });
+        setShowReviewForm(false);
+        fetchReviews(); // Refresh reviews
+      } else {
+        showToast(response.data.message || "Failed to submit review", "error");
       }
     } catch (error) {
-      console.error("Error fetching featured categories:", error);
+      console.error("Error submitting review:", error);
+      showToast(error.response?.data?.message || "Failed to submit review", "error");
     } finally {
-      setLoadingCoupons(false);
+      setIsSubmittingReview(false);
     }
   };
-  
-  fetchFeaturedCategories();
-}, [id]);
+
+  // Fetch featured categories with coupons
+  useEffect(() => {
+    const fetchFeaturedCategories = async () => {
+      try {
+        setLoadingCoupons(true);
+        const token = localStorage.getItem("authToken");
+
+        const response = await axios.post(
+          "http://localhost:8001/api/activeCouponProducts",
+          {},
+          {
+            headers: {
+              Authorization: `${token}`,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setFeaturedCategories(response.data.data);
+
+          // Find coupons applicable to this product
+          const applicable = response.data.data.filter(
+            item => item.productid === parseInt(id)
+          );
+          setApplicableCoupons(applicable);
+        }
+      } catch (error) {
+        console.error("Error fetching featured categories:", error);
+      } finally {
+        setLoadingCoupons(false);
+      }
+    };
+
+    fetchFeaturedCategories();
+  }, [id]);
 
   useEffect(() => {
     let isMounted = true;
@@ -125,7 +219,11 @@ useEffect(() => {
           description: productData.description,
           howToWear: productData.howToWear || "",
           brand: "Unknown Brand", // if not coming from API
-          rating: productData.rating || 4.5, // fallback rating
+
+          // ⭐ Rating setup
+          rating: productData.rating && productData.rating <= 5
+            ? productData.rating
+            : 0, // fallback: no rating yet, safe default
           reviews: productData.reviews || 0,
           reviewList: productData.reviewList || [],
 
@@ -142,10 +240,6 @@ useEffect(() => {
             )
             : "/s1.jpeg",
 
-
-          // ✅ Keep only one mainImage
-          // mainImage: productData.images[0]?.imageData || "/placeholder.png",
-
           size: productData.sizes.map((s) => s.size), // extract just size
           sizeDetails: productData.sizes, // keep full details
           material: ["Leather", "Synthetic"], // fallback until API provides
@@ -155,7 +249,7 @@ useEffect(() => {
           shipping: "Delivered in 5-7 business days",
         };
 
-        console.log(productData);
+        console.log("Mapped Product:", mapped);
         setProduct(mapped);
         setMainImage(mapped.mainImage);
         setSelectedSize(mapped.size[0] || "");
@@ -171,39 +265,52 @@ useEffect(() => {
     };
 
     loadProduct();
+    fetchReviews(); // Fetch reviews when component mounts
 
     return () => {
       isMounted = false;
     };
   }, [id]);
 
-
-
-
-
   const isWishlisted = wishlist.some((item) => item.id === product?.id);
-
 
   const showToast = (message, type = "success") => {
     setCustomToast({ message, type, visible: true });
   };
 
+  const toggleLike = async (reviewId) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await axios.post(
+        `http://localhost:8001/api/review/${reviewId}/like`,
+        {},
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        }
+      );
 
-  const toggleLike = (idx) =>
-    setLikedReviews((prev) =>
-      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
-    );
+      if (response.data.success) {
+        setLikedReviews(prev =>
+          prev.includes(reviewId)
+            ? prev.filter(id => id !== reviewId)
+            : [...prev, reviewId]
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling review like:", error);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
 
-
   const getOriginalPrice = () => {
     const selected = product?.sizeDetails?.find((s) => s.size === selectedSize);
     return selected ? selected.dummyPrice : 0;
   };
-
 
   const getAdjustedPrice = () => {
     if (!product || !product.sizeDetails) return 0;
@@ -215,7 +322,6 @@ useEffect(() => {
 
     return selected.price * quantity;
   };
-
 
   const handleImageZoom = (e) => {
     if (!isImageZoomed) return;
@@ -253,11 +359,9 @@ useEffect(() => {
     );
   }
 
-
-  // ✅ Function to toggle wishlist
+  // Function to toggle wishlist
   const toggleWishlist = async (productId) => {
     try {
-
       const { data } = await axios.post(
         "http://localhost:8001/api/manageWishlist",
         { productId }, // body
@@ -278,6 +382,18 @@ useEffect(() => {
     }
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return date.toLocaleDateString();
+  };
 
   return (
     <div className="bg-color-background min-h-screen">
@@ -337,11 +453,6 @@ useEffect(() => {
                   <FiZoomIn className="text-sm" />
                   {isImageZoomed ? 'Click to zoom out' : 'Click to zoom'}
                 </div>
-
-                {/* Premium badge */}
-                {/* <div className="absolute top-4 left-4 bg-color-primary text-color-surface text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-                  LUXURY COLLECTION
-                </div> */}
               </div>
             </div>
           </div>
@@ -360,16 +471,13 @@ useEffect(() => {
                       <AiOutlineStar key={i} className="text-lg" />
                   ))}
                 </div>
-                <span className="text-sm text-color-text-muted">({product.reviews} reviews)</span>
+                <span className="text-sm text-color-text-muted">({reviews.length} reviews)</span>
                 <span className="text-sm font-medium text-color-accent-green ml-4">In Stock</span>
               </div>
               <div className="text-2xl font-light text-color-text mb-2">
                 <span className="line-through text-color-text-muted mr-2">₹ {getOriginalPrice()}</span>
                 ₹ {getAdjustedPrice()}
               </div>
-
-
-
             </div>
 
             {/* Size Picker */}
@@ -442,10 +550,6 @@ useEffect(() => {
 
             {/* Buttons */}
             <div className="flex gap-4 mb-8">
-              {/* onClick={() => { */}
-              {/* //   addToCart(product, quantity, selectedSize, selectedMaterial); */}
-              {/* //   showToast(`${product.name} added to Bag`, "success"); */}
-              {/* // }} */}
               <Button
                 onClick={() => {
                   addToCart({ productid: product.id });
@@ -475,124 +579,121 @@ useEffect(() => {
                 )}
                 Wishlist
               </Button>
-
-
             </div>
 
             {/* Delivery Section */}
-{/* Delivery Section */}
-<div className="bg-color-surface border border-color-border rounded-sm p-5 flex flex-col gap-4 text-sm mb-6">
-  <div className="flex gap-3 items-center">
-    <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
-      🚚
-    </span>
-    <div>
-      <div className="font-semibold text-color-text">Free Shipping</div>
-      <div className="text-xs text-color-text-muted">
-        On orders over ₹5,000
-      </div>
-    </div>
-  </div>
+            <div className="bg-color-surface border border-color-border rounded-sm p-5 flex flex-col gap-4 text-sm mb-6">
+              <div className="flex gap-3 items-center">
+                <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
+                  🚚
+                </span>
+                <div>
+                  <div className="font-semibold text-color-text">Free Shipping</div>
+                  <div className="text-xs text-color-text-muted">
+                    On orders over ₹5,000
+                  </div>
+                </div>
+              </div>
 
-  <div className="flex gap-3 items-center">
-    <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
-      ↩️
-    </span>
-    <div>
-      <div className="font-semibold text-color-text">Return Delivery</div>
-      <div className="text-xs text-color-text-muted">
-        Free 30 days Delivery Return
-      </div>
-    </div>
-  </div>
+              <div className="flex gap-3 items-center">
+                <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
+                  ↩️
+                </span>
+                <div>
+                  <div className="font-semibold text-color-text">Return Delivery</div>
+                  <div className="text-xs text-color-text-muted">
+                    Free 30 days Delivery Return
+                  </div>
+                </div>
+              </div>
 
-  <div className="flex gap-3 items-center">
-    <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
-      🔒
-    </span>
-    <div>
-      <div className="font-semibold text-color-text">Secure Payment</div>
-      <div className="text-xs text-color-text-muted">
-        Your transaction is secured with SSL encryption
-      </div>
-    </div>
-  </div>
-</div>
+              <div className="flex gap-3 items-center">
+                <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
+                  🔒
+                </span>
+                <div>
+                  <div className="font-semibold text-color-text">Secure Payment</div>
+                  <div className="text-xs text-color-text-muted">
+                    Your transaction is secured with SSL encryption
+                  </div>
+                </div>
+              </div>
+            </div>
 
-{/* Coupon Section */}
-<div className="bg-color-surface border border-color-border rounded-sm p-5 flex flex-col gap-4 text-sm mb-6">
-  <div className="flex gap-3 items-center">
-    <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
-      🎫
-    </span>
-    <div>
-      <div className="font-semibold text-color-text">Special Offers</div>
-      <div className="text-xs text-color-text-muted">
-        Available discounts for your order
-      </div>
-    </div>
-  </div>
+            {/* Coupon Section */}
+            <div className="bg-color-surface border border-color-border rounded-sm p-5 flex flex-col gap-4 text-sm mb-6">
+              <div className="flex gap-3 items-center">
+                <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
+                  🎫
+                </span>
+                <div>
+                  <div className="font-semibold text-color-text">Special Offers</div>
+                  <div className="text-xs text-color-text-muted">
+                    Available discounts for your order
+                  </div>
+                </div>
+              </div>
 
-  {!loadingCoupons && applicableCoupons.map((coupon, index) => {
-    const copyToClipboard = () => {
-      navigator.clipboard.writeText(coupon.couponcode)
-        .then(() => {
-          // Show feedback that code was copied
-          const element = document.getElementById(`coupon-${index}`);
-          if (element) {
-            element.textContent = "✓ Copied!";
-            setTimeout(() => {
-              element.textContent = "Double tap to copy";
-            }, 2000);
-          }
-        })
-        .catch(err => {
-          console.error('Failed to copy: ', err);
-        });
-    };
-    
-    return (
-      <div key={index} className="flex gap-3 items-center mt-2">
-        <span className="inline-flex items-center justify-center w-8 h-8 bg-color-accent-green/20 rounded-full text-center text-color-accent-green">
-          🔖
-        </span>
-        <div className="flex-1">
-          <div 
-            className="font-semibold text-color-text cursor-pointer"
-            onDoubleClick={copyToClipboard}
-          >
-            Use code: <span className="text-color-primary">{coupon.couponcode}</span>
-            <span 
-              id={`coupon-${index}`}
-              className="ml-2 text-xs text-color-text-muted"
-            >
-              Double tap to copy
-            </span>
-          </div>
-          <div className="text-xs text-color-text-muted">
-            Save {coupon.DiscountType === 'PERCENTAGE' 
-              ? `${coupon.DiscountValue}%` 
-              : `₹${coupon.DiscountValue}`}
-          </div>
-        </div>
-      </div>
-    );
-  })}
-  
-  {loadingCoupons && (
-    <div className="flex gap-3 items-center">
-      <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
-        🎫
-      </span>
-      <div>
-        <div className="font-semibold text-color-text">Checking for offers...</div>
-        <div className="text-xs text-color-text-muted">
-          Loading available discounts
-        </div>
-      </div>
-    </div>
-  )}
-</div>
+              {!loadingCoupons && applicableCoupons.map((coupon, index) => {
+                const copyToClipboard = () => {
+                  navigator.clipboard.writeText(coupon.couponcode)
+                    .then(() => {
+                      const element = document.getElementById(`coupon-${index}`);
+                      if (element) {
+                        element.textContent = "✓ Copied!";
+                        setTimeout(() => {
+                          element.textContent = "Double tap to copy";
+                        }, 2000);
+                      }
+                    })
+                    .catch(err => {
+                      console.error('Failed to copy: ', err);
+                    });
+                };
+
+                return (
+                  <div key={index} className="flex gap-3 items-center mt-2">
+                    <span className="inline-flex items-center justify-center w-8 h-8 bg-color-accent-green/20 rounded-full text-center text-color-accent-green">
+                      🔖
+                    </span>
+                    <div className="flex-1">
+                      <div
+                        className="font-semibold text-color-text cursor-pointer"
+                        onDoubleClick={copyToClipboard}
+                      >
+                        Use code: <span className="text-color-primary">{coupon.couponcode}</span>
+                        <span
+                          id={`coupon-${index}`}
+                          className="ml-2 text-xs text-color-text-muted"
+                        >
+                          Double tap to copy
+                        </span>
+                      </div>
+                      <div className="text-xs text-color-text-muted">
+                        Save {coupon.DiscountType === 'PERCENTAGE'
+                          ? `${coupon.DiscountValue}%`
+                          : `₹${coupon.DiscountValue}`}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {loadingCoupons && (
+                <div className="flex gap-3 items-center">
+                  <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
+                    🎫
+                  </span>
+                  <div>
+                    <div className="font-semibold text-color-text">Checking for offers...</div>
+                    <div className="text-xs text-color-text-muted">
+                      Loading available discounts
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Accordion FAQs */}
             <div className="mt-2">
               {productquestions.map((item, index) => (
@@ -604,6 +705,33 @@ useEffect(() => {
           </div>
         </div>
 
+        {/* Tab Navigation */}
+        <div className="border-b border-color-border mb-8 mt-12">
+          <div className="flex space-x-8">
+            <button
+              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === "description"
+                ? "border-color-primary text-color-primary"
+                : "border-transparent text-color-text-muted hover:text-color-text"
+                }`}
+              onClick={() => handleTabChange("description")}
+            >
+              DESCRIPTION
+            </button>
+
+            <button
+              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === "reviews"
+                ? "border-color-primary text-color-primary"
+                : "border-transparent text-color-text-muted hover:text-color-text"
+                }`}
+              onClick={() => handleTabChange("reviews")}
+            >
+              REVIEWS ({reviews.length})
+            </button>
+
+          </div>
+        </div>
+
+        {/* Tab Content */}
         {activeTab === "description" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 py-8">
             {/* Left Column: About & Advantages */}
@@ -662,6 +790,249 @@ useEffect(() => {
           </div>
         )}
 
+        {activeTab === "reviews" && (
+          <div className="py-8">
+            {/* Review Header */}
+            {/* Review Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
+              <div className="mb-6 md:mb-0">
+                <h2 className="text-2xl font-serif font-normal text-color-text mb-2">Customer Reviews</h2>
+                <div className="flex items-center">
+                  <div className="flex text-color-rating mr-2">
+                    {[...Array(5)].map((_, i) => (
+                      i < Math.floor(product.rating) ?
+                        <AiFillStar key={i} className="text-lg" /> :
+                        <AiOutlineStar key={i} className="text-lg" />
+                    ))}
+                  </div>
+                  <span className="text-color-text-muted text-sm">Based on {reviews.length} reviews</span>
+                </div>
+              </div>
+
+              <button
+                className="bg-color-primary text-color-surface px-6 py-3 rounded-sm text-sm font-medium hover:bg-opacity-90 transition-colors"
+                onClick={() => setShowReviewForm(!showReviewForm)}
+              >
+                {showReviewForm ? 'CANCEL' : 'WRITE A REVIEW'}
+              </button>
+            </div>
+
+            {/* Write Review Form */}
+            {showReviewForm && (
+              <div className="bg-color-surface border-2 border-color-border rounded-lg p-8 mb-10 shadow-sm">
+                <h3 className="text-xl font-serif font-normal text-color-text mb-2">Write a Review</h3>
+                <p className="text-color-text-muted text-sm mb-8">What is it like to use this Product?</p>
+
+                {/* Rating Section */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-color-text mb-3 uppercase tracking-wider">
+                    Your Rating *
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        className="text-2xl transition-colors duration-200 hover:scale-110"
+                        onMouseEnter={() => setReviewForm(prev => ({ ...prev, hoverRating: star }))}
+                        onMouseLeave={() => setReviewForm(prev => ({ ...prev, hoverRating: 0 }))}
+                        onClick={() => setReviewForm(prev => ({ ...prev, rating: star }))}
+                      >
+                        {star <= (reviewForm.hoverRating || reviewForm.rating) ? (
+                          <AiFillStar className="text-color-rating" />
+                        ) : (
+                          <AiOutlineStar className="text-color-text-muted" />
+                        )}
+                      </button>
+                    ))}
+                    <span className="ml-3 text-sm text-color-text-muted">
+                      {reviewForm.rating > 0 && (
+                        `${reviewForm.rating} star${reviewForm.rating > 1 ? 's' : ''}`
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Review Title */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-color-text mb-3 uppercase tracking-wider">
+                    Review Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={reviewForm.title}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Great Product!"
+                    className="w-full px-4 py-3 border-2 border-color-border rounded-sm bg-color-background focus:border-color-primary focus:outline-none text-color-text placeholder-color-text-muted transition-colors duration-200"
+                    maxLength={100}
+                  />
+                  <div className="text-right text-xs text-color-text-muted mt-1">
+                    {reviewForm.title.length}/100
+                  </div>
+                </div>
+
+                {/* Review Content */}
+                <div className="mb-8">
+                  <label className="block text-sm font-semibold text-color-text mb-3 uppercase tracking-wider">
+                    Review Content *
+                  </label>
+                  <textarea
+                    value={reviewForm.content}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, content: e.target.value }))}
+                    placeholder="Share your thoughts about this product..."
+                    rows={6}
+                    className="w-full px-4 py-3 border-2 border-color-border rounded-sm bg-color-background focus:border-color-primary focus:outline-none text-color-text placeholder-color-text-muted resize-none transition-colors duration-200"
+                    maxLength={500}
+                  />
+                  <div className="text-right text-xs text-color-text-muted mt-1">
+                    {reviewForm.content.length}/500
+                  </div>
+                </div>
+
+                {/* Review Tips */}
+                <div className="bg-color-background border-2 border-color-border rounded-sm p-6 mb-8">
+                  <h4 className="text-sm font-semibold text-color-text mb-3 uppercase tracking-wider">Review Tips</h4>
+                  <ul className="text-sm text-color-text-light space-y-2">
+                    <li className="flex items-start">
+                      <span className="text-color-primary mr-3 mt-1">•</span>
+                      Focus on the product's features and your experience
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-color-primary mr-3 mt-1">•</span>
+                      Mention quality, comfort, and value for money
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-color-primary mr-3 mt-1">•</span>
+                      Be honest and helpful to other customers
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-color-primary mr-3 mt-1">•</span>
+                      Avoid personal information and irrelevant details
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-4">
+                  <button
+                    onClick={submitReview}
+                    disabled={isSubmittingReview || !reviewForm.rating || !reviewForm.title.trim() || !reviewForm.content.trim()}
+                    className="bg-color-primary text-color-surface px-8 py-3 rounded-sm text-sm font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmittingReview ? 'SUBMITTING...' : 'SUBMIT REVIEW'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowReviewForm(false);
+                      setReviewForm({
+                        rating: 0,
+                        title: "",
+                        content: "",
+                        hoverRating: 0
+                      });
+                    }}
+                    className="border-2 border-color-border px-8 py-3 rounded-sm text-sm font-semibold text-color-text hover:border-color-primary transition-colors"
+                  >
+                    CANCEL
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Reviews List */}
+            <div className="space-y-8">
+              {reviewsLoading ? (
+                <div className="text-center py-12">
+                  <div className="text-color-text-muted">Loading reviews...</div>
+                </div>
+              ) : reviews.length === 0 ? (
+                <div className="text-center py-16 border-2 border-color-border border-dashed rounded-lg">
+                  <div className="text-color-text-muted mb-2">No reviews yet</div>
+                  <p className="text-sm text-color-text-light mb-4">
+                    Be the first to share your thoughts!
+                  </p>
+                  <button
+                    onClick={() => setShowReviewForm(true)}
+                    className="bg-color-primary text-color-surface px-6 py-2 rounded-sm text-sm font-medium hover:bg-opacity-90 transition-colors"
+                  >
+                    WRITE THE FIRST REVIEW
+                  </button>
+                </div>
+              ) : (
+                reviews.map((review) => (
+                  <div
+                    key={review.ReviewID}
+                    className="bg-color-surface border-2 border-color-border rounded-lg p-8"
+                  >
+                    {/* Review Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-color-background rounded-full flex items-center justify-center border-2 border-color-border">
+                          <FiUser className="text-xl text-color-text-muted" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-color-text">{review.UserName}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex text-color-rating">
+                              {[...Array(5)].map((_, i) =>
+                                i < review.Rating ? (
+                                  <AiFillStar key={i} className="text-sm" />
+                                ) : (
+                                  <AiOutlineStar
+                                    key={i}
+                                    className="text-sm text-color-text-muted"
+                                  />
+                                )
+                              )}
+                            </div>
+                            <span className="text-sm text-color-text-muted">
+                              {formatDate(review.Created_Date)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Like Button (optional since API doesn’t return likes yet) */}
+                      <button
+                        onClick={() => toggleLike(review.ReviewID)}
+                        className="flex items-center gap-2 text-sm text-color-text-muted hover:text-color-primary transition-colors duration-200"
+                      >
+                        {likedReviews.includes(review.ReviewID) ? (
+                          <AiFillLike className="text-lg" />
+                        ) : (
+                          <AiOutlineLike className="text-lg" />
+                        )}
+                        <span>Helpful</span>
+                      </button>
+                    </div>
+
+                    {/* Review Content */}
+                    <div className="mb-6">
+                      <h5 className="font-semibold text-color-text mb-3 text-lg">
+                        {review.ProductName}
+                      </h5>
+                      <p className="text-color-text-light leading-relaxed">
+                        {review.ReviewText}
+                      </p>
+                    </div>
+
+                    {/* Review Metadata */}
+                    <div className="flex flex-wrap gap-4 text-xs text-color-text-muted">
+                      <span>Review ID: {review.ReviewID}</span>
+                      <span>•</span>
+                      <span>User ID: {review.UserID}</span>
+                      <span>•</span>
+                      <span>Product ID: {review.ProductID}</span>
+                      <span>•</span>
+                      <span>Product: {review.ProductName}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+          </div>
+        )}
 
         {/* Recommendations */}
         <div className="mt-20">
@@ -671,14 +1042,6 @@ useEffect(() => {
       </div>
 
       {/* Toast Notification */}
-      {toast.visible && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast({ ...toast, visible: false })}
-        />
-      )}
-
       {customToast.visible && (
         <Toast
           message={customToast.message}
@@ -688,7 +1051,6 @@ useEffect(() => {
           }
         />
       )}
-
     </div>
   );
 };

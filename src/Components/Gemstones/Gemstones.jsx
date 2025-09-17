@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Star, StarHalf, Filter, X, Sparkles, Eye, ArrowRight } from "lucide-react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import img from "./s1.jpeg"
 
 const ProductsPage = () => {
   const { category } = useParams();
@@ -18,7 +17,6 @@ const ProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]); // Store all products separately
   const [error, setError] = useState(null);
-  const [categoryData, setCategoryData] = useState([]);
   const [categories, setCategories] = useState([]);
   const [showSortOptions, setShowSortOptions] = useState(false);
 
@@ -47,49 +45,51 @@ const ProductsPage = () => {
     }
   }, [category]);
 
-useEffect(() => {
-  const fetchAllProducts = async () => {
-    try {
-      const res = await axios.post("http://localhost:8001/api/getFilteredProducts", {
-        p_min_price: null,
-        p_max_price: null,
-        p_catogaryname: filters.Categories?.trim() || null,
-        p_rating: null,
-      });
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        const res = await axios.post("http://localhost:8001/api/getFilteredProducts", {
+          p_min_price: null,
+          p_max_price: null,
+          p_catogaryname: filters.Categories?.trim() || null,
+          p_rating: null,
+        });
 
-      if (res.data.success) {
-        const productsData = res.data.data.map(p => ({
-          id: p.productid,
-          name: p.name,
-          category: p.catogaryname,
-          description: p.description,
-          price: p.firstsizeprice ? `₹ ${parseFloat(p.firstsizeprice).toLocaleString("en-IN")}` : "₹ 0",
-          img: p.primaryimage || null,
-          rating: parseFloat(p.avgrating || 0),
-          stock: p.stock,
-          dummyPrice: p.firstdummyprice ? `₹ ${parseFloat(p.firstdummyprice).toLocaleString("en-IN")}` : null,
-          discount: p.discount ? `₹ ${parseFloat(p.discount).toLocaleString("en-IN")}` : null,
-          discountPercentage: p.discountpercentage || 0,
-          numericPrice: p.firstsizeprice ? parseFloat(p.firstsizeprice) : 0,
-        }));
+        if (res.data.success) {
+          const productsData = res.data.data.map(p => ({
+            id: p.productid,
+            name: p.name,
+            category: p.catogaryname,
+            description: p.description,
+            price: p.firstsizeprice ? `₹ ${parseFloat(p.firstsizeprice).toLocaleString("en-IN")}` : "₹ 0",
+            img: p.primaryimage || null,
+            rating: parseFloat(p.avgrating || 0),
+            productRating: p.productratings ? parseFloat(p.productratings) : 0, // Individual product rating
+            reviewCount: p.reviewcount || 0, // Review count
+            stock: p.stock,
+            dummyPrice: p.firstdummyprice ? `₹ ${parseFloat(p.firstdummyprice).toLocaleString("en-IN")}` : null,
+            discount: p.discount ? `₹ ${parseFloat(p.discount).toLocaleString("en-IN")}` : null,
+            discountPercentage: p.discountpercentage || 0,
+            numericPrice: p.firstsizeprice ? parseFloat(p.firstsizeprice) : 0,
+          }));
 
-        setAllProducts(productsData);
-        setProducts(productsData);
-      } else {
+          setAllProducts(productsData);
+          setProducts(productsData);
+        } else {
+          setError("Failed to load products");
+        }
+      } catch (err) {
+        console.error(err);
         setError("Failed to load products");
       }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load products");
-    }
-  };
+    };
 
-  fetchAllProducts();
-}, [filters.Categories]); // ✅ Run whenever category changes
- // ✅ Run whenever the category filter changes
+    fetchAllProducts();
+  }, [filters.Categories]); // ✅ Run whenever category changes
+
   useEffect(() => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}, [category]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [category]);
 
   // Fetch filtered products whenever filters change
   useEffect(() => {
@@ -124,6 +124,8 @@ useEffect(() => {
               : "₹ 0",
             img: p.primaryimage || null,
             rating: parseFloat(p.avgrating || 0),
+            productRating: p.productratings ? parseFloat(p.productratings) : 0, // Individual product rating
+            reviewCount: p.reviewcount || 0, // Review count
             stock: p.stock,
             dummyPrice: p.firstdummyprice
               ? `₹ ${parseFloat(p.firstdummyprice).toLocaleString("en-IN")}`
@@ -237,6 +239,22 @@ useEffect(() => {
   };
 
   const hasActiveFilters = Object.values(filters).some(v => v !== "") || sortBy !== "";
+
+  // Function to render star ratings
+  const renderStars = (rating) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
+    return (
+      <div className="flex">
+        {Array.from({ length: 5 }).map((_, i) => {
+          if (i < fullStars) return <Star key={i} className="w-3 h-3 md:w-4 md:h-4 text-[var(--color-rating)] fill-[var(--color-rating)]" />;
+          if (i === fullStars && hasHalfStar) return <StarHalf key={i} className="w-3 h-3 md:w-4 md:h-4 text-[var(--color-rating)] fill-[var(--color-rating)]" />;
+          return <Star key={i} className="w-3 h-3 md:w-4 md:h-4 text-gray-300" />;
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
@@ -382,18 +400,30 @@ useEffect(() => {
                   <div className="p-3 md:p-4 lg:p-5">
                     <p className="text-xs font-medium text-[var(--color-primary)] uppercase tracking-wide mb-1">{product.category}</p>
                     <h3 className="font-semibold text-[var(--color-text)] text-sm md:text-base mb-2 line-clamp-2 group-hover:text-[var(--color-primary)] transition-colors">{product.name}</h3>
-                    <div className="flex items-center gap-1.5 md:gap-2 mb-3 md:mb-4">
-                      <div className="flex">
-                        {Array.from({ length: 5 }).map((_, i) => {
-                          const fullStars = Math.floor(product.rating);
-                          const hasHalfStar = product.rating % 1 >= 0.5;
-                          if (i < fullStars) return <Star key={i} className="w-3 h-3 md:w-4 md:h-4 text-[var(--color-rating)] fill-[var(--color-rating)]" />;
-                          if (i === fullStars && hasHalfStar) return <StarHalf key={i} className="w-3 h-3 md:w-4 md:h-4 text-[var(--color-rating)] fill-[var(--color-rating)]" />;
-                          return <Star key={i} className="w-3 h-3 md:w-4 md:h-4 text-gray-300" />;
-                        })}
+                    
+                    {/* Ratings and Reviews Section */}
+                    <div className="flex flex-col gap-1 mb-3 md:mb-4">
+                      <div className="flex items-center gap-1.5 md:gap-2">
+                        {renderStars(product.rating)}
+                        <span className="text-xs md:text-sm text-[var(--color-text-light)]">
+                          ({product.rating.toFixed(1)})
+                        </span>
                       </div>
-                      <span className="text-xs md:text-sm text-[var(--color-text-light)]">({product.rating})</span>
+                      
+                      {/* Product-specific rating (if available) */}
+                      {product.productRating > 0 && (
+                        <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-light)]">
+                          <span>Product: {product.productRating.toFixed(1)}</span>
+                          {renderStars(product.productRating)}
+                        </div>
+                      )}
+                      
+                      {/* Review count */}
+                      <div className="text-xs text-[var(--color-text-light)]">
+                        {product.reviewCount} {product.reviewCount === 1 ? 'review' : 'reviews'}
+                      </div>
                     </div>
+                    
                     <div className="flex flex-col gap-1.5 md:gap-2 pt-2 md:pt-3 border-t border-[var(--color-border-light)]">
                       {product.dummyPrice && product.discountPercentage && (
                         <div className="flex items-center gap-1.5 md:gap-2">

@@ -68,11 +68,11 @@ const Consultancy = () => {
         );
       } else {
         console.error("Failed to update status:", response.data.message);
-        alert("Failed to update status: " + response.data.message);
+        // alert("Failed to update status: " + response.data.message);
       }
     } catch (error) {
       console.error("Error updating status:", error);
-      alert("Error updating status. See console for details.");
+      // alert("Error updating status. See console for details.");
     }
   };
 

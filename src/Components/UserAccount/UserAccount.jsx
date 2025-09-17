@@ -93,14 +93,14 @@ export default function UserAccount() {
       );
 
       if (res.data.success) {
-        alert("Profile updated successfully!");
+        // alert("Profile updated successfully!");
         // Optionally fetch updated data again from server
       } else {
-        alert(res.data.message || "Failed to update profile");
+        // alert(res.data.message || "Failed to update profile");
       }
     } catch (err) {
       console.error("Failed to update user:", err);
-      alert(err.response?.data?.message || "Something went wrong");
+      // alert(err.response?.data?.message || "Something went wrong");
     }
   };
 

@@ -117,7 +117,7 @@ const ModernTestimonialsCarousel = () => {
       }
     } else {
       navigator.clipboard.writeText(`${review.name}: ${review.description}`);
-      alert('Testimonial copied to clipboard!');
+      // alert('Testimonial copied to clipboard!');
     }
   };
 

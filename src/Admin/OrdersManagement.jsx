@@ -133,7 +133,7 @@ const OrdersManagement = ({ isMobile }) => {
 
     } catch (err) {
       console.error("Failed to update order status:", err);
-      alert("Failed to update order status. Please try again.");
+      // alert("Failed to update order status. Please try again.");
     }
   };
 

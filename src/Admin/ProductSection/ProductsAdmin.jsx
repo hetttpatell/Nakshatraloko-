@@ -136,13 +136,13 @@ const handleAddProductWithAPI = async (productData) => {
 
       if (response.data.success) {
         handleSaveProduct(response.data.data); // update state
-        alert("Product updated successfully!");
+        // alert("Product updated successfully!");
       } else {
-        alert(response.data.message || "Failed to update product");
+        // alert(response.data.message || "Failed to update product");
       }
     } catch (error) {
       console.error("Error updating product:", error);
-      alert("Failed to update product. Please try again.");
+      // alert("Failed to update product. Please try again.");
       throw error;
     } finally {
       setIsSaving(false);

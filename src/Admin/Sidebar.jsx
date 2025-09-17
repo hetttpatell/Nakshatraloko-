@@ -9,7 +9,8 @@ import {
   FaPercent,
   FaHandshake,
   FaSignOutAlt,
-  FaTimes
+  FaTimes,
+  FaComment
 } from "react-icons/fa";
 
 const sidebarItems = [
@@ -19,6 +20,7 @@ const sidebarItems = [
   { name: "Catagories", icon: <FaList /> },
   { name: "Coupons", icon: <FaPercent /> },
   { name: "Consultancy", icon: <FaHandshake /> },
+  { name: "Reviews", icon: < FaComment /> },
   { name: "Settings", icon: <FaCog /> },
 ];
 
