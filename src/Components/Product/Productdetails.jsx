@@ -592,9 +592,9 @@ const ProductDetails = () => {
                     showToast(res.message, "error");
                   }
                 }}
-                className={`px-6 py-3.5 font-medium text-sm border transition-all duration-200 ${isWishlisted
-                    ? "bg-color-primary text-color-surface border-color-primary"
-                    : "bg-color-surface text-color-text border-color-border hover:border-color-primary"
+                className={`px-6 py-3.5 font-medium text-sm transition-all duration-200 ${isWishlisted
+                    ? "bg-color-primary text-color-surface hover:bg-opacity-90"
+                    : "bg-color-surface text-color-text border border-color-border hover:border-color-primary"
                   }`}
               >
                 {isWishlisted ? (
@@ -1040,10 +1040,10 @@ const ProductDetails = () => {
 
                     {/* Review Content */}
                     <div className="mb-6">
-                      <h5 className="font-semibold text-color-text mb-3 text-lg">
+                      {/* <h5 className="font-semibold text-color-text mb-3 text-lg">
                        Review Title
-                      </h5>
-                      <p className="text-color-text-light leading-relaxed">
+                      </h5> */}
+                      <p className="text-color-text-light text-lg leading-relaxed">
                         {review.ReviewText}
                       </p>
                     </div>
