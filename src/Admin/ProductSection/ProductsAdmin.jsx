@@ -10,6 +10,8 @@ import api from '../../Utils/api'; // Import the api utility
 import axios from "axios";
 import { toast } from "react-toastify";
 import Toast from "../../Components/Product/Toast";
+import { FaSync } from "react-icons/fa"; // ✅ Add this at top with other icons
+
 // Constants for options
 const BRAND_OPTIONS = ["STYLIUM", "PEARLIX", "DIAMONDX", "GOLDEN"];
 const SIZE_OPTIONS = [
@@ -60,7 +62,7 @@ const ProductAdmin = ({ isMobile }) => {
     handleEditProduct,
     viewProductDetails,
     toastData,
-  closeToast,
+    closeToast,
   } = useProductManagement();
 
   const [isSaving, setIsSaving] = useState(false);
@@ -68,64 +70,64 @@ const ProductAdmin = ({ isMobile }) => {
   // ✅ FIX: hooks must be inside component
   const [featuredProducts, setFeaturedProducts] = useState([]);
 
-  
-// 🔹 Fetch featured products from backend
-useEffect(() => {
-  const fetchFeaturedProducts = async () => {
-    try {
-      const response = await axios.post("http://localhost:8001/api/getFeaturedProducts");
- 
-      if (response.data.success) {
-        // Extract just the IDs from API response
-        const featuredIds = response.data.data.map((p) => p.ID);
-        setFeaturedProducts(featuredIds);
+
+  // 🔹 Fetch featured products from backend
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        const response = await axios.post("http://localhost:8001/api/getFeaturedProducts");
+
+        if (response.data.success) {
+          // Extract just the IDs from API response
+          const featuredIds = response.data.data.map((p) => p.ID);
+          setFeaturedProducts(featuredIds);
+        }
+      } catch (err) {
+        console.error("Error fetching featured products:", err);
       }
-    } catch (err) {
-      console.error("Error fetching featured products:", err);
-    }
-  };
+    };
 
-  fetchFeaturedProducts();
-}, []);
+    fetchFeaturedProducts();
+  }, []);
 
-useEffect(()=>{
+  useEffect(() => {
 
-})
+  })
 
 
   // Function to handle adding product via API
-const handleAddProductWithAPI = async (productData) => {
-  setIsSaving(true);
-  try {
-    const payload = {
-      Name: productData.name,
-      Description: productData.description,
-      Price: Number(productData.price),
-      DummyPrice: Number(productData.dummyPrice),
-      Stock: Number(productData.stock),
-      CategoryID: productData.categoryId,
-      PrimaryImage: productData.primaryImage || null,
-      Advantages: productData.advantages || "",
-      HowToWear: productData.howToWear || "",
-      IsActive: true,
-    };
+  const handleAddProductWithAPI = async (productData) => {
+    setIsSaving(true);
+    try {
+      const payload = {
+        Name: productData.name,
+        Description: productData.description,
+        Price: Number(productData.price),
+        DummyPrice: Number(productData.dummyPrice),
+        Stock: Number(productData.stock),
+        CategoryID: productData.categoryId,
+        PrimaryImage: productData.primaryImage || null,
+        Advantages: productData.advantages || "",
+        HowToWear: productData.howToWear || "",
+        IsActive: true,
+      };
 
-    const response = await api.post("/admin/products", payload);
+      const response = await api.post("/admin/products", payload);
 
-    if (response.data.success) {
-      toast.success("Product added successfully!");
-      // ✅ Refresh the list from backend
-      await refreshProducts();
-    } else {
-      toast.error(response.data.message || "Failed to save product");
+      if (response.data.success) {
+        toast.success("Product added successfully!");
+        // ✅ Refresh the list from backend
+        await refreshProducts();
+      } else {
+        toast.error(response.data.message || "Failed to save product");
+      }
+    } catch (error) {
+      console.error("❌ Request failed:", error.response?.data || error.message);
+      toast.error("Something went wrong while saving product");
+    } finally {
+      setIsSaving(false);
     }
-  } catch (error) {
-    console.error("❌ Request failed:", error.response?.data || error.message);
-    toast.error("Something went wrong while saving product");
-  } finally {
-    setIsSaving(false);
-  }
-};
+  };
 
 
   // Function to handle editing product via API
@@ -191,13 +193,26 @@ const handleAddProductWithAPI = async (productData) => {
         brandOptions={BRAND_OPTIONS}
       />
 
-      {/* Add Product Button */}
-      <button
-        className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow-md mb-6"
-        onClick={() => setIsAddModalOpen(true)}
-      >
-        Add New Product
-      </button>
+      {/* Actions Bar */}
+      <div className="flex items-center gap-4 mb-6">
+        {/* Add Product Button */}
+        <button
+          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow-md"
+          onClick={() => setIsAddModalOpen(true)}
+        >
+          Add New Product
+        </button>
+
+        {/* Refresh Button */}
+        <button
+          className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors shadow-md"
+          onClick={refreshProducts}
+        >
+          <FaSync className="text-lg" />
+          Refresh
+        </button>
+      </div>
+
 
       {/* Products Table */}
       <ProductTable
@@ -243,24 +258,24 @@ const handleAddProductWithAPI = async (productData) => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmModal.isOpen && (
-       <DeleteConfirmationModal
-  productName={deleteConfirmModal.productName}
-  onClose={() => setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" })}
-  onConfirm={() => {
-    handleDeleteProductWithAPI(deleteConfirmModal.productId); // Pass ID
-    setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
-  }}
-  isLoading={isSaving}
-/>
+        <DeleteConfirmationModal
+          productName={deleteConfirmModal.productName}
+          onClose={() => setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" })}
+          onConfirm={() => {
+            handleDeleteProductWithAPI(deleteConfirmModal.productId); // Pass ID
+            setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
+          }}
+          isLoading={isSaving}
+        />
 
       )}
       {toastData && (
-      <Toast
-        type={toastData.type}
-        message={toastData.message}
-        onClose={closeToast}
-      />
-    )}
+        <Toast
+          type={toastData.type}
+          message={toastData.message}
+          onClose={closeToast}
+        />
+      )}
     </div>
   );
 };

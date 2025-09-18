@@ -1,7 +1,8 @@
 // components/ProductModal.jsx
 import axios from "axios";
 import React, { useState, useEffect } from "react";
-import { FaTimes, FaArrowUp, FaArrowDown, FaTrash, FaPlus, FaMinus } from "react-icons/fa";
+import { FaTimes, FaArrowUp, FaArrowDown, FaTrash, FaPlus, FaMinus, FaSync } from "react-icons/fa";
+
 
 const ProductModal = ({
   title,
@@ -319,12 +320,16 @@ const ProductModal = ({
     formData.append("createdBy", 1);
 
     // Add sizes as JSON string
-    const sizesData = sizes.map((size) => ({
-      size: isNaN(parseInt(size.size, 10)) ? size.size : parseInt(size.size, 10),
-      price: parseFloat(size.price) || 0,
-      dummyPrice: parseFloat(size.dummyPrice) || 0,
-      stock: parseInt(size.stock, 10) || 0,
-    }));
+    const sizesData = sizes.map((size) => {
+      const parsedSize = parseFloat(size.size);
+      return {
+        size: !isNaN(parsedSize) ? parsedSize : size.size,  // ✅ supports 5, 5.5, 6.5, etc.
+        price: parseFloat(size.price) || 0,
+        dummyPrice: parseFloat(size.dummyPrice) || 0,
+        stock: parseInt(size.stock, 10) || 0,
+      };
+    });
+
 
     formData.append("sizes", JSON.stringify(sizesData));
 
@@ -436,6 +441,7 @@ const ProductModal = ({
       <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto border-2 border-gray-200">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
+
             <h3 className="text-xl font-semibold">{title}</h3>
             <button
               className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -451,7 +457,6 @@ const ProductModal = ({
               {errors.submit}
             </div>
           )}
-
           {apiStatus.message === "success" && (
             <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg">
               Product {isEditing ? "updated" : "added"} successfully!

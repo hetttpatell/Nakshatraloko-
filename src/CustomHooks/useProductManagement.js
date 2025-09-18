@@ -106,42 +106,6 @@ export const useProductManagement = () => {
     }
   };
 
-
-
-  const handleSaveProduct = (updatedProduct) => {
-    if (editingProduct && editingProduct.id) {
-      // Update existing product
-      setProducts(prev =>
-        prev.map(product =>
-          product.id === editingProduct.id
-            ? { ...updatedProduct, id: editingProduct.id }
-            : product
-        )
-      );
-    }
-  };
-
-  const handleAddProduct = (productData) => {
-    // Generate a unique ID for the new product
-    const newId = Date.now().toString();
-    const newProduct = {
-      ...productData,
-      id: newId,
-      rating: 0,
-      reviews: 0
-    };
-
-    setProducts(prev => [...prev, newProduct]);
-  };
-
-  const openDeleteConfirm = (productId, productName) => {
-    setDeleteConfirmModal({
-      isOpen: true,
-      productId,
-      productName
-    });
-  };
-
   const handleEditProduct = async (productId) => {
     try {
       setIsSaving(true);
@@ -178,14 +142,13 @@ export const useProductManagement = () => {
   };
 
 
-  const viewProductDetails = (product) => {
-    setSelectedProduct(product);
-  };
+
+
 
   return {
     products,
     loading,
-    error, // Make error available to the component
+    error, 
     searchTerm,
     brandFilter,
     statusFilter,
@@ -204,11 +167,7 @@ export const useProductManagement = () => {
     setEditingProduct,
     setDeleteConfirmModal,
     handleDeleteProductWithAPI,
-    handleSaveProduct,
-    handleAddProduct,
-    openDeleteConfirm,
     handleEditProduct,
-    viewProductDetails,
     toastData,
     closeToast,
   };
