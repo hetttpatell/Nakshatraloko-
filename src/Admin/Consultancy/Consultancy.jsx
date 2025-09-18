@@ -6,6 +6,8 @@ import React, { useState, useEffect, useContext } from "react"; import {
 } from "react-icons/fa";
 import ConsultancyContext from "../../Context/ConsultancyContext";
 import axios from "axios";
+import { FaSync } from "react-icons/fa";
+
 
 const Consultancy = () => {
   // Sample data - in a real app, this would come from your backend
@@ -31,25 +33,27 @@ const Consultancy = () => {
     return true;
   });
   //getting detaisl of consultancy 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        const response = await axios.post(
-          "http://localhost:8001/api/getConsultations",
-          {},
-          { headers: { Authorization: `${token}` } }
-        );
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await axios.post(
+        "http://localhost:8001/api/getConsultations",
+        {},
+        { headers: { Authorization: `${token}` } }
+      );
 
-        if (response.data.success) {
-          setSubmissions(response.data.data); // use local state for new API
-        }
-      } catch (error) {
-        console.error("Error fetching consultations:", error);
+      if (response.data.success) {
+        setSubmissions(response.data.data);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching consultations:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
+
 
   //updating detaisl of consultacy 
   const updateSubmissionStatus = async (id, newStatus) => {
@@ -89,23 +93,23 @@ const Consultancy = () => {
     setDeleteConfirm(null);
   };
 
-  
 
-const getStatusBadgeClass = (status) => {
-  if (!status) return "bg-gray-100 text-gray-800"; // default class
-  switch (status.toLowerCase()) {
-    case "pending":
-      return "bg-yellow-100 text-yellow-800";
-    case "completed":
-      return "bg-green-100 text-green-800";
-    case "cancelled":
-      return "bg-red-100 text-red-800";
-    case "process":
-      return "bg-blue-100 text-blue-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
+
+  const getStatusBadgeClass = (status) => {
+    if (!status) return "bg-gray-100 text-gray-800"; // default class
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      case "process":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
 
   const getStatusText = (status) => {
@@ -143,10 +147,23 @@ const getStatusBadgeClass = (status) => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Consultancy Requests</h2>
-        <div className="text-sm text-gray-500">
-          Total: {submissions.length} | Showing: {filteredSubmissions.length}
+
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-gray-500">
+            Total: {Submissions.length} | Showing: {filteredSubmissions.length}
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            className="flex items-center gap-2 px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors shadow-md"
+            onClick={fetchData}
+          >
+            <FaSync className="text-sm" />
+            Refresh
+          </button>
         </div>
       </div>
+
 
       {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -196,7 +213,7 @@ const getStatusBadgeClass = (status) => {
               <th className="p-3 font-semibold text-gray-700">Preferred Time</th>
               <th className="p-3 font-semibold text-gray-700">Status</th>
               <th className="p-3 font-semibold text-gray-700">Submitted</th>
-             
+
             </tr>
           </thead>
           <tbody>
@@ -238,7 +255,7 @@ const getStatusBadgeClass = (status) => {
                 </td>
                 <td className="p-3">
                   <div className="flex justify-end gap-2">
-                   
+
                   </div>
                 </td>
               </tr>

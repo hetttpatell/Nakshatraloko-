@@ -131,25 +131,7 @@ const ProductAdmin = ({ isMobile }) => {
 
 
   // Function to handle editing product via API
-  const handleEditProductWithAPI = async (productData) => {
-    setIsSaving(true);
-    try {
-      const response = await api.put(`/admin/products/${editingProduct.id}`, productData);
 
-      if (response.data.success) {
-        handleSaveProduct(response.data.data); // update state
-        // alert("Product updated successfully!");
-      } else {
-        // alert(response.data.message || "Failed to update product");
-      }
-    } catch (error) {
-      console.error("Error updating product:", error);
-      // alert("Failed to update product. Please try again.");
-      throw error;
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   // Function to handle deleting product via API
 
@@ -220,7 +202,13 @@ const ProductAdmin = ({ isMobile }) => {
         featuredProducts={featuredProducts} // ✅ pass featured product IDs
         onView={viewProductDetails}
         onEdit={handleEditProduct}
-        onDelete={openDeleteConfirm}
+        onDelete={(productId, productName) => {
+          setDeleteConfirmModal({
+            isOpen: true,
+            productId: productId,
+            productName: productName
+          });
+        }}
       />
 
       {/* Add Product Modal */}
@@ -257,17 +245,17 @@ const ProductAdmin = ({ isMobile }) => {
       )}
 
       {/* Delete Confirmation Modal */}
+
       {deleteConfirmModal.isOpen && (
         <DeleteConfirmationModal
           productName={deleteConfirmModal.productName}
           onClose={() => setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" })}
           onConfirm={() => {
-            handleDeleteProductWithAPI(deleteConfirmModal.productId); // Pass ID
+            handleDeleteProductWithAPI(deleteConfirmModal.productId); // This will call your API function directly
             setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
           }}
           isLoading={isSaving}
         />
-
       )}
       {toastData && (
         <Toast

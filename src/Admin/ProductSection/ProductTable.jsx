@@ -12,17 +12,17 @@ const ProductTable = ({ products, onView, onEdit, onDelete }) => {
       </div>
     );
   }
-  const handleEdit = async (product) => {
-    try {
-      const response = await axios.get(`http://localhost:8001/api/getProductById/${product.id}`);
-      if (response.data.success) {
-        setSelectedProduct(response.data.data);
-        setIsModalOpen(true);
-      }
-    } catch (err) {
-      console.error("Failed to fetch product:", err);
-    }
-  };
+  // const handleEdit = async (product) => {
+  //   try {
+  //     const response = await axios.get(`http://localhost:8001/api/getProductById/${product.id}`);
+  //     if (response.data.success) {
+  //       setSelectedProduct(response.data.data);
+  //       setIsModalOpen(true);
+  //     }
+  //   } catch (err) {
+  //     console.error("Failed to fetch product:", err);
+  //   }
+  // };
 
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200">
