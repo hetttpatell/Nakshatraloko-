@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Star, StarHalf, Filter, X, Sparkles, Eye, ArrowRight } from "lucide-react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import CouponBanner from "../Coupons/CouponsBanner";
 
 const ProductsPage = () => {
   const { category } = useParams();
@@ -257,8 +258,10 @@ const ProductsPage = () => {
   };
 
   return (
+    
     <div className="min-h-screen bg-[var(--color-background)]">
       {/* Header */}
+      <CouponBanner />
       <div className="container mx-auto px-4 py-6 md:py-8">
         <div className="text-center mb-6 md:mb-8">
           <h1 className="text-2xl md:text-4xl lg:text-5xl font-playfair font-bold text-[var(--color-text)] mb-3 md:mb-4">
