@@ -1,4 +1,3 @@
-
 // components/ProductModal.jsx
 import axios from "axios";
 import React, { useState, useEffect } from "react";
@@ -79,7 +78,17 @@ const ProductModal = ({
       // Images - handle both API response and expected format
       const productImages = initialProduct.Images || initialProduct.images || [];
       if (Array.isArray(productImages) && productImages.length > 0) {
-        setImages(productImages);
+        // For existing images, we'll store them with a flag to indicate they're already uploaded
+        const formattedImages = productImages.map(img => ({
+          ...img,
+          // If imageData is a URL (not a blob), it's an existing image
+          isExisting: !img.imageData || !img.imageData.startsWith('blob:'),
+          // Store the original image URL for reference
+          originalUrl: img.imageData || img.imageUrl,
+          // Preserve the image ID if it exists
+          id: img.id || img.ID || null
+        }));
+        setImages(formattedImages);
       } else {
         setImages([]);
       }
@@ -116,7 +125,7 @@ const ProductModal = ({
       } else {
         validFiles.push(file);
       }
-    }); 
+    });
 
     if (Object.keys(newErrors).length > 0) {
       setErrors({ ...errors, ...newErrors });
@@ -134,7 +143,8 @@ const ProductModal = ({
         altText: `${name || "Product"} image`,
         isPrimary: images.length === 0, // Set as primary if it's the first image
         isActive: true,
-        file: file // Store the File object
+        file: file, // Store the File object
+        isExisting: false // Flag as new image
       };
 
       newImageFiles.push(file);
@@ -161,11 +171,14 @@ const ProductModal = ({
       return newImages;
     });
 
-    setImageFiles(prev => {
-      const newFiles = [...prev];
-      newFiles.splice(index, 1);
-      return newFiles;
-    });
+    // Only remove from imageFiles if it's a new file (not an existing image)
+    if (!images[index].isExisting) {
+      setImageFiles(prev => {
+        const newFiles = [...prev];
+        newFiles.splice(index, 1);
+        return newFiles;
+      });
+    }
   };
 
   const setPrimaryImage = (index) => {
@@ -195,10 +208,21 @@ const ProductModal = ({
       return newImages;
     });
 
+    // Only rearrange imageFiles for new images
     setImageFiles(prev => {
       const newFiles = [...prev];
-      const targetIndex = direction === "up" ? index - 1 : index + 1;
-      [newFiles[index], newFiles[targetIndex]] = [newFiles[targetIndex], newFiles[index]];
+      // Find the indices of new files in the images array
+      const newFileIndices = images
+        .map((img, idx) => (!img.isExisting ? idx : -1))
+        .filter(idx => idx !== -1);
+
+      // If both images at these indices are new files, swap them
+      if (newFileIndices.includes(index) && newFileIndices.includes(targetIndex)) {
+        const fileIndex1 = newFileIndices.indexOf(index);
+        const fileIndex2 = newFileIndices.indexOf(targetIndex);
+        [newFiles[fileIndex1], newFiles[fileIndex2]] = [newFiles[fileIndex2], newFiles[fileIndex1]];
+      }
+
       return newFiles;
     });
   };
@@ -250,10 +274,11 @@ const ProductModal = ({
       newErrors.name = "Please enter a product name";
       console.log("Name validation failed");
     }
-    if (images.length === 0) {
+    if (images.filter(img => img.isExisting || img.file).length === 0) {
       newErrors.images = "Please upload at least one image";
       console.log("Images validation failed");
     }
+
 
     // Validate each size
     sizes.forEach((size, index) => {
@@ -303,22 +328,41 @@ const ProductModal = ({
 
     formData.append("sizes", JSON.stringify(sizesData));
 
-
-    // Add images metadata as JSON string (without imageData)
-    // Actual image files will be appended separately
+    // Add images metadata as JSON string
     const imagesMeta = images.map((img, index) => ({
+      id: img.id || null, // Include image ID for existing images
       altText: img.altText?.trim() || "",
       isPrimary: Boolean(img.isPrimary),
       isActive: Boolean(img.isActive),
-      order: index
+      order: index,
+      isExisting: Boolean(img.isExisting), // Flag to indicate if this is an existing image
+      originalUrl: img.originalUrl || img.imageData // Keep reference to original URL for existing images
     }));
     formData.append("images", JSON.stringify(imagesMeta));
 
-    // Append actual image files
+    // Append only new image files (not existing ones)
     images.forEach((img, index) => {
-      if (img.file) {
-        formData.append("images", img.file); // "imagesFiles" should match your Multer field name
+      if (img.file && !img.isExisting) {
+        formData.append("imageFiles", img.file); // Changed field name to "imageFiles" for clarity
       }
+    });
+
+    // For existing images, add their URLs to the form data
+    const existingImages = images
+      .filter(img => img.isExisting)
+      .map((img, idx) => ({
+        id: img.id,
+        image: img.originalUrl,
+        altText: "",
+        isPrimary: img.isPrimary || idx === 0, // user picks or default first
+        isActive: true
+      }));
+
+
+    formData.append("existingImageUrls", JSON.stringify(existingImages));
+
+    images.filter(img => !img.isExisting).forEach(img => {
+      formData.append("images", img.file);
     });
 
 
@@ -389,7 +433,7 @@ const ProductModal = ({
 
   return (
     <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto border-2 border-gray-200">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold">{title}</h3>
@@ -414,8 +458,8 @@ const ProductModal = ({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className=" space-y-6">
-            <div className="grid grid-cols-1  md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="space-y-6 border-2 border-gray-200 p-6 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
               {/* Category Name */}
               <div className="space-y-2">
@@ -501,6 +545,13 @@ const ProductModal = ({
                             alt={`Preview ${index + 1}`}
                             className="w-full h-32 object-contain rounded"
                           />
+
+                          {/* Existing image badge */}
+                          {image.isExisting && (
+                            <span className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                              Existing
+                            </span>
+                          )}
 
                           {/* Primary badge */}
                           {image.isPrimary && (
