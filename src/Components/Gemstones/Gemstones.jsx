@@ -256,7 +256,7 @@ const ProductsPage = () => {
       </div>
     );
   };
-
+ 
   return (
     
     <div className="min-h-screen bg-[var(--color-background)]">

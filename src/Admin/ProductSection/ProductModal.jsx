@@ -46,9 +46,11 @@ const ProductModal = ({
       // Basic fields
       setName(initialProduct.Name || initialProduct.name || "");
       setCategoryId(
-        initialProduct.CategoryID || initialProduct.categoryId
-          ? String(initialProduct.CategoryID || initialProduct.categoryId)
-          : ""
+        initialProduct.CategoryID !== undefined
+          ? parseInt(initialProduct.CategoryID)
+          : initialProduct.categoryId !== undefined
+            ? parseInt(initialProduct.categoryId)
+            : ""
       );
       setDescription(initialProduct.Description || initialProduct.description || "");
       setAdvantages(initialProduct.Advantages || initialProduct.advantages || "");
@@ -129,8 +131,11 @@ const ProductModal = ({
     });
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors({ ...errors, ...newErrors });
-      return;
+      console.log("Validation errors:", newErrors);
+      setErrors(newErrors);
+      setApiStatus({ loading: false, message: "" });
+      submittingRef.current = false; // Reset the submitting flag
+      return; // Add this return statement
     }
 
     // Process valid files
@@ -257,173 +262,163 @@ const ProductModal = ({
 
   const submittingRef = React.useRef(false);
 
-  const handleSubmit = React.useCallback(async (e) => {
-    e.preventDefault();
+const handleSubmit = React.useCallback(async (e) => {
+  e.preventDefault();
 
-    if (submittingRef.current) return; // prevent multiple calls
-    submittingRef.current = true;
-    setErrors({});
-    setApiStatus({ loading: true, message: "" });
+  if (submittingRef.current) return;
+  submittingRef.current = true;
+  setErrors({});
+  setApiStatus({ loading: true, message: "" });
 
-    const newErrors = {};
-    // --- Validations ---
-    if (!categoryId) {
-      newErrors.categoryId = "Please select a category";
-      console.log("Category validation failed");
-    }
-    if (!name.trim()) {
-      newErrors.name = "Please enter a product name";
-      console.log("Name validation failed");
-    }
-    if (images.filter(img => img.isExisting || img.file).length === 0) {
-      newErrors.images = "Please upload at least one image";
-      console.log("Images validation failed");
-    }
+  const newErrors = {};
+  
+  // --- Validations ---
+  if (!categoryId) {
+    newErrors.categoryId = "Please select a category";
+  }
+  if (!name.trim()) {
+    newErrors.name = "Please enter a product name";
+  }
+  if (images.filter(img => img.isExisting || img.file).length === 0) {
+    newErrors.images = "Please upload at least one image";
+  }
 
+  // Validate each size
+  sizes.forEach((size, index) => {
+    if (!size.size) newErrors[`size-${index}`] = "Size is required";
+    if (!size.price || parseFloat(size.price) <= 0) newErrors[`price-${index}`] = "Valid price is required";
+    if (!size.dummyPrice || parseFloat(size.dummyPrice) <= 0) newErrors[`dummyPrice-${index}`] = "Valid dummy price is required";
+    if (!size.stock || parseInt(size.stock) < 0) newErrors[`stock-${index}`] = "Valid stock quantity is required";
+  });
 
-    // Validate each size
-    sizes.forEach((size, index) => {
-      if (!size.size) newErrors[`size-${index}`] = "Size is required";
-      if (!size.price || parseFloat(size.price) <= 0) newErrors[`price-${index}`] = "Valid price is required";
-      if (!size.dummyPrice || parseFloat(size.dummyPrice) <= 0) newErrors[`dummyPrice-${index}`] = "Valid dummy price is required";
-      if (!size.stock || parseInt(size.stock) < 0) newErrors[`stock-${index}`] = "Valid stock quantity is required";
-    });
+  // FIXED: Category validation - compare as numbers
+  const numericCategoryId = parseInt(categoryId, 10);
+  const selectedCategory = categoryData.find(cat => 
+    cat.ID === numericCategoryId
+  );
 
-    let selectedCategory = null;
-    if (categoryId) {
-      selectedCategory = categoryData.find((cat) => cat.ID === parseInt(categoryId, 10));
-      if (!selectedCategory) {
-        newErrors.categoryId = "Invalid category selected";
-        console.log("Invalid category selected");
-      }
-    }
+  if (!selectedCategory && categoryId) {
+    newErrors.categoryId = "Invalid category selected";
+  }
 
-    if (Object.keys(newErrors).length > 0) {
-      console.log("Validation errors:", newErrors);
-      setErrors(newErrors);
-      return;
-    }
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    setApiStatus({ loading: false, message: "" });
+    submittingRef.current = false;
+    return;
+  }
 
-    console.log("All validations passed, building payload");
+  console.log("All validations passed, building payload");
 
-    // --- Build FormData payload ---
-    const formData = new FormData();
+  // --- Build FormData payload ---
+  const formData = new FormData();
 
-    // Add basic fields
-    formData.append("id", isEditing ? (initialProduct?.id || 0) : 0);
-    formData.append("categoryId", selectedCategory ? parseInt(categoryId, 10) : 0);
-    formData.append("name", name.trim());
-    formData.append("description", description?.trim() || "");
-    formData.append("advantages", advantages?.trim() || "");
-    formData.append("howToWear", howToWear?.trim() || "");
-    formData.append("isActive", Boolean(isActive));
-    formData.append("createdBy", 1);
+  // Add basic fields
+  formData.append("id", isEditing ? (initialProduct?.id || 0) : 0);
+  formData.append("categoryId", numericCategoryId);
+  formData.append("name", name.trim());
+  formData.append("description", description?.trim() || "");
+  formData.append("advantages", advantages?.trim() || "");
+  formData.append("howToWear", howToWear?.trim() || "");
+  formData.append("isActive", Boolean(isActive));
+  formData.append("createdBy", 1); // Make sure this is included
 
-    // Add sizes as JSON string
-    const sizesData = sizes.map((size) => {
-      const parsedSize = parseFloat(size.size);
-      return {
-        size: !isNaN(parsedSize) ? parsedSize : size.size,  // ✅ supports 5, 5.5, 6.5, etc.
-        price: parseFloat(size.price) || 0,
-        dummyPrice: parseFloat(size.dummyPrice) || 0,
-        stock: parseInt(size.stock, 10) || 0,
-      };
-    });
+  // Add sizes as JSON string
+  const sizesData = sizes.map((size) => {
+    const parsedSize = parseFloat(size.size);
+    return {
+      size: !isNaN(parsedSize) ? parsedSize : size.size,
+      price: parseFloat(size.price) || 0,
+      dummyPrice: parseFloat(size.dummyPrice) || 0,
+      stock: parseInt(size.stock, 10) || 0,
+    };
+  });
+  formData.append("sizes", JSON.stringify(sizesData));
 
+  // Add images metadata as JSON string
+  const imagesMeta = images.map((img, index) => ({
+    id: img.id || null,
+    altText: img.altText?.trim() || "",
+    isPrimary: Boolean(img.isPrimary),
+    isActive: Boolean(img.isActive),
+    order: index,
+    isExisting: Boolean(img.isExisting),
+    originalUrl: img.originalUrl || img.imageData
+  }));
+  formData.append("images", JSON.stringify(imagesMeta));
 
-    formData.append("sizes", JSON.stringify(sizesData));
-
-    // Add images metadata as JSON string
-    const imagesMeta = images.map((img, index) => ({
-      id: img.id || null, // Include image ID for existing images
-      altText: img.altText?.trim() || "",
-      isPrimary: Boolean(img.isPrimary),
-      isActive: Boolean(img.isActive),
-      order: index,
-      isExisting: Boolean(img.isExisting), // Flag to indicate if this is an existing image
-      originalUrl: img.originalUrl || img.imageData // Keep reference to original URL for existing images
+  // FIXED: Handle existing images properly
+  const existingImages = images
+    .filter(img => img.isExisting)
+    .map((img, idx) => ({
+      id: img.id,
+      image: img.originalUrl,
+      altText: img.altText || "",
+      isPrimary: img.isPrimary,
+      isActive: true
     }));
-    formData.append("images", JSON.stringify(imagesMeta));
+  formData.append("existingImageUrls", JSON.stringify(existingImages));
 
-    // Append only new image files (not existing ones)
-    images.forEach((img, index) => {
-      if (img.file && !img.isExisting) {
-        formData.append("imageFiles", img.file); // Changed field name to "imageFiles" for clarity
+  // FIXED: Append only new image files with proper field name
+  images.forEach((img, index) => {
+    if (img.file && !img.isExisting) {
+      formData.append("imageFiles", img.file); // Use consistent field name
+    }
+  });
+
+  console.log('Sending FormData with product data');
+
+  try {
+    setApiStatus({ loading: true, message: "" });
+    console.log("Making API call to saveProduct with FormData");
+
+    const response = await axios.post(
+      "http://localhost:8001/api/saveProduct",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
+        },
       }
-    });
+    );
 
-    // For existing images, add their URLs to the form data
-    const existingImages = images
-      .filter(img => img.isExisting)
-      .map((img, idx) => ({
-        id: img.id,
-        image: img.originalUrl,
-        altText: "",
-        isPrimary: img.isPrimary || idx === 0, // user picks or default first
-        isActive: true
-      }));
+    console.log("API response:", response.data);
 
-
-    formData.append("existingImageUrls", JSON.stringify(existingImages));
-
-    images.filter(img => !img.isExisting).forEach(img => {
-      formData.append("images", img.file);
-    });
-
-
-    console.log('Sending FormData with product data');
-
-    try {
-      setApiStatus({ loading: true, message: "" });
-      console.log("Making API call to saveProduct with FormData");
-
-      const response = await axios.post(
-        "http://localhost:8001/api/saveProduct",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      console.log("API response:", response.data);
-
-      if (response.data.success) {
-        setApiStatus({ loading: false, message: "success" });
-        onSave(response.data);
-      } else {
-        setErrors({
-          submit: response.data.message || "Failed to save product",
-        });
-        setApiStatus({ loading: false, message: "error" });
-      }
-    } catch (error) {
-      console.error("❌ Save product failed:", error);
-      let errorMessage = "Failed to save product";
-
-      if (error.response) {
-        console.error("Error data:", error.response.data);
-        console.error("Error status:", error.response.status);
-        errorMessage = error.response.data.message || errorMessage;
-      } else if (error.request) {
-        console.error("Error request:", error.request);
-        errorMessage = "No response received from server. Please check your connection.";
-      } else {
-        console.error("Error message:", error.message);
-        errorMessage = error.message;
-      }
-
+    if (response.data.success) {
+      setApiStatus({ loading: false, message: "success" });
+      onSave(response.data);
+    } else {
       setErrors({
-        submit: errorMessage,
+        submit: response.data.message || "Failed to save product",
       });
       setApiStatus({ loading: false, message: "error" });
-    } finally {
-      setApiStatus({ loading: false, message: "" });
-      submittingRef.current = false; // reset after API finishes
     }
-  }, [name, categoryId, sizes, images, imageFiles, isActive]);
+  } catch (error) {
+    console.error("❌ Save product failed:", error);
+    let errorMessage = "Failed to save product";
+
+    if (error.response) {
+      console.error("Error data:", error.response.data);
+      console.error("Error status:", error.response.status);
+      errorMessage = error.response.data.message || errorMessage;
+    } else if (error.request) {
+      console.error("Error request:", error.request);
+      errorMessage = "No response received from server. Please check your connection.";
+    } else {
+      console.error("Error message:", error.message);
+      errorMessage = error.message;
+    }
+
+    setErrors({
+      submit: errorMessage,
+    });
+    setApiStatus({ loading: false, message: "error" });
+  } finally {
+    setApiStatus({ loading: false, message: "" });
+    submittingRef.current = false;
+  }
+}, [name, categoryId, sizes, images, isActive, description, advantages, howToWear, isEditing, initialProduct, categoryData, onSave]);
 
   // Clean up object URLs when component unmounts
   useEffect(() => {
@@ -479,7 +474,7 @@ const ProductModal = ({
                 >
                   <option value="">Select Category</option>
                   {categoryData.map((cat) => (
-                    <option key={`cat-${cat.ID}`} value={cat.ID}>
+                    <option key={cat.ID} value={cat.ID}>
                       {cat.Name}
                     </option>
                   ))}
@@ -827,3 +822,13 @@ const ProductModal = ({
 };
 
 export default ProductModal;
+
+// const ProductModal = ({ title, onClose }) => {
+//   return (
+//     <div>
+//       <h1>{title}</h1>
+//       <button onClick={onClose}>Close</button>
+//     </div>
+//   );
+// };
+// export default ProductModal;

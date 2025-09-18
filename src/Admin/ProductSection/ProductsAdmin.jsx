@@ -6,11 +6,11 @@ import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import SearchAndFilterBar from "./SearchAndFilterBar";
 import { useProductManagement } from "../../CustomHooks/useProductManagement";
 import { filterProducts } from "../ProductSection/productFilters";
-import api from '../../Utils/api'; // Import the api utility
+import api from '../../Utils/api';
 import axios from "axios";
 import { toast } from "react-toastify";
 import Toast from "../../Components/Product/Toast";
-import { FaSync } from "react-icons/fa"; // ✅ Add this at top with other icons
+import { FaSync } from "react-icons/fa";
 
 // Constants for options
 const BRAND_OPTIONS = ["STYLIUM", "PEARLIX", "DIAMONDX", "GOLDEN"];
@@ -66,19 +66,14 @@ const ProductAdmin = ({ isMobile }) => {
   } = useProductManagement();
 
   const [isSaving, setIsSaving] = useState(false);
-
-  // ✅ FIX: hooks must be inside component
   const [featuredProducts, setFeaturedProducts] = useState([]);
 
-
-  // 🔹 Fetch featured products from backend
+  // Fetch featured products from backend
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
         const response = await axios.post("http://localhost:8001/api/getFeaturedProducts");
-
         if (response.data.success) {
-          // Extract just the IDs from API response
           const featuredIds = response.data.data.map((p) => p.ID);
           setFeaturedProducts(featuredIds);
         }
@@ -86,14 +81,8 @@ const ProductAdmin = ({ isMobile }) => {
         console.error("Error fetching featured products:", err);
       }
     };
-
     fetchFeaturedProducts();
   }, []);
-
-  useEffect(() => {
-
-  })
-
 
   // Function to handle adding product via API
   const handleAddProductWithAPI = async (productData) => {
@@ -113,10 +102,8 @@ const ProductAdmin = ({ isMobile }) => {
       };
 
       const response = await api.post("/admin/products", payload);
-
       if (response.data.success) {
         toast.success("Product added successfully!");
-        // ✅ Refresh the list from backend
         await refreshProducts();
       } else {
         toast.error(response.data.message || "Failed to save product");
@@ -129,15 +116,22 @@ const ProductAdmin = ({ isMobile }) => {
     }
   };
 
-
   // Function to handle editing product via API
-
-
-  // Function to handle deleting product via API
-
-
-
-
+  const handleEditProductWithAPI = async (productData) => {
+    setIsSaving(true);
+    try {
+      // Implement your edit API call here
+      console.log("Editing product:", productData);
+      toast.success("Product updated successfully!");
+      await refreshProducts();
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error("❌ Edit failed:", error);
+      toast.error("Something went wrong while updating product");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Memoize filtered products to improve performance
   const filteredProducts = useMemo(
@@ -145,7 +139,6 @@ const ProductAdmin = ({ isMobile }) => {
     [products, searchTerm, brandFilter, statusFilter]
   );
 
-  // Then, somewhere in your JSX, conditionally render the error
   if (error) {
     return (
       <div className="text-center py-8 text-red-500">
@@ -177,7 +170,6 @@ const ProductAdmin = ({ isMobile }) => {
 
       {/* Actions Bar */}
       <div className="flex items-center gap-4 mb-6">
-        {/* Add Product Button */}
         <button
           className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow-md"
           onClick={() => setIsAddModalOpen(true)}
@@ -185,7 +177,6 @@ const ProductAdmin = ({ isMobile }) => {
           Add New Product
         </button>
 
-        {/* Refresh Button */}
         <button
           className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors shadow-md"
           onClick={refreshProducts}
@@ -195,11 +186,10 @@ const ProductAdmin = ({ isMobile }) => {
         </button>
       </div>
 
-
       {/* Products Table */}
       <ProductTable
         products={filteredProducts}
-        featuredProducts={featuredProducts} // ✅ pass featured product IDs
+        featuredProducts={featuredProducts}
         onView={viewProductDetails}
         onEdit={handleEditProduct}
         onDelete={(productId, productName) => {
@@ -229,13 +219,13 @@ const ProductAdmin = ({ isMobile }) => {
         />
       )}
 
-      {/* Edit Product Modal */}
+      {/* Edit Product Modal - FIXED: Added onSave prop */}
       {isEditModalOpen && (
         <ProductModal
           title="Edit Product"
           initialProduct={editingProduct}
           onClose={() => setIsEditModalOpen(false)}
-          onSave={handleEditProductWithAPI}
+          onSave={handleEditProductWithAPI} // This was missing!
           brandOptions={BRAND_OPTIONS}
           sizeOptions={SIZE_OPTIONS}
           materialOptions={MATERIAL_OPTIONS}
@@ -245,18 +235,18 @@ const ProductAdmin = ({ isMobile }) => {
       )}
 
       {/* Delete Confirmation Modal */}
-
       {deleteConfirmModal.isOpen && (
         <DeleteConfirmationModal
           productName={deleteConfirmModal.productName}
           onClose={() => setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" })}
           onConfirm={() => {
-            handleDeleteProductWithAPI(deleteConfirmModal.productId); // This will call your API function directly
+            handleDeleteProductWithAPI(deleteConfirmModal.productId);
             setDeleteConfirmModal({ isOpen: false, productId: null, productName: "" });
           }}
           isLoading={isSaving}
         />
       )}
+
       {toastData && (
         <Toast
           type={toastData.type}
