@@ -144,7 +144,7 @@ const Footer = () => {
             {[
               { label: "Home", to: "/" },
               { label: "Product", to: "/gemstones" },
-              { label: "About Us", to: "/about" },
+              // { label: "About Us", to: "/" },
               { label: "FAQs", to: "/faqs" },
               { label: "Blogs", to: "/blogs" }
             ].map((item) => (

@@ -1,4 +1,4 @@
-  import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingBag, Heart, User, ChevronDown, Menu, X, UserCog, Search, Sparkles, LogOut } from "lucide-react";
 import { useCart } from "../Context/CartContext";
@@ -6,7 +6,6 @@ import { useWishlist } from "../Context/WishlistContext";
 import LoginSignup from "../Components/Login/Login";
 import logo from "/Logo.png";
 import axios from "axios";
-
 
 // ---------- MENU DATA ---------- 
 const initialMenuItems = [
@@ -23,7 +22,7 @@ const initialMenuItems = [
 
 const userMenuItems = [
   { to: "/cart", icon: ShoppingBag, badgeType: "cart" },
-  { to: "/wishlist", icon: Heart, badgeType: "wishlist", },
+  { to: "/wishlist", icon: Heart, badgeType: "wishlist" },
   { to: "/account", icon: User },
 ];
 
@@ -109,9 +108,6 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
   const itemRef = useRef(null);
   const clickTimeoutRef = useRef(null);
 
-
-
-
   const handleMouseEnter = () => {
     if (item.subMenu && !isMobile) {
       setDropdownOpen(true);
@@ -173,7 +169,6 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 -z-10" />
       </NavLink>
 
-
       {item.subMenu && (
         <ul
           className={`bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)] ${isMobile
@@ -208,7 +203,7 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
   );
 };
 
-const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "" }) => (
+const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "", onClick }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
@@ -217,66 +212,17 @@ const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "" }) => (
         : "text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md"
       } ${className}`
     }
-    onClick={closeMenu}
+    onClick={() => {
+      if (onClick) onClick();
+      closeMenu();
+    }}
   >
     <Icon className="h-5 w-5 transition-all duration-300 group-hover/icon:scale-110" />
     {badgeCount > 0 && <Badge count={badgeCount} />}
   </NavLink>
 );
 
-
-// const fetchWishlist = async () => {
-//   try {
-//     const { data } = await axios.get("http://localhost:8001/api/getWishlist", {
-//       headers: {
-//         Authorization: `${localStorage.getItem("authToken")}`, // JWT token
-//       },
-//     });
-
-//     if (data.success) {
-//       console.log("✅ Wishlist fetched:", data.wishlist);
-//       // if you use context, update it here:
-//       // setWishlist(data.wishlist);
-//     } else {
-//       console.warn("⚠️ Wishlist fetch failed:", data.message);
-//     }
-//   } catch (error) {
-//     console.error("❌ Wishlist fetch error:", error);
-//   }
-// };
-
-
-
 // ---------- MAIN HEADER ----------
-
-const fetchWishlist = async () => {
-  try {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      setWishlist([]);
-      return;
-    }
-
-    const { data } = await axios.post("http://localhost:8001/api/listWishlist", {},{
-      headers: {
-        Authorization: `${token}`,
-      },
-    });
-
-    if (data.success) {
-      console.log("✅ Wishlist fetched:", data.wishlist);
-      setWishlist(data.wishlist);
-    } else {
-      console.warn("⚠️ Wishlist fetch failed:", data.message);
-      setWishlist([]);
-    }
-  } catch (error) {
-    console.error("❌ Wishlist fetch error:", error);
-    setWishlist([]);
-  }
-};
-
-
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -293,11 +239,59 @@ export default function Header() {
   const [isSearching, setIsSearching] = useState(false);
 
   const navigate = useNavigate();
+  const menuRef = useRef(null);
+  const searchRef = useRef(null);
+  const navRef = useRef(null);
 
+  const { cart, fetchCart } = useCart();
+  const { wishlist, setWishlist, fetchWishlist } = useWishlist();
 
+  const location = useLocation();
+
+  // Calculate cart and wishlist counts
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const wishlistCount = wishlist.length;
+
+  const closeMenu = () => setMenuOpen(false);
+
+  // Check if search should be shown on current page
+  const shouldShowSearch = searchEnabledPages.some(path =>
+    location.pathname.startsWith(path)
+  );
+
+  // Fetch cart data when component mounts or login state changes
   useEffect(() => {
-    fetchWishlist(); // ✅ fetch wishlist when page loads
-  }, []);
+    const fetchCartData = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (token) {
+          await fetchCart();
+        }
+      } catch (error) {
+        console.error("Error fetching cart:", error);
+      }
+    };
+
+    fetchCartData();
+  }, [isLoggedIn, fetchCart]);
+
+  // Fetch wishlist data when component mounts or login state changes
+  useEffect(() => {
+    const fetchWishlistData = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (token) {
+          await fetchWishlist();
+        } else {
+          setWishlist([]);
+        }
+      } catch (error) {
+        console.error("Error fetching wishlist:", error);
+      }
+    };
+
+    fetchWishlistData();
+  }, [isLoggedIn, fetchWishlist, setWishlist]);
 
   // Initialize menu items
   useEffect(() => {
@@ -330,49 +324,6 @@ export default function Header() {
       .catch((err) => console.log(err));
   }, []);
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      fetchWishlist();
-    } else {
-      setWishlist([]);
-    }
-  }, [isLoggedIn]);
-
-  // Optional: log menuItems after it updates
-  useEffect(() => {
-    console.log("Updated menuItems:", menuItems);
-  }, [menuItems]);
-
-  useEffect(() => {
-    const token = localStorage.getItem("authToken") || localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-
-    if (token) {
-      setIsLoggedIn(true);
-
-      if (userData) {
-        try {
-          const parsedUser = JSON.parse(userData);
-          if (parsedUser?.role) {
-            parsedUser.role = parsedUser.role.toLowerCase(); // normalize role
-            setUserrole(parsedUser.role === "admin"); // 👈 set userrole true if admin
-          } else {
-            setUserrole(false);
-          }
-          setUser(parsedUser);
-        } catch (e) {
-          console.error("Error parsing user data:", e);
-          setUser(null);
-          setUserrole(false);
-        }
-      }
-    } else {
-      setIsLoggedIn(false);
-      setUser(null);
-      setUserrole(false);
-    }
-  }, [showLogin]);
-
   // Check login state when modal closes
   useEffect(() => {
     if (!showLogin) {
@@ -403,26 +354,9 @@ export default function Header() {
     setIsLoggedIn(false);
     setUser(null);
     setUserrole(false);
+    // Clear cart and wishlist on logout
+    setWishlist([]);
   };
-
-  const menuRef = useRef(null);
-  const searchRef = useRef(null);
-  const navRef = useRef(null);
-
-  const { cart } = useCart();
-  const { wishlist, setWishlist } = useWishlist();
-
-  const location = useLocation();
-
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const wishlistCount = wishlist.length;
-
-  const closeMenu = () => setMenuOpen(false);
-
-  // Check if search should be shown on current page
-  const shouldShowSearch = searchEnabledPages.some(path =>
-    location.pathname.startsWith(path)
-  );
 
   // Handle scroll effect
   useEffect(() => {
@@ -646,12 +580,11 @@ export default function Header() {
                   closeMenu={closeMenu}
                   onClick={
                     item.badgeType === "wishlist"
-                      ? fetchWishlist // 👈 call API only on wishlist click
+                      ? fetchWishlist // Call API only on wishlist click
                       : undefined
                   }
                 />
               ))}
-
               {userrole && (
                 <UserMenuIcon
                   to="/admin"
@@ -824,19 +757,20 @@ export default function Header() {
         <LoginSignup
           onClose={() => setShowLogin(false)}
           onLoginSuccess={() => {
-            setShowLogin(false);
             const token = localStorage.getItem("authToken") || localStorage.getItem("token");
             const userData = localStorage.getItem("user");
-            if (token) {
+
+            if (token && userData) {
+              const parsedUser = JSON.parse(userData);
+              setUser(parsedUser);
               setIsLoggedIn(true);
-              if (userData) {
-                const parsedUser = JSON.parse(userData);
-                setUser(parsedUser);
-                if (parsedUser?.role) {
-                  setUserrole(parsedUser.role.toLowerCase() === "admin");
-                }
-              }
+              setUserrole(parsedUser.role?.toLowerCase() === "admin");
+              
+              // Fetch cart and wishlist data after successful login
+              fetchCart();
+              fetchWishlist();
             }
+            setShowLogin(false);
           }}
         />
       )}
