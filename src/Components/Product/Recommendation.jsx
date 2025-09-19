@@ -13,6 +13,24 @@ const Recommendation = () => {
 
   // Helper function to map product data to consistent format
   const mapProductData = (product) => {
+    let imagePath = product.PrimaryImage;
+
+    // If already absolute URL (starts with http), use directly
+    if (imagePath?.startsWith("http")) {
+      return {
+        id: product.ID || product.id,
+        name: product.Name || product.name,
+        price:
+          typeof product.Price === "string"
+            ? parseFloat(product.Price.replace(/[^\d.]/g, ""))
+            : product.Price || product.price,
+        image: imagePath, // use as-is
+        rating: product.Rating || product.rating || 4.5,
+        brand: product.Brand || product.brand || "STYLIUM",
+      };
+    }
+
+    // Else treat it as relative path → prepend backend URL
     return {
       id: product.ID || product.id,
       name: product.Name || product.name,
@@ -20,14 +38,12 @@ const Recommendation = () => {
         typeof product.Price === "string"
           ? parseFloat(product.Price.replace(/[^\d.]/g, ""))
           : product.Price || product.price,
-      // prepend /uploads to PrimaryImage
-      image: product.PrimaryImage
-        ? `/uploads${product.PrimaryImage}`
-        : "/placeholder.jpg",
+      image: `http://localhost:8001/uploads${imagePath}`, // prepend correctly
       rating: product.Rating || product.rating || 4.5,
       brand: product.Brand || product.brand || "STYLIUM",
     };
   };
+
 
 
   // Fetch all products and select 4 random ones
@@ -106,14 +122,15 @@ const Recommendation = () => {
             >
               <div className="relative overflow-hidden">
                 <img
-                  src={`http://localhost:8001${product.image}`}
+                  src={product.image}
                   alt={product.name}
                   className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
                 />
 
-                <div className="absolute top-3 left-3 bg-color-primary text-color-surface text-xs font-semibold px-2 py-1 rounded">
+
+                {/* <div className="absolute top-3 left-3 bg-color-primary text-color-surface text-xs font-semibold px-2 py-1 rounded">
                   NEW
-                </div>
+                </div> */}
               </div>
             </Link>
 

@@ -26,6 +26,7 @@ export default function Cart() {
 
   const quantityUpdateTimers = useRef({});
 
+  // In Cart.jsx, update the handleCheckout function
   const handleCheckout = () => {
     if (subtotal === 0) {
       toast.error("Your cart is empty!");
@@ -51,35 +52,41 @@ export default function Cart() {
     fetchCartData();
   }, []);
 
-
-
-
-
   useEffect(() => {
     setTransformedCart(
-      cart.map((item) => ({
-        id: item.ProductID || item.ID,
-        cartId: item.ID,
-        name: item.Name,
-        description: item.Description,
-        price: parseFloat(item.FirstSizePrice),
-        originalPrice: parseFloat(item.FirstDummyPrice),
-        discount: parseFloat(item.Discount),
-        discountPercentage: parseFloat(item.DiscountPercentage),
-        image: item.PrimaryImage
-          ? `http://localhost:8001/uploads/${item.PrimaryImage}` // prepend your server URL
-          : "/s1.jpeg",
-        category: item.CategoryName,
-        inStock: item.Stock > 0,
-        stock: item.Stock,
-        rating: parseFloat(item.AvgRating),
-        reviews: item.ReviewCount,
-        quantity: item.Quantity || 1,
-        size: "Standard", // your API doesn’t have size
-        material: item.CategoryName
-      }))
+      cart.map((item) => {
+        let imagePath = item.PrimaryImage;
+
+        // If already absolute URL, keep it
+        if (imagePath?.startsWith("http")) {
+          imagePath = imagePath;
+        } else {
+          // If relative, prepend server path
+          imagePath = `http://localhost:8001/uploads${imagePath}`;
+        }
+
+        return {
+          id: item.ProductID || item.ID,
+          cartId: item.ID,
+          name: item.Name,
+          description: item.Description,
+          price: parseFloat(item.FirstSizePrice),
+          originalPrice: parseFloat(item.FirstDummyPrice),
+          discountPercentage: parseFloat(item.DiscountPercentage),
+          image: imagePath || "/s1.jpeg",
+          category: item.CategoryName,
+          inStock: item.Stock > 0,
+          stock: item.Stock,
+          rating: parseFloat(item.AvgRating),
+          reviews: item.ReviewCount,
+          quantity: item.Quantity || 1,
+          size: "Standard",
+          material: item.CategoryName,
+        };
+      })
     );
   }, [cart]);
+
 
 
   // ✅ updates whenever `cart` changes

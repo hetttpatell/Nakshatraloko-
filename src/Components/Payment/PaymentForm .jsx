@@ -1,8 +1,9 @@
+// PaymentForm.jsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCreditCard, FaMoneyBillWave, FaMobileAlt } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
-import { Sparkles, Zap, ArrowRight } from "lucide-react";
+import { Sparkles, Zap, ArrowRight, Percent, Check, X } from "lucide-react";
 import axios from "axios";
 
 // Background circles component (same as Collections.jsx)
@@ -58,7 +59,13 @@ const UnderlineInput = ({
 const PaymentPage = () => {
   const [order, setOrder] = useState(null);
   const [cartItems, setCartItems] = useState([]);
+  const [subtotalAmount, setSubtotalAmount] = useState(0);
+  const [discount, setDiscount] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -77,71 +84,221 @@ const PaymentPage = () => {
   const [apiLoading, setApiLoading] = useState(true);
 
   const navigate = useNavigate();
-  const { id } = useParams(); // Get order ID from URL params
+  const { id } = useParams(); // Get order ID from URL params if available
 
-  // ✅ Fetch order data from API - FIXED VERSION
-  useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        setApiLoading(true);
-        
-        // Check if we have an ID to fetch
-        if (!id) {
-          throw new Error("No order ID provided");
+  // ✅ Fetch cart data from API
+  const fetchCartData = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await axios.post("http://localhost:8001/api/getCart", {}, {
+        headers: { Authorization: `${token}` }
+      });
+        console.log("API Response:", response.data); // Add this line
+      // Check if response has data directly or nested in data property
+      let cartData = response.data;
+
+      // If response has success property and data nested
+      if (response.data && response.data.success && response.data.data) {
+        cartData = response.data.data;
+      }
+
+      // Transform cart data to match expected format
+      const transformedCart = cartData.map((item) => {
+        return {
+          id: item.ProductID || item.id,
+          cartId: item.ID || item.cartId,
+          name: item.Name || item.name,
+          description: item.Description || item.description,
+          price: parseFloat(item.FirstSizePrice || item.price || 0),
+          originalPrice: parseFloat(item.FirstDummyPrice || item.originalPrice || 0),
+          discountPercentage: parseFloat(item.DiscountPercentage || item.discountPercentage || 0),
+          image: item.PrimaryImage || item.image,
+          category: item.CategoryName || item.category,
+          inStock: (item.Stock || item.stock || 0) > 0,
+          stock: item.Stock || item.stock || 0,
+          rating: parseFloat(item.AvgRating || item.rating || 0),
+          reviews: item.ReviewCount || item.reviews || 0,
+          quantity: item.Quantity || item.quantity || 1,
+          size: "Standard",
+          material: item.CategoryName || item.category,
+        };
+      });
+
+      setCartItems(transformedCart);
+
+      // Calculate subtotal
+      const subtotal = transformedCart.reduce(
+        (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
+        0
+      );
+      setSubtotalAmount(subtotal);
+      setTotalAmount(subtotal); // Initially total equals subtotal
+
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+      setError("Failed to load cart. Please try again.");
+
+      // Fallback to localStorage
+      const savedCart = JSON.parse(localStorage.getItem("cart")) || [];
+      setCartItems(savedCart);
+
+      const subtotal = savedCart.reduce(
+        (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
+        0
+      );
+      setSubtotalAmount(subtotal);
+      setTotalAmount(subtotal);
+    }
+  };
+
+  // ✅ Apply coupon function
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code");
+      return;
+    }
+
+    setCouponLoading(true);
+    setCouponError("");
+
+    try {
+      const token = localStorage.getItem("authToken");
+
+      // Mock coupon validation - replace with actual API call
+      const response = await new Promise((resolve) => {
+        setTimeout(() => {
+          // Mock coupon data
+          const mockCoupons = {
+            "SAVE10": { discount: 10, type: "percentage", minAmount: 500 },
+            "FLAT50": { discount: 50, type: "fixed", minAmount: 200 },
+            "WELCOME20": { discount: 20, type: "percentage", minAmount: 1000 },
+          };
+
+          if (mockCoupons[couponCode.toUpperCase()]) {
+            resolve({
+              success: true,
+              data: mockCoupons[couponCode.toUpperCase()]
+            });
+          } else {
+            resolve({
+              success: false,
+              message: "Invalid coupon code"
+            });
+          }
+        }, 1000);
+      });
+
+      if (response.success) {
+        const couponData = response.data;
+
+        // Check minimum amount
+        if (subtotalAmount < couponData.minAmount) {
+          setCouponError(`Minimum order amount of ₹${couponData.minAmount} required`);
+          setCouponLoading(false);
+          return;
         }
-        
+
+        // Calculate discount
+        let discountAmount = 0;
+        if (couponData.type === "percentage") {
+          discountAmount = (subtotalAmount * couponData.discount) / 100;
+        } else {
+          discountAmount = couponData.discount;
+        }
+
+        setDiscount(discountAmount);
+        setTotalAmount(subtotalAmount - discountAmount);
+        setAppliedCoupon({ code: couponCode.toUpperCase(), ...couponData });
+        setCouponCode("");
+      } else {
+        setCouponError(response.message || "Invalid coupon code");
+      }
+    } catch (error) {
+      console.error("Error applying coupon:", error);
+      setCouponError("Failed to apply coupon. Please try again.");
+    }
+
+    setCouponLoading(false);
+  };
+
+  // ✅ Remove coupon function
+  const removeCoupon = () => {
+    setDiscount(0);
+    setTotalAmount(subtotalAmount);
+    setAppliedCoupon(null);
+    setCouponError("");
+  };
+
+  // ✅ Fetch order data from API if ID is provided, otherwise fetch cart
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setApiLoading(true);
+      
+      if (id) {
+        // Fetch order by ID
         console.log("Fetching order with ID:", id);
         
-        // Make the POST request with proper error handling
-        const response = await axios.post(`http://localhost:8001/api/getOrderById/${id}`,
-          {
-            headers: {
-              'Content-Type': 'application/json'
-            }
+        const response = await axios.post(`http://localhost:8001/api/getOrderById/${id}`, {}, {
+          headers: {
+            'Content-Type': 'application/json'
           }
-        );
+        });
         
-        // Check if response has data
         if (!response.data) {
           throw new Error("No data received from server");
         }
         
-        const orderData = response.data;
+        // Handle both response structures
+        let orderData = response.data;
+        if (response.data && response.data.success && response.data.data) {
+          orderData = response.data.data;
+        }
+        
         console.log("Order data received:", orderData);
 
         setOrder(orderData);
 
+        // Check for items in different possible locations
+        let items = [];
         if (orderData.items && Array.isArray(orderData.items)) {
-          setCartItems(orderData.items);
+          items = orderData.items;
+        } else if (orderData.products && Array.isArray(orderData.products)) {
+          items = orderData.products;
+        } else if (orderData.orderItems && Array.isArray(orderData.orderItems)) {
+          items = orderData.orderItems;
+        }
 
-          const total = orderData.items.reduce(
+        if (items.length > 0) {
+          setCartItems(items);
+          const subtotal = items.reduce(
             (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
             0
           );
-          setTotalAmount(total);
+          setSubtotalAmount(subtotal);
+          setTotalAmount(subtotal);
         } else {
-          throw new Error("Invalid order data structure");
+          throw new Error("No items found in order data");
         }
-      } catch (error) {
-        console.error("Error fetching order:", error);
-        setError("Failed to load order details. Using local cart data.");
-
-        // Fallback to localStorage
-        const savedCart = JSON.parse(localStorage.getItem("cart")) || [];
-        setCartItems(savedCart);
-
-        const total = savedCart.reduce(
-          (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
-          0
-        );
-        setTotalAmount(total);
-      } finally {
-        setApiLoading(false);
+      } else {
+        // No order ID, fetch cart data
+        await fetchCartData();
       }
-    };
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError("Failed to load order details. Please try again.");
+    } finally {
+      setApiLoading(false);
+    }
+  };
 
-    fetchOrder();
-  }, [id]);
+  fetchData();
+}, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -160,11 +317,25 @@ const PaymentPage = () => {
       localStorage.setItem("lastOrder", JSON.stringify({
         cart: cartItems,
         orderId,
-        orderDetails: order
+        orderDetails: order,
+        appliedCoupon,
+        subtotal: subtotalAmount,
+        discount,
+        total: totalAmount
       }));
 
       // Navigate to ThankYouPage and pass cart & orderId via state
-      navigate("/thankyou", { state: { cart: cartItems, orderId, orderDetails: order } });
+      navigate("/thankyou", {
+        state: {
+          cart: cartItems,
+          orderId,
+          orderDetails: order,
+          appliedCoupon,
+          subtotal: subtotalAmount,
+          discount,
+          total: totalAmount
+        }
+      });
 
       // Clear cart after order if it was from localStorage
       if (!order) {
@@ -204,7 +375,7 @@ const PaymentPage = () => {
     }
   };
 
-  if (!id) {
+  if (apiLoading) {
     return (
       <main className="py-16 md:py-24 bg-gradient-to-b from-[var(--color-primary-light)]/50 to-[var(--color-background)] relative overflow-hidden min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -283,36 +454,125 @@ const PaymentPage = () => {
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col md:flex-row w-full max-w-7xl mx-auto overflow-hidden border border-white/20">
           {/* Left summary panel */}
           <section className="w-full md:w-2/5 p-6 md:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-[var(--color-border)] bg-gradient-to-b from-[var(--color-primary-light)]/20 to-white">
-            <h2 className="text-2xl font-semibold mb-6 md:mb-8 text-[var(--color-text)] tracking-tight">Order Summary</h2>
+            <div>
+              <h2 className="text-2xl font-semibold mb-6 md:mb-8 text-[var(--color-text)] tracking-tight">Order Summary</h2>
 
-            <ul className="space-y-4 md:space-y-6 flex-grow overflow-y-auto max-h-96 pr-2">
-              {cartItems.length > 0 ? (
-                cartItems.map(({ id, name, price, quantity, image }) => (
-                  <motion.li
-                    key={id}
-                    className="flex items-center gap-4 p-3 md:p-4 border border-[var(--color-border)] rounded-lg bg-white/80 hover:shadow-md transition-all"
-                    whileHover={{ y: -2 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {image && <img src={image} alt={name} className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border border-[var(--color-border)]" />}
-                    <div className="flex flex-col flex-1">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-semibold text-[var(--color-text)] text-sm md:text-base">{name}</h4>
-                        <span className="font-bold text-[var(--color-text)] text-sm md:text-base">₹{price * quantity}</span>
+              <ul className="space-y-4 md:space-y-6 flex-grow overflow-y-auto max-h-96 pr-2 mb-6">
+                {cartItems.length > 0 ? (
+                  cartItems.map(({ id, cartId, name, price, quantity, image }) => (
+                    <motion.li
+                      key={cartId || id}
+                      className="flex items-center gap-4 p-3 md:p-4 border border-[var(--color-border)] rounded-lg bg-white/80 hover:shadow-md transition-all"
+                      whileHover={{ y: -2 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {image && <img src={image} alt={name} className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border border-[var(--color-border)]" />}
+                      <div className="flex flex-col flex-1">
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-semibold text-[var(--color-text)] text-sm md:text-base">{name}</h4>
+                          <span className="font-bold text-[var(--color-text)] text-sm md:text-base">₹{(price * quantity).toFixed(2)}</span>
+                        </div>
+                        <p className="text-[var(--color-text-light)] text-xs mt-1">Quantity: <span className="font-medium">x{quantity}</span></p>
+                        <p className="text-[var(--color-text-light)] text-xs">Unit Price: ₹{price}</p>
                       </div>
-                      <p className="text-[var(--color-text-light)] text-xs mt-1">Quantity: <span className="font-medium">x{quantity}</span></p>
-                      <p className="text-[var(--color-text-light)] text-xs">Unit Price: ₹{price}</p>
-                    </div>
-                  </motion.li>
-                ))
-              ) : (
-                <p className="text-[var(--color-text-light)] text-sm text-center w-full">Your cart is empty.</p>
-              )}
-            </ul>
+                    </motion.li>
+                  ))
+                ) : (
+                  <p className="text-[var(--color-text-light)] text-sm text-center w-full">Your cart is empty.</p>
+                )}
+              </ul>
 
-            <div className="flex justify-between items-center border-t border-[var(--color-border)] pt-4 mt-4 md:mt-0">
-              <p className="text-lg font-medium text-[var(--color-text)]">Total:</p>
-              <p className="text-xl font-bold text-[var(--color-primary-dark)]">₹{totalAmount}</p>
+              {/* Coupon Section */}
+              <div className="mb-6">
+                <h3 className="text-lg font-medium mb-4 text-[var(--color-text)]">Have a Coupon?</h3>
+
+                {appliedCoupon ? (
+                  <motion.div
+                    className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Check size={16} className="text-green-600" />
+                      <span className="text-green-700 font-medium text-sm">
+                        {appliedCoupon.code} applied
+                      </span>
+                    </div>
+                    <button
+                      onClick={removeCoupon}
+                      className="text-green-600 hover:text-green-800 transition-colors"
+                    >
+                      <X size={16} />
+                    </button>
+                  </motion.div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Enter coupon code"
+                      className="flex-1 px-3 py-2 border border-[var(--color-border)] rounded-lg focus:border-[var(--color-primary)] focus:outline-none text-sm"
+                      disabled={couponLoading}
+                    />
+                    <button
+                      onClick={applyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-2"
+                    >
+                      {couponLoading ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      ) : (
+                        <>
+                          <Percent size={14} />
+                          Apply
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {couponError && (
+                  <motion.p
+                    className="text-red-600 text-xs mt-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    {couponError}
+                  </motion.p>
+                )}
+              </div>
+            </div>
+
+            {/* Billing Summary */}
+            <div className="border-t border-[var(--color-border)] pt-4">
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-[var(--color-text-light)]">Subtotal:</p>
+                  <p className="text-sm font-medium text-[var(--color-text)]">₹{subtotalAmount.toFixed(2)}</p>
+                </div>
+
+                {discount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-green-600">Discount:</p>
+                    <p className="text-sm font-medium text-green-600">-₹{discount.toFixed(2)}</p>
+                  </div>
+                )}
+
+                {formData.paymentMethod === "cod" && (
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-[var(--color-text-light)]">COD Charges:</p>
+                    <p className="text-sm font-medium text-[var(--color-text)]">₹50.00</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-between items-center border-t border-[var(--color-border)] pt-2">
+                <p className="text-lg font-medium text-[var(--color-text)]">Total:</p>
+                <p className="text-xl font-bold text-[var(--color-primary-dark)]">
+                  ₹{(totalAmount + (formData.paymentMethod === "cod" ? 50 : 0)).toFixed(2)}
+                </p>
+              </div>
             </div>
           </section>
 
