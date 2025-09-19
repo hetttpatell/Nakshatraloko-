@@ -107,8 +107,15 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
   const dropdownRef = useRef(null);
   const itemRef = useRef(null);
   const clickTimeoutRef = useRef(null);
+  const leaveTimeoutRef = useRef(null);
 
   const handleMouseEnter = () => {
+    // Clear any pending leave timeout
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current);
+      leaveTimeoutRef.current = null;
+    }
+    
     if (item.subMenu && !isMobile) {
       setDropdownOpen(true);
     }
@@ -118,8 +125,28 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
   };
 
   const handleMouseLeave = () => {
+    // Set a timeout before closing the dropdown to allow for cursor movement to submenu
     if (item.subMenu && !isMobile) {
-      setDropdownOpen(false);
+      leaveTimeoutRef.current = setTimeout(() => {
+        setDropdownOpen(false);
+      }, 300); // 300ms delay before closing
+    }
+  };
+
+  const handleDropdownMouseEnter = () => {
+    // Clear any pending leave timeout when entering the dropdown
+    if (leaveTimeoutRef.current) {
+      clearTimeout(leaveTimeoutRef.current);
+      leaveTimeoutRef.current = null;
+    }
+  };
+
+  const handleDropdownMouseLeave = () => {
+    // Close dropdown when leaving the dropdown area
+    if (item.subMenu && !isMobile) {
+      leaveTimeoutRef.current = setTimeout(() => {
+        setDropdownOpen(false);
+      }, 200); // 200ms delay before closing
     }
   };
 
@@ -138,6 +165,18 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
     item.subMenu && item.subMenu.some((sub) => location.pathname.startsWith(sub.to));
 
   const isActive = location.pathname === item.to || isParentActive;
+
+  // Clean up timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+      if (leaveTimeoutRef.current) {
+        clearTimeout(leaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <li
@@ -179,6 +218,8 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
               : "opacity-0 -translate-y-2 scale-95 pointer-events-none"
             }`
             }`}
+          onMouseEnter={handleDropdownMouseEnter}
+          onMouseLeave={handleDropdownMouseLeave}
         >
           {item.subMenu.map((subItem, index) => (
             <li key={subItem.label}>
@@ -585,11 +626,14 @@ export default function Header() {
                   }
                 />
               ))}
-              {userrole && (
+
+              {/* Admin Panel icon - only show if logged in AND role is admin */}
+              {isLoggedIn && userrole && (
                 <UserMenuIcon
                   to="/admin"
                   Icon={UserCog}
                   closeMenu={closeMenu}
+                  className="hidden lg:flex"
                 />
               )}
 
@@ -645,7 +689,8 @@ export default function Header() {
             {/* Mobile user menu */}
             <li className="px-6 py-4 border-b border-[var(--color-border)]">
               <div className="flex items-center gap-4">
-                {userrole && (
+                {/* Admin Panel icon in mobile menu - only show if logged in AND role is admin */}
+                {isLoggedIn && userrole && (
                   <UserMenuIcon
                     to="/admin"
                     Icon={UserCog}
@@ -765,7 +810,7 @@ export default function Header() {
               setUser(parsedUser);
               setIsLoggedIn(true);
               setUserrole(parsedUser.role?.toLowerCase() === "admin");
-              
+
               // Fetch cart and wishlist data after successful login
               fetchCart();
               fetchWishlist();

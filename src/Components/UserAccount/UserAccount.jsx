@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Calendar, Star, Shield, Bell, Moon, Sun, Zap, CreditCard, MapPin, Heart, Smartphone } from "lucide-react";
+import { User, Mail, Calendar, Star, Shield, Bell, Moon, Sun, Zap, CreditCard, MapPin, Heart, Smartphone, UserCog } from "lucide-react";
 import axios from "axios";
 import { FaMobile } from "react-icons/fa";
+import { useNavigate } from "react-router-dom"; // Add this import
 
 export default function UserAccount() {
   const [user, setUser] = useState({
@@ -14,11 +15,13 @@ export default function UserAccount() {
     birthPlace: "",  // ✅ BirthPlace
     gender: "",      // ✅ Gender
     address: "",     // ✅ Address
-    fullNameAtBirth: "" // ✅ FullNameAtBirth
+    fullNameAtBirth: "", // ✅ FullNameAtBirth
+    membership: ""   // ✅ Add membership/role to state
   });
 
   const [activeTab, setActiveTab] = useState("profile");
   const [editMode, setEditMode] = useState(false);
+  const navigate = useNavigate(); // Initialize navigate
 
   // ✅ Fetch user data on component mount
   useEffect(() => {
@@ -46,7 +49,6 @@ export default function UserAccount() {
             fullNameAtBirth: userData.FullNameAtBirth || "",
             membership: userData.role || "customer"
           }));
-
         }
       } catch (err) {
         console.error("Failed to fetch user:", err);
@@ -83,7 +85,6 @@ export default function UserAccount() {
         FullNameAtBirth: user.fullNameAtBirth || "",
       };
 
-
       const res = await axios.post(
         "http://localhost:8001/api/updateUser",
         payload,
@@ -102,6 +103,11 @@ export default function UserAccount() {
       console.error("Failed to update user:", err);
       // alert(err.response?.data?.message || "Something went wrong");
     }
+  };
+
+  // Function to handle admin panel navigation
+  const handleAdminPanelClick = () => {
+    navigate("/admin"); // Adjust the path to your admin panel route
   };
 
   return (
@@ -162,6 +168,17 @@ export default function UserAccount() {
                   <span>{item.label}</span>
                 </button>
               ))}
+              
+              {/* Admin Panel Button - Conditionally Rendered */}
+              {user.membership === "admin" && (
+                <button
+                  onClick={handleAdminPanelClick}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-[var(--color-text-light)] hover:bg-[var(--color-primary-light)]"
+                >
+                  <UserCog size={18} />
+                  <span>Admin Panel</span>
+                </button>
+              )}
             </nav>
           </motion.div>
 
@@ -189,7 +206,6 @@ export default function UserAccount() {
             {activeTab === "profile" && (
               <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Full Name */}
                   {/* Full Name */}
                   <div>
                     <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Full Name</label>
@@ -355,7 +371,6 @@ export default function UserAccount() {
                   </div>
                 )}
               </form>
-
             )}
           </motion.div>
         </div>
