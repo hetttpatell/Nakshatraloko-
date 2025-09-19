@@ -37,7 +37,7 @@ const ProductsPage = () => {
 
     fetchCategories();
   }, []);
-  
+
   useEffect(() => {
     if (category) {
       // Map URL param back to your category name
@@ -63,7 +63,11 @@ const ProductsPage = () => {
             category: p.catogaryname,
             description: p.description,
             price: p.firstsizeprice ? `₹ ${parseFloat(p.firstsizeprice).toLocaleString("en-IN")}` : "₹ 0",
-            img: p.primaryimage || null,
+            img: p.primaryimage
+              ? p.primaryimage.startsWith("http")
+                ? p.primaryimage
+                : `http://localhost:8001/uploads${p.primaryimage}`
+              : null,
             rating: parseFloat(p.avgrating || 0),
             productRating: p.productratings ? parseFloat(p.productratings) : 0, // Individual product rating
             reviewCount: p.reviewcount || 0, // Review count
@@ -123,7 +127,11 @@ const ProductsPage = () => {
             price: p.firstsizeprice
               ? `₹ ${parseFloat(p.firstsizeprice).toLocaleString("en-IN")}`
               : "₹ 0",
-            img: p.primaryimage || null,
+            img: p.primaryimage
+              ? p.primaryimage.startsWith("http")
+                ? p.primaryimage
+                : `http://localhost:8001/uploads${p.primaryimage}`
+              : null,
             rating: parseFloat(p.avgrating || 0),
             productRating: p.productratings ? parseFloat(p.productratings) : 0, // Individual product rating
             reviewCount: p.reviewcount || 0, // Review count
@@ -245,7 +253,7 @@ const ProductsPage = () => {
   const renderStars = (rating) => {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
-    
+
     return (
       <div className="flex">
         {Array.from({ length: 5 }).map((_, i) => {
@@ -256,9 +264,9 @@ const ProductsPage = () => {
       </div>
     );
   };
- 
+
   return (
-    
+
     <div className="min-h-screen bg-[var(--color-background)]">
       {/* Header */}
       <CouponBanner />
@@ -289,17 +297,17 @@ const ProductsPage = () => {
               </button>
             )}
           </div>
-          
+
           {/* Mobile Sort Button */}
           <div className="md:hidden w-full">
-            <button 
+            <button
               onClick={() => setShowSortOptions(!showSortOptions)}
               className="flex items-center justify-center gap-2 w-full px-4 py-2 border border-[var(--color-border)] rounded-xl bg-white text-[var(--color-text)]"
             >
               <span>Sort by: {sortOptions.find(o => o.value === sortBy)?.label || "Recommended"}</span>
               <ArrowRight className={`w-4 h-4 transform transition-transform ${showSortOptions ? 'rotate-90' : ''}`} />
             </button>
-            
+
             {/* Mobile Sort Dropdown */}
             {showSortOptions && (
               <div className="mt-2 bg-white border border-[var(--color-border)] rounded-xl shadow-lg py-2">
@@ -318,7 +326,7 @@ const ProductsPage = () => {
               </div>
             )}
           </div>
-          
+
           {/* Desktop Sort Select */}
           <div className="hidden md:flex items-center gap-3">
             <span className="text-[var(--color-text-light)] text-sm">Sort by:</span>
@@ -397,36 +405,42 @@ const ProductsPage = () => {
               {filteredAndSortedProducts.map(product => (
                 <Link key={product.id} to={`/product/${product.id}`} state={{ product }} className="group bg-[var(--color-surface)] rounded-xl md:rounded-2xl overflow-hidden border border-[var(--color-border)] transition-all duration-300 hover:shadow-md md:hover:shadow-xl hover:-translate-y-0.5 md:hover:-translate-y-1">
                   <div className="relative w-full aspect-square overflow-hidden">
-                    <img src={product.img ? `http://localhost:8001/uploads/${product.img}` : "/s1.jpeg"} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onError={e => e.target.src = "/s1.jpeg"} loading="lazy" />
+                    <img
+                      src={product.img || "/s1.jpeg"}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={e => (e.target.src = "/s1.jpeg")}
+                      loading="lazy"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   <div className="p-3 md:p-4 lg:p-5">
                     <p className="text-xs font-medium text-[var(--color-primary)] uppercase tracking-wide mb-1">{product.category}</p>
                     <h3 className="font-semibold text-[var(--color-text)] text-sm md:text-base mb-2 line-clamp-2 group-hover:text-[var(--color-primary)] transition-colors">{product.name}</h3>
-                    
+
                     {/* Ratings and Reviews Section */}
                     <div className="flex flex-col gap-1 mb-3 md:mb-4">
-                      <div className="flex items-center gap-1.5 md:gap-2">
+                      {/* <div className="flex items-center gap-1.5 md:gap-2">
                         {renderStars(product.rating)}
                         <span className="text-xs md:text-sm text-[var(--color-text-light)]">
                           ({product.rating.toFixed(1)})
                         </span>
-                      </div>
-                      
+                      </div> */}
+
                       {/* Product-specific rating (if available) */}
                       {product.productRating > 0 && (
                         <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-light)]">
-                          <span>Product: {product.productRating.toFixed(1)}</span>
+                          {/* <span>{product.productRating.toFixed(1)}</span> */}
                           {renderStars(product.productRating)}
                         </div>
                       )}
-                      
+
                       {/* Review count */}
                       <div className="text-xs text-[var(--color-text-light)]">
                         {product.reviewCount} {product.reviewCount === 1 ? 'review' : 'reviews'}
                       </div>
                     </div>
-                    
+
                     <div className="flex flex-col gap-1.5 md:gap-2 pt-2 md:pt-3 border-t border-[var(--color-border-light)]">
                       {product.dummyPrice && product.discountPercentage && (
                         <div className="flex items-center gap-1.5 md:gap-2">
@@ -448,7 +462,7 @@ const ProductsPage = () => {
           )}
         </div>
       </div>
-    </div> 
+    </div>
   );
 };
 

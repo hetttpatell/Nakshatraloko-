@@ -1,8 +1,7 @@
 // components/ProductModal.jsx
 import axios from "axios";
 import React, { useState, useEffect } from "react";
-import { FaTimes, FaArrowUp, FaArrowDown, FaTrash, FaPlus, FaMinus, FaSync } from "react-icons/fa";
-
+import { FaTimes, FaArrowUp, FaArrowDown, FaTrash, FaPlus, FaMinus, FaSync, FaStar } from "react-icons/fa";
 
 const ProductModal = ({
   title,
@@ -20,11 +19,13 @@ const ProductModal = ({
   const [advantages, setAdvantages] = useState("");
   const [howToWear, setHowToWear] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
   const [sizes, setSizes] = useState([
     { size: "", price: "", dummyPrice: "", stock: "" }
   ]);
   const [images, setImages] = useState([]);
-  const [imageFiles, setImageFiles] = useState([]); // Store File objects
+  const [imageFiles, setImageFiles] = useState([]);
   const [errors, setErrors] = useState({});
   const [categoryData, setCategoryData] = useState([]);
   const [apiStatus, setApiStatus] = useState({ loading: false, message: "" });
@@ -43,7 +44,8 @@ const ProductModal = ({
   useEffect(() => {
     if (initialProduct && Object.keys(initialProduct).length > 0) {
       console.log("Initial product data:", initialProduct);
-      // Basic fields
+
+      // ---------------- Basic fields ----------------
       setName(initialProduct.Name || initialProduct.name || "");
       setCategoryId(
         initialProduct.CategoryID !== undefined
@@ -62,35 +64,68 @@ const ProductModal = ({
             ? initialProduct.isActive
             : true
       );
+      
+      // ---------------- Rating field ----------------
+      const initialRating = initialProduct.Rating !== undefined
+        ? parseFloat(initialProduct.Rating)
+        : initialProduct.rating !== undefined
+          ? parseFloat(initialProduct.rating)
+          : initialProduct.productRatings !== undefined
+            ? parseFloat(initialProduct.productRatings)
+            : 0;
+          
+      // Ensure rating is between 0 and 5
+      setRating(Math.min(Math.max(initialRating, 0), 5));
 
-      // Sizes
+      // ---------------- Sizes ----------------
       const productSizes = initialProduct.Sizes || initialProduct.sizes || [];
       if (Array.isArray(productSizes) && productSizes.length > 0) {
         setSizes(
           productSizes.map((size) => ({
-            size: size.size ? `${size.size}` : "", // Remove "Ratti" suffix if present
-            price: size.price !== undefined && size.price !== null ? String(size.price) : "",
-            dummyPrice: size.dummyPrice !== undefined && size.dummyPrice !== null ? String(size.dummyPrice) : "",
-            stock: size.stock !== undefined && size.stock !== null ? String(size.stock) : ""
+            size: size.size ? `${size.size}` : "",
+            price:
+              size.price !== undefined && size.price !== null
+                ? String(size.price)
+                : "",
+            dummyPrice:
+              size.dummyPrice !== undefined && size.dummyPrice !== null
+                ? String(size.dummyPrice)
+                : "",
+            stock:
+              size.stock !== undefined && size.stock !== null
+                ? String(size.stock)
+                : "",
           }))
         );
       } else {
         setSizes([{ size: "", price: "", dummyPrice: "", stock: "" }]);
       }
 
-      // Images - handle both API response and expected format
+      // ---------------- Images ----------------
       const productImages = initialProduct.Images || initialProduct.images || [];
       if (Array.isArray(productImages) && productImages.length > 0) {
-        // For existing images, we'll store them with a flag to indicate they're already uploaded
-        const formattedImages = productImages.map(img => ({
-          ...img,
-          // If imageData is a URL (not a blob), it's an existing image
-          isExisting: !img.imageData || !img.imageData.startsWith('blob:'),
-          // Store the original image URL for reference
-          originalUrl: img.imageData || img.imageUrl,
-          // Preserve the image ID if it exists
-          id: img.id || img.ID || null
-        }));
+        const formattedImages = productImages.map((img) => {
+          let imageUrl = img.imageData || img.imageUrl || "";
+
+          if (imageUrl) {
+            // ✅ Always keep only the last "/uploads/..." part
+            const uploadsIndex = imageUrl.lastIndexOf("/uploads");
+            if (uploadsIndex !== -1) {
+              const cleanPath = imageUrl.substring(uploadsIndex);
+              imageUrl = `http://localhost:8001${cleanPath}`;
+            }
+          }
+
+          return {
+            ...img,
+            imageData: imageUrl,
+            isExisting: true,
+            originalUrl: imageUrl,
+            id: img.id || img.ID || null,
+            altText: img.altText || "",
+          };
+        });
+
         setImages(formattedImages);
       } else {
         setImages([]);
@@ -134,8 +169,8 @@ const ProductModal = ({
       console.log("Validation errors:", newErrors);
       setErrors(newErrors);
       setApiStatus({ loading: false, message: "" });
-      submittingRef.current = false; // Reset the submitting flag
-      return; // Add this return statement
+      submittingRef.current = false;
+      return;
     }
 
     // Process valid files
@@ -145,12 +180,12 @@ const ProductModal = ({
     validFiles.forEach((file) => {
       const objectUrl = URL.createObjectURL(file);
       const newImage = {
-        imageData: objectUrl, // Use object URL for preview
+        imageData: objectUrl,
         altText: `${name || "Product"} image`,
-        isPrimary: images.length === 0, // Set as primary if it's the first image
+        isPrimary: images.length === 0,
         isActive: true,
-        file: file, // Store the File object
-        isExisting: false // Flag as new image
+        file: file,
+        isExisting: false
       };
 
       newImageFiles.push(file);
@@ -260,165 +295,193 @@ const ProductModal = ({
     }
   };
 
+  // Handle star click for rating
+  const handleStarClick = (value) => {
+    setRating(value);
+  };
+
+  // Handle star hover for visual feedback
+  const handleStarHover = (value) => {
+    setHoverRating(value);
+  };
+
+  // Handle star leave for visual feedback
+  const handleStarLeave = () => {
+    setHoverRating(0);
+  };
+
+  // Handle numeric input change for rating
+  const handleRatingInputChange = (e) => {
+    let value = parseFloat(e.target.value);
+    
+    // Ensure value is between 0 and 5
+    if (isNaN(value)) value = 0;
+    value = Math.min(Math.max(value, 0), 5);
+    
+    setRating(value);
+  };
+
   const submittingRef = React.useRef(false);
 
-const handleSubmit = React.useCallback(async (e) => {
-  e.preventDefault();
+  const handleSubmit = React.useCallback(async (e) => {
+    e.preventDefault();
 
-  if (submittingRef.current) return;
-  submittingRef.current = true;
-  setErrors({});
-  setApiStatus({ loading: true, message: "" });
-
-  const newErrors = {};
-  
-  // --- Validations ---
-  if (!categoryId) {
-    newErrors.categoryId = "Please select a category";
-  }
-  if (!name.trim()) {
-    newErrors.name = "Please enter a product name";
-  }
-  if (images.filter(img => img.isExisting || img.file).length === 0) {
-    newErrors.images = "Please upload at least one image";
-  }
-
-  // Validate each size
-  sizes.forEach((size, index) => {
-    if (!size.size) newErrors[`size-${index}`] = "Size is required";
-    if (!size.price || parseFloat(size.price) <= 0) newErrors[`price-${index}`] = "Valid price is required";
-    if (!size.dummyPrice || parseFloat(size.dummyPrice) <= 0) newErrors[`dummyPrice-${index}`] = "Valid dummy price is required";
-    if (!size.stock || parseInt(size.stock) < 0) newErrors[`stock-${index}`] = "Valid stock quantity is required";
-  });
-
-  // FIXED: Category validation - compare as numbers
-  const numericCategoryId = parseInt(categoryId, 10);
-  const selectedCategory = categoryData.find(cat => 
-    cat.ID === numericCategoryId
-  );
-
-  if (!selectedCategory && categoryId) {
-    newErrors.categoryId = "Invalid category selected";
-  }
-
-  if (Object.keys(newErrors).length > 0) {
-    setErrors(newErrors);
-    setApiStatus({ loading: false, message: "" });
-    submittingRef.current = false;
-    return;
-  }
-
-  console.log("All validations passed, building payload");
-
-  // --- Build FormData payload ---
-  const formData = new FormData();
-
-  // Add basic fields
-  formData.append("id", isEditing ? (initialProduct?.id || 0) : 0);
-  formData.append("categoryId", numericCategoryId);
-  formData.append("name", name.trim());
-  formData.append("description", description?.trim() || "");
-  formData.append("advantages", advantages?.trim() || "");
-  formData.append("howToWear", howToWear?.trim() || "");
-  formData.append("isActive", Boolean(isActive));
-  formData.append("createdBy", 1); // Make sure this is included
-
-  // Add sizes as JSON string
-  const sizesData = sizes.map((size) => {
-    const parsedSize = parseFloat(size.size);
-    return {
-      size: !isNaN(parsedSize) ? parsedSize : size.size,
-      price: parseFloat(size.price) || 0,
-      dummyPrice: parseFloat(size.dummyPrice) || 0,
-      stock: parseInt(size.stock, 10) || 0,
-    };
-  });
-  formData.append("sizes", JSON.stringify(sizesData));
-
-  // Add images metadata as JSON string
-  const imagesMeta = images.map((img, index) => ({
-    id: img.id || null,
-    altText: img.altText?.trim() || "",
-    isPrimary: Boolean(img.isPrimary),
-    isActive: Boolean(img.isActive),
-    order: index,
-    isExisting: Boolean(img.isExisting),
-    originalUrl: img.originalUrl || img.imageData
-  }));
-  formData.append("images", JSON.stringify(imagesMeta));
-
-  // FIXED: Handle existing images properly
-  const existingImages = images
-    .filter(img => img.isExisting)
-    .map((img, idx) => ({
-      id: img.id,
-      image: img.originalUrl,
-      altText: img.altText || "",
-      isPrimary: img.isPrimary,
-      isActive: true
-    }));
-  formData.append("existingImageUrls", JSON.stringify(existingImages));
-
-  // FIXED: Append only new image files with proper field name
-  images.forEach((img, index) => {
-    if (img.file && !img.isExisting) {
-      formData.append("imageFiles", img.file); // Use consistent field name
-    }
-  });
-
-  console.log('Sending FormData with product data');
-
-  try {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setErrors({});
     setApiStatus({ loading: true, message: "" });
-    console.log("Making API call to saveProduct with FormData");
 
-    const response = await axios.post(
-      "http://localhost:8001/api/saveProduct",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
-        },
-      }
+    const newErrors = {};
+
+    // --- Validations ---
+    if (!categoryId) {
+      newErrors.categoryId = "Please select a category";
+    }
+    if (!name.trim()) {
+      newErrors.name = "Please enter a product name";
+    }
+    if (images.filter(img => img.isExisting || img.file).length === 0) {
+      newErrors.images = "Please upload at least one image";
+    }
+
+    // Validate each size
+    sizes.forEach((size, index) => {
+      if (!size.size) newErrors[`size-${index}`] = "Size is required";
+      if (!size.price || parseFloat(size.price) <= 0) newErrors[`price-${index}`] = "Valid price is required";
+      if (!size.dummyPrice || parseFloat(size.dummyPrice) <= 0) newErrors[`dummyPrice-${index}`] = "Valid dummy price is required";
+      if (!size.stock || parseInt(size.stock) < 0) newErrors[`stock-${index}`] = "Valid stock quantity is required";
+    });
+
+    // Category validation - compare as numbers
+    const numericCategoryId = parseInt(categoryId, 10);
+    const selectedCategory = categoryData.find(cat =>
+      cat.ID === numericCategoryId
     );
 
-    console.log("API response:", response.data);
+    if (!selectedCategory && categoryId) {
+      newErrors.categoryId = "Invalid category selected";
+    }
 
-    if (response.data.success) {
-      setApiStatus({ loading: false, message: "success" });
-      onSave(response.data);
-    } else {
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setApiStatus({ loading: false, message: "" });
+      submittingRef.current = false;
+      return;
+    }
+
+    console.log("All validations passed, building payload");
+
+    // --- Build FormData payload ---
+    const formData = new FormData();
+
+    // Add basic fields
+    formData.append("id", isEditing ? (initialProduct?.id || 0) : 0);
+    formData.append("categoryId", numericCategoryId);
+    formData.append("name", name.trim());
+    formData.append("description", description?.trim() || "");
+    formData.append("advantages", advantages?.trim() || "");
+    formData.append("howToWear", howToWear?.trim() || "");
+    formData.append("isActive", Boolean(isActive));
+    formData.append("rating", parseFloat(rating) || 0);
+    formData.append("productRatings", parseFloat(rating) || 0); // Add rating to productRatings field
+    formData.append("createdBy", 1);
+
+    // Add sizes as JSON string
+    const sizesData = sizes.map((size) => {
+      const parsedSize = parseFloat(size.size);
+      return {
+        size: !isNaN(parsedSize) ? parsedSize : size.size,
+        price: parseFloat(size.price) || 0,
+        dummyPrice: parseFloat(size.dummyPrice) || 0,
+        stock: parseInt(size.stock, 10) || 0,
+      };
+    });
+    formData.append("sizes", JSON.stringify(sizesData));
+
+    // Add images metadata as JSON string
+    const imagesMeta = images.map((img, index) => ({
+      id: img.id || null,
+      altText: img.altText?.trim() || "",
+      isPrimary: Boolean(img.isPrimary),
+      isActive: Boolean(img.isActive),
+      order: index,
+      isExisting: Boolean(img.isExisting),
+      originalUrl: img.originalUrl || img.imageData
+    }));
+    formData.append("imageFiles", JSON.stringify(imagesMeta));
+
+    // Handle existing images properly
+    const existingImages = images
+      .filter(img => img.isExisting)
+      .map((img, idx) => ({
+        id: img.id,
+        image: img.originalUrl,
+        altText: img.altText || "",
+        isPrimary: img.isPrimary,
+        isActive: true
+      }));
+    formData.append("existingImageUrls", JSON.stringify(existingImages));
+
+    // Append only new image files with proper field name
+    images.forEach((img) => {
+      if (img.file && !img.isExisting) {
+        formData.append("images", img.file);
+      }
+    });
+
+    console.log('Sending FormData with product data');
+
+    try {
+      setApiStatus({ loading: true, message: "" });
+      console.log("Making API call to saveProduct with FormData");
+
+      const response = await axios.post(
+        "http://localhost:8001/api/saveProduct",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      console.log("API response:", response.data);
+
+      if (response.data.success) {
+        setApiStatus({ loading: false, message: "success" });
+        onSave(response.data);
+      } else {
+        setErrors({
+          submit: response.data.message || "Failed to save product",
+        });
+        setApiStatus({ loading: false, message: "error" });
+      }
+    } catch (error) {
+      console.error("❌ Save product failed:", error);
+      let errorMessage = "Failed to save product";
+
+      if (error.response) {
+        console.error("Error data:", error.response.data);
+        console.error("Error status:", error.response.status);
+        errorMessage = error.response.data.message || errorMessage;
+      } else if (error.request) {
+        console.error("Error request:", error.request);
+        errorMessage = "No response received from server. Please check your connection.";
+      } else {
+        console.error("Error message:", error.message);
+        errorMessage = error.message;
+      }
+
       setErrors({
-        submit: response.data.message || "Failed to save product",
+        submit: errorMessage,
       });
       setApiStatus({ loading: false, message: "error" });
+    } finally {
+      setApiStatus({ loading: false, message: "" });
+      submittingRef.current = false;
     }
-  } catch (error) {
-    console.error("❌ Save product failed:", error);
-    let errorMessage = "Failed to save product";
-
-    if (error.response) {
-      console.error("Error data:", error.response.data);
-      console.error("Error status:", error.response.status);
-      errorMessage = error.response.data.message || errorMessage;
-    } else if (error.request) {
-      console.error("Error request:", error.request);
-      errorMessage = "No response received from server. Please check your connection.";
-    } else {
-      console.error("Error message:", error.message);
-      errorMessage = error.message;
-    }
-
-    setErrors({
-      submit: errorMessage,
-    });
-    setApiStatus({ loading: false, message: "error" });
-  } finally {
-    setApiStatus({ loading: false, message: "" });
-    submittingRef.current = false;
-  }
-}, [name, categoryId, sizes, images, isActive, description, advantages, howToWear, isEditing, initialProduct, categoryData, onSave]);
+  }, [name, categoryId, sizes, images, isActive, description, advantages, howToWear, rating, isEditing, initialProduct, categoryData, onSave]);
 
   // Clean up object URLs when component unmounts
   useEffect(() => {
@@ -430,6 +493,42 @@ const handleSubmit = React.useCallback(async (e) => {
       });
     };
   }, [images]);
+
+  // Function to render stars for rating
+  const renderStars = () => {
+    return Array.from({ length: 5 }, (_, index) => {
+      const starValue = index + 1;
+      const isFullStar = starValue <= Math.floor(rating);
+      const isHalfStar = rating % 1 >= 0.5 && starValue === Math.ceil(rating);
+      const isHovered = starValue <= hoverRating;
+      
+      return (
+        <button
+          key={index}
+          type="button"
+          onClick={() => handleStarClick(starValue)}
+          onMouseEnter={() => handleStarHover(starValue)}
+          onMouseLeave={handleStarLeave}
+          className="text-2xl focus:outline-none relative"
+        >
+          {/* Empty star */}
+          <FaStar className="text-gray-300 absolute inset-0" />
+          
+          {/* Half star (when applicable) */}
+          {isHalfStar && (
+            <div className="overflow-hidden w-1/2 absolute inset-0">
+              <FaStar className="text-yellow-400" />
+            </div>
+          )}
+          
+          {/* Full star (when applicable) */}
+          {(isFullStar || isHovered) && (
+            <FaStar className={isHovered ? "text-yellow-300" : "text-yellow-400"} />
+          )}
+        </button>
+      );
+    });
+  };
 
   return (
     <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -501,6 +600,33 @@ const handleSubmit = React.useCallback(async (e) => {
                 {errors.name && (
                   <p className="text-red-500 text-sm">{errors.name}</p>
                 )}
+              </div>
+
+              {/* Product Rating */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                  Product Rating *
+                </label>
+                <div className="flex items-center mb-2">
+                  {/* {renderStars()} */}
+                  {/* <span className="ml-2 text-sm text-gray-600">
+                    ({rating.toFixed(1)}/5)
+                  </span> */}
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  value={rating}
+                  onChange={handleRatingInputChange}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
+                  placeholder="Enter rating (0-5)"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Click stars or enter a value between 0 and 5 (decimals allowed)
+                </p>
               </div>
 
               {/* Image Upload */}
@@ -681,7 +807,7 @@ const handleSubmit = React.useCallback(async (e) => {
                       <input
                         type="text"
                         value={size.size}
-                        onChange={(e) => handleSizeChange(index, "size", e.target.value)} // text instead of selected option
+                        onChange={(e) => handleSizeChange(index, "size", e.target.value)}
                         placeholder="Enter size"
                         required
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
@@ -690,7 +816,6 @@ const handleSubmit = React.useCallback(async (e) => {
                         <p className="text-red-500 text-xs">{errors[`size-${index}`]}</p>
                       )}
                     </div>
-
 
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">Price (₹)</label>
@@ -807,10 +932,10 @@ const handleSubmit = React.useCallback(async (e) => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {isEditing ? "Updating..." : "Adding..."}
+                    {isEditing ? "Updating..." : "Creating..."}
                   </>
                 ) : (
-                  isEditing ? "Update Product" : "Add Product"
+                  <>{isEditing ? "Update Product" : "Create Product"}</>
                 )}
               </button>
             </div>
@@ -822,13 +947,3 @@ const handleSubmit = React.useCallback(async (e) => {
 };
 
 export default ProductModal;
-
-// const ProductModal = ({ title, onClose }) => {
-//   return (
-//     <div>
-//       <h1>{title}</h1>
-//       <button onClick={onClose}>Close</button>
-//     </div>
-//   );
-// };
-// export default ProductModal;

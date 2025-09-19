@@ -1,10 +1,11 @@
 // components/CategoriesAdmin.jsx
 import React, { useState, useEffect } from "react";
-import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaTimes, FaCheck, FaArrowLeft, FaSearch, FaFilter, FaUpload } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaTimes, FaCheck, FaArrowLeft, FaSearch, FaFilter, FaUpload, FaSync } from "react-icons/fa";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import Toast from "../../Components/Product/Toast";
+import { useProductManagement } from "../../CustomHooks/useProductManagement";
 
 const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   // State for categories
@@ -37,6 +38,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const removeToast = (id) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
+  const { refreshProducts } = useProductManagement();
 
   // Fetch categories from API
   useEffect(() => {
@@ -71,9 +73,10 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   ? category.IsFeatured
                   : false,
             image: category.Image
-              ? `http://localhost:8001/uploads/${category.Image}`
+              ? `http://localhost:8001/uploads${category.Image}` // prepend /upload
               : "/s1.jpeg",
           }));
+
 
           console.log({ data: response });
 
@@ -402,14 +405,26 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
         {/* Header and Add Button */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Categories Management</h2>
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            <FaPlus /> Add Category
-          </button>
-        </div>
 
+          <div className="flex items-center gap-3">
+            {/* Refresh Button */}
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors shadow-md"
+              onClick={refreshProducts}
+            >
+              <FaSync className="text-lg" />
+              Refresh
+            </button>
+
+            {/* Add Category Button */}
+            <button
+              onClick={() => setIsAdding(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <FaPlus /> Add Category
+            </button>
+          </div>
+        </div>
 
         {/* Add Category Form */}
         {isAdding && (

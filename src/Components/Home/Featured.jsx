@@ -18,6 +18,23 @@ export default function FeaturedProducts() {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+ 
+ // Utility to normalize image URLs
+const getImageUrl = (imageText) => {
+  if (!imageText) return "/placeholder.jpg";
+
+  // Already a full URL
+  if (imageText.startsWith("http")) {
+    return imageText.replace(
+      "http://localhost:8001/uploads/http://localhost:8001/uploads/",
+      "http://localhost:8001/uploads/"
+    );
+  }
+
+  // Relative path -> prepend server path
+  return `http://localhost:8001/uploads${imageText.startsWith("/") ? imageText : `/${imageText}`}`;
+};
+
   useEffect(() => {
     let isMounted = true;
 
@@ -34,11 +51,11 @@ export default function FeaturedProducts() {
             id: p.ID,
             name: p.Name,
             description: p.Description,
-            category: p.CatogaryName || "Uncategorized", // map to subcategory
+            category: p.CatogaryName || "Uncategorized",
             subcategory: p.CatogaryName || "Uncategorized",
             price: p.Price || "N/A",
-            originalPrice: p.DummyPrice || null,          // original price shown as line-through
-            img: `http://localhost:8001/uploads/${p.ImageText}` || "/placeholder.jpg", // full URL
+            originalPrice: p.DummyPrice || null,
+            img: getImageUrl(p.ImageText),   // ✅ fixed
             altText: p.Alt_Text || "product image",
             discount: p["Discount Percentage"] || null,
             rating: p.rating || 4,
@@ -148,105 +165,105 @@ export default function FeaturedProducts() {
             animate="visible"
           >
             {filteredProducts.map((product) => (
-  <Link
-    key={product.id}
-    to={`/product/${product.id}`}
-    state={{ product }}
-    className="group block bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-300 border border-[var(--color-border)] hover:border-[var(--color-primary)]/20"
-  >
-    {/* Image Container */}
-    <div className="relative aspect-square overflow-hidden">
-      <img
-        src={product.img}
-        alt={product.name}
-        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-      />
+              <Link
+                key={product.id}
+                to={`/product/${product.id}`}
+                state={{ product }}
+                className="group block bg-white rounded-lg md:rounded-2xl overflow-hidden shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-300 border border-[var(--color-border)] hover:border-[var(--color-primary)]/20"
+              >
+                {/* Image Container */}
+                <div className="relative aspect-square overflow-hidden">
+                  <img
+                    src={product.img}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
 
-      {/* Badges */}
-      <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col items-start gap-1">
-        {product.discount && (
-          <span className="bg-[var(--color-primary)] text-white text-xs font-semibold px-1.5 py-0.5 md:px-2.5 md:py-1 rounded">
-            {product.discount}
-          </span>
-        )}
-        {product.tags?.map((tag, index) => (
-          <span
-            key={index}
-            className="bg-white text-[var(--color-primary)] text-xs font-semibold px-1.5 py-0.5 md:px-2.5 md:py-1 rounded"
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
+                  {/* Badges */}
+                  <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col items-start gap-1">
+                    {product.discount && (
+                      <span className="bg-[var(--color-primary)] text-white text-xs font-semibold px-1.5 py-0.5 md:px-2.5 md:py-1 rounded">
+                        {product.discount}
+                      </span>
+                    )}
+                    {product.tags?.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="bg-white text-[var(--color-primary)] text-xs font-semibold px-1.5 py-0.5 md:px-2.5 md:py-1 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
 
-      {/* Out of Stock Overlay */}
-      {!product.inStock && (
-        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-          <span className="text-white font-semibold bg-[var(--color-primary)] px-2 py-1 md:px-4 md:py-2 rounded text-xs">
-            Out of Stock
-          </span>
-        </div>
-      )}
-    </div>
+                  {/* Out of Stock Overlay */}
+                  {!product.inStock && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <span className="text-white font-semibold bg-[var(--color-primary)] px-2 py-1 md:px-4 md:py-2 rounded text-xs">
+                        Out of Stock
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-    {/* Product Details */}
-    <div className="p-3 md:p-6">
-      <h3 className="font-medium text-[var(--color-text)] line-clamp-2 mb-1 md:mb-2 group-hover:text-[var(--color-primary)] transition-colors text-xs md:text-base">
-        {product.name}
-      </h3>
+                {/* Product Details */}
+                <div className="p-3 md:p-6">
+                  <h3 className="font-medium text-[var(--color-text)] line-clamp-2 mb-1 md:mb-2 group-hover:text-[var(--color-primary)] transition-colors text-xs md:text-base">
+                    {product.name}
+                  </h3>
 
-      <p className="text-xs text-[var(--color-text-light)] mb-1 md:mb-3">
-        {product.subcategory}
-      </p>
+                  <p className="text-xs text-[var(--color-text-light)] mb-1 md:mb-3">
+                    {product.subcategory}
+                  </p>
 
-      {/* Rating */}
-      <div className="flex items-center gap-1 mb-1 md:mb-3">
-        <div className="flex">
-          {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
-              size={10}
-              className={
-                i < Math.floor(product.rating)
-                  ? "text-amber-500 fill-amber-500"
-                  : "text-gray-300"
-              }
-            />
-          ))}
-        </div>
-        <span className="text-xs text-[var(--color-text-light)]">
-          ({product.reviews})
-        </span>
-      </div>
+                  {/* Rating */}
+                  <div className="flex items-center gap-1 mb-1 md:mb-3">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={10}
+                          className={
+                            i < Math.floor(product.rating)
+                              ? "text-amber-500 fill-amber-500"
+                              : "text-gray-300"
+                          }
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-[var(--color-text-light)]">
+                      ({product.reviews})
+                    </span>
+                  </div>
 
-      {/* Price */}
-      <div className="flex items-center gap-1 mb-2 md:mb-4">
-        <p className="text-sm md:text-lg font-semibold text-[var(--color-primary)]">
-          {product.price}
-        </p>
-        {product.originalPrice && (
-          <p className="text-xs text-[var(--color-text-light)] line-through">
-            {product.originalPrice}
-          </p>
-        )}
-      </div>
+                  {/* Price */}
+                  <div className="flex items-center gap-1 mb-2 md:mb-4">
+                    <p className="text-sm md:text-lg font-semibold text-[var(--color-primary)]">
+                      {product.price}
+                    </p>
+                    {product.originalPrice && (
+                      <p className="text-xs text-[var(--color-text-light)] line-through">
+                        {product.originalPrice}
+                      </p>
+                    )}
+                  </div>
 
-      {/* Browse Button */}
-      <div
-        className={`w-full py-1.5 md:py-3 rounded-lg font-medium flex items-center justify-center gap-1 text-xs md:text-base ${product.inStock
-          ? "bg-[var(--color-primary)] text-white"
-          : "bg-gray-200 text-gray-500 cursor-not-allowed"
-          }`}
-      >
-        {product.inStock ? "Browse" : "Out of Stock"}
-      </div>
-    </div>
-  </Link>
-))}
-  
+                  {/* Browse Button */}
+                  <div
+                    className={`w-full py-1.5 md:py-3 rounded-lg font-medium flex items-center justify-center gap-1 text-xs md:text-base ${product.inStock
+                      ? "bg-[var(--color-primary)] text-white"
+                      : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      }`}
+                  >
+                    {product.inStock ? "Browse" : "Out of Stock"}
+                  </div>
+                </div>
+              </Link>
+            ))}
+
           </motion.div>
         )}
       </div>

@@ -228,18 +228,26 @@ const ProductDetails = () => {
           reviews: productData.reviews || 0,
           reviewList: productData.reviewList || [],
 
-          images: productData.images.map((img) => ({
-            src: img.imageData.startsWith("http")
-              ? img.imageData
-              : `http://localhost:8001/${img.imageData.replace(/^\/+/, "")}`,
-            alt: img.altText || productData.name,
-          })),
+          images: productData.images.map((img) => {
+            let fixedUrl = img.imageData;
+
+            // If API duplicates the URL, clean it up
+            if (fixedUrl.includes("http://localhost:8001/uploads/http://localhost:8001/uploads/")) {
+              fixedUrl = fixedUrl.replace("http://localhost:8001/uploads/http://localhost:8001/uploads/", "http://localhost:8001/uploads/");
+            }
+
+            return {
+              src: fixedUrl,
+              alt: img.altText || productData.name,
+            };
+          }),
           mainImage: productData.images[0]
-            ? (productData.images[0].imageData.startsWith("http")
-              ? productData.images[0].imageData
-              : `http://localhost:8001/${productData.images[0].imageData.replace(/^\/+/, "")}`
+            ? productData.images[0].imageData.replace(
+              "http://localhost:8001/uploads/http://localhost:8001/uploads/",
+              "http://localhost:8001/uploads"
             )
-            : "/s1.jpeg",
+            : " ",
+
 
           size: productData.sizes.map((s) => s.size), // extract just size
           sizeDetails: productData.sizes, // keep full details
@@ -489,7 +497,7 @@ const ProductDetails = () => {
               <h2 className="text-sm font-medium text-color-primary uppercase tracking-wider mb-2">{product.brand}</h2>
               <h1 className="text-3xl font-serif font-normal text-color-text leading-tight mb-4">{product.name}</h1>
 
-             // In the product header section:
+           
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex items-center text-color-rating">
                   {renderStars(product.rating)}
@@ -593,8 +601,8 @@ const ProductDetails = () => {
                   }
                 }}
                 className={`px-6 py-3.5 font-medium text-sm transition-all duration-200 ${isWishlisted
-                    ? "bg-color-primary text-color-surface hover:bg-opacity-90"
-                    : "bg-color-surface text-color-text border border-color-border hover:border-color-primary"
+                  ? "bg-color-primary text-color-surface hover:bg-opacity-90"
+                  : "bg-color-surface text-color-text border border-color-border hover:border-color-primary"
                   }`}
               >
                 {isWishlisted ? (
