@@ -1,43 +1,63 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useCart } from "../../Context/CartContext";
 import Recommendations from "../Product/Recommendation";
-import { Minus, Plus, Trash2, ShoppingBag, Sparkles, Zap } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Minus, Plus, Trash2, ShoppingBag, Sparkles, Zap, LogIn } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import Toast from "../Product/Toast"; // adjust path if needed
-import { useNavigate } from "react-router-dom";
+import Toast from "../Product/Toast";
 import { toast } from "react-toastify";
 
 export default function Cart() {
   const { cart, addToCart, removeFromCart, updateQuantity, getCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [transformedCart, setTransformedCart] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [customToast, setCustomToast] = useState({
     message: "",
     type: "success",
     visible: false,
   });
+  
+  const navigate = useNavigate();
 
   const showToast = (message, type = "success") => {
     setCustomToast({ message, type, visible: true });
   };
 
-
   const quantityUpdateTimers = useRef({});
 
-  // In Cart.jsx, update the handleCheckout function
+  // Check if user is logged in
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    setIsLoggedIn(!!token);
+  }, []);
+
+  // Handle checkout
   const handleCheckout = () => {
     if (subtotal === 0) {
       toast.error("Your cart is empty!");
       return;
     }
+    
+    // Check if user is logged in
+    if (!isLoggedIn) {
+      toast.info("Please log in to proceed to checkout");
+      return;
+    }
+    
     navigate("/payment");
+  };
+
+  // Handle login redirect
+  const handleLoginRedirect = () => {
+    // Save current URL to redirect back after login
+    sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
+    navigate("/");
   };
 
   // Fetch cart on mount
   useEffect(() => {
-
     const fetchCartData = async () => {
       setLoading(true);
       try {
@@ -87,8 +107,6 @@ export default function Cart() {
     );
   }, [cart]);
 
-
-
   // ✅ updates whenever `cart` changes
 
   // Calculations
@@ -112,8 +130,6 @@ export default function Cart() {
         prev.map((p) => (p.id === item.id ? { ...p, quantity: newQuantity } : p))
       );
 
-
-
       // 2️⃣ Debounce backend update
       if (quantityUpdateTimers.current[item.id]) {
         clearTimeout(quantityUpdateTimers.current[item.id]);
@@ -124,12 +140,10 @@ export default function Cart() {
         await getCart(); // fetch fresh cart including stock
         delete quantityUpdateTimers.current[item.id];
       }, 300);
-      ; // 300ms delay
     } else {
       console.warn(`Cannot add more than ${item.stock} items`);
     }
   };
-
 
   // Handle remove item
   const handleRemoveItem = async (product) => {
@@ -161,8 +175,6 @@ export default function Cart() {
       showToast("Something went wrong while removing item", "error");
     }
   };
-
-
 
   // Background circles component
   const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
@@ -235,18 +247,28 @@ export default function Cart() {
             Review your items and proceed to checkout
           </p>
 
-          {/* Checkout button */}
-          <button
-            onClick={handleCheckout}
-            disabled={subtotal === 0}
-            className={`w-full max-w-xs mx-auto py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
-              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-              : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
-              }`}
-          >
-            <Sparkles size={16} />
-            Proceed to Checkout
-          </button>
+          {/* Checkout button - Updated to show login button if not authenticated */}
+          {isLoggedIn ? (
+            <button
+              onClick={handleCheckout}
+              disabled={subtotal === 0}
+              className={`w-full max-w-xs mx-auto py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+                }`}
+            >
+              <Sparkles size={16} />
+              Proceed to Checkout
+            </button>
+          ) : (
+            <button
+              onClick={handleLoginRedirect}
+              className="w-full max-w-xs mx-auto py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+            >
+              <LogIn size={16} />
+              Login to Checkout
+            </button>
+          )}
         </motion.div>
 
         <AnimatePresence>
@@ -337,7 +359,8 @@ export default function Cart() {
                           <div className="text-sm text-gray-500 line-through">
                             ₹{(product.originalPrice * product.quantity).toFixed(2)}
                           </div>
-                        )}
+                        )
+                        }
                       </div>
                       <div className="text-xs text-[var(--color-text-light)]">
                         (₹{product.price.toFixed(2)} × {product.quantity})
@@ -409,11 +432,6 @@ export default function Cart() {
                       {shipping === 0 ? "Free" : `₹${shipping}`}
                     </span>
                   </div>
-                  {/* {subtotal > 0 && subtotal < 5000 && (
-                    <div className="text-xs text-[var(--color-text-light)] bg-blue-50 p-2 rounded">
-                      Add ₹{(5000 - subtotal).toFixed(2)} more for free shipping!
-                    </div>
-                  )} */}
                   <div className="border-t border-[var(--color-border)] pt-4 mt-4">
                     <div className="flex justify-between font-bold text-xl text-[var(--color-text)]">
                       <span>Total</span>
@@ -429,16 +447,29 @@ export default function Cart() {
                   >
                     Continue Shopping
                   </Link>
-                  <Link
-                    to="/payment"
-                    className={`w-full py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
-                      }`}
-                  >
-                    <Sparkles size={16} />
-                    Proceed to Checkout
-                  </Link>
+                  
+                  {/* Updated checkout button in summary section */}
+                  {isLoggedIn ? (
+                    <button
+                      onClick={handleCheckout}
+                      disabled={subtotal === 0}
+                      className={`w-full py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+                        }`}
+                    >
+                      <Sparkles size={16} />
+                      Proceed to Checkout
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleLoginRedirect}
+                      className="w-full py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+                    >
+                      <LogIn size={16} />
+                      Login to Checkout
+                    </button>
+                  )}
                 </div>
               </motion.div>
             </motion.div>

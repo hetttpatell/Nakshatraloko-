@@ -5,6 +5,7 @@ import { FaCreditCard, FaMoneyBillWave, FaMobileAlt } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { Sparkles, Zap, ArrowRight, Percent, Check, X } from "lucide-react";
 import axios from "axios";
+import Toast from "../Product/Toast";
 
 // Background circles component (same as Collections.jsx)
 const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
@@ -82,9 +83,31 @@ const PaymentPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [apiLoading, setApiLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [toastData, setToastData] = useState(null);
+  const showToast = (message, type = "success", duration = 4000) => {
+    setToastData({ message, type, duration });
+  };
 
   const navigate = useNavigate();
   const { id } = useParams(); // Get order ID from URL params if available
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        // No token found, redirect to home
+        navigate("/");
+
+        return false;
+      }
+      setIsAuthenticated(true);
+      return true;
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   // ✅ Fetch cart data from API
   const fetchCartData = async () => {
@@ -98,7 +121,7 @@ const PaymentPage = () => {
       const response = await axios.post("http://localhost:8001/api/getCart", {}, {
         headers: { Authorization: `${token}` }
       });
-        console.log("API Response:", response.data); // Add this line
+      console.log("API Response:", response.data); // Add this line
       // Check if response has data directly or nested in data property
       let cartData = response.data;
 
@@ -215,8 +238,10 @@ const PaymentPage = () => {
         setTotalAmount(subtotalAmount - discountAmount);
         setAppliedCoupon({ code: couponCode.toUpperCase(), ...couponData });
         setCouponCode("");
+        showToast(`Coupon ${couponCode.toUpperCase()} applied!`, "success");
+
       } else {
-        setCouponError(response.message || "Invalid coupon code");
+        showToast("Invalid coupon code", "error");
       }
     } catch (error) {
       console.error("Error applying coupon:", error);
@@ -235,70 +260,73 @@ const PaymentPage = () => {
   };
 
   // ✅ Fetch order data from API if ID is provided, otherwise fetch cart
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      setApiLoading(true);
-      
-      if (id) {
-        // Fetch order by ID
-        console.log("Fetching order with ID:", id);
-        
-        const response = await axios.post(`http://localhost:8001/api/getOrderById/${id}`, {}, {
-          headers: {
-            'Content-Type': 'application/json'
+  useEffect(() => {
+    // Don't fetch data if user is not authenticated
+    if (!isAuthenticated) return;
+
+    const fetchData = async () => {
+      try {
+        setApiLoading(true);
+
+        if (id) {
+          // Fetch order by ID
+          console.log("Fetching order with ID:", id);
+
+          const response = await axios.post(`http://localhost:8001/api/getOrderById/${id}`, {}, {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!response.data) {
+            throw new Error("No data received from server");
           }
-        });
-        
-        if (!response.data) {
-          throw new Error("No data received from server");
-        }
-        
-        // Handle both response structures
-        let orderData = response.data;
-        if (response.data && response.data.success && response.data.data) {
-          orderData = response.data.data;
-        }
-        
-        console.log("Order data received:", orderData);
 
-        setOrder(orderData);
+          // Handle both response structures
+          let orderData = response.data;
+          if (response.data && response.data.success && response.data.data) {
+            orderData = response.data.data;
+          }
 
-        // Check for items in different possible locations
-        let items = [];
-        if (orderData.items && Array.isArray(orderData.items)) {
-          items = orderData.items;
-        } else if (orderData.products && Array.isArray(orderData.products)) {
-          items = orderData.products;
-        } else if (orderData.orderItems && Array.isArray(orderData.orderItems)) {
-          items = orderData.orderItems;
-        }
+          console.log("Order data received:", orderData);
 
-        if (items.length > 0) {
-          setCartItems(items);
-          const subtotal = items.reduce(
-            (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
-            0
-          );
-          setSubtotalAmount(subtotal);
-          setTotalAmount(subtotal);
+          setOrder(orderData);
+
+          // Check for items in different possible locations
+          let items = [];
+          if (orderData.items && Array.isArray(orderData.items)) {
+            items = orderData.items;
+          } else if (orderData.products && Array.isArray(orderData.products)) {
+            items = orderData.products;
+          } else if (orderData.orderItems && Array.isArray(orderData.orderItems)) {
+            items = orderData.orderItems;
+          }
+
+          if (items.length > 0) {
+            setCartItems(items);
+            const subtotal = items.reduce(
+              (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
+              0
+            );
+            setSubtotalAmount(subtotal);
+            setTotalAmount(subtotal);
+          } else {
+            throw new Error("No items found in order data");
+          }
         } else {
-          throw new Error("No items found in order data");
+          // No order ID, fetch cart data
+          await fetchCartData();
         }
-      } else {
-        // No order ID, fetch cart data
-        await fetchCartData();
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError("Failed to load order details. Please try again.");
+      } finally {
+        setApiLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setError("Failed to load order details. Please try again.");
-    } finally {
-      setApiLoading(false);
-    }
-  };
+    };
 
-  fetchData();
-}, [id]);
+    fetchData();
+  }, [id, isAuthenticated]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -307,6 +335,15 @@ useEffect(() => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Check authentication again before proceeding
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setError("Your session has expired. Please login again.");
+      setTimeout(() => navigate("/"), 2000);
+      return;
+    }
+
     setError("");
     setLoading(true);
 
@@ -374,6 +411,18 @@ useEffect(() => {
       }, 700);
     }
   };
+
+  // Don't render the component if user is not authenticated
+  if (!isAuthenticated) {
+    return (
+      <main className="py-16 md:py-24 bg-gradient-to-b from-[var(--color-primary-light)]/50 to-[var(--color-background)] relative overflow-hidden min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)] mx-auto"></div>
+          <p className="mt-4 text-[var(--color-text)]">Redirecting to home page...</p>
+        </div>
+      </main>
+    );
+  }
 
   if (apiLoading) {
     return (
@@ -721,6 +770,15 @@ useEffect(() => {
             </form>
           </section>
         </div>
+        {toastData && (
+          <Toast
+            message={toastData.message}
+            type={toastData.type}
+            duration={toastData.duration}
+            onClose={() => setToastData(null)}
+          />
+        )}
+
       </div>
     </main>
   );
