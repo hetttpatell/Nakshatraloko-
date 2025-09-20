@@ -497,7 +497,7 @@ const ProductDetails = () => {
               <h2 className="text-sm font-medium text-color-primary uppercase tracking-wider mb-2">{product.brand}</h2>
               <h1 className="text-3xl font-serif font-normal text-color-text leading-tight mb-4">{product.name}</h1>
 
-           
+
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex items-center text-color-rating">
                   {renderStars(product.rating)}
@@ -596,9 +596,9 @@ const ProductDetails = () => {
                   const res = await toggleWishlist(product.id);
                   if (res.success) {
                     showToast(res.message, "success");
-                    setTimeout(()=>{
+                    setTimeout(() => {
                       navigate("/wishlist")
-                    },2000)
+                    }, 2000)
                   } else {
                     showToast(res.message, "error");
                   }
@@ -678,7 +678,7 @@ const ProductDetails = () => {
                       if (element) {
                         element.textContent = "✓ Copied!";
                         setTimeout(() => {
-                          element.textContent = "Double tap to copy";
+                          element.textContent = "Tap to copy"; // message after 2 seconds
                         }, 2000);
                       }
                     })

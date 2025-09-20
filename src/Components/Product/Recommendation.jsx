@@ -114,75 +114,81 @@ const Recommendation = () => {
     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {recommendedProducts.map((product) => {
         return (
-          <div key={product.id} className="group relative bg-color-surface rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+          <div
+            key={product.id}
+            className="group relative bg-color-surface rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+          >
+            {/* Entire card clickable */}
             <Link
               to={`/product/${product.id}`}
               state={{ product }}
-              className="block"
-            >
+              className="block absolute inset-0 z-10"
+            />
+
+            <div className="relative z-0">
               <div className="relative overflow-hidden">
                 <img
                   src={product.image}
                   alt={product.name}
                   className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-
-
-                {/* <div className="absolute top-3 left-3 bg-color-primary text-color-surface text-xs font-semibold px-2 py-1 rounded">
-                  NEW
-                </div> */}
               </div>
-            </Link>
 
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="text-sm font-medium text-color-text-muted mb-1">{product.brand}</h3>
-                  <Link
-                    to={`/product/${product.id}`}
-                    state={{ product }}
-                    className="font-normal text-color-text hover:text-color-primary transition-colors line-clamp-1"
+              <div className="p-4 relative z-20">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="text-sm font-medium text-color-text-muted mb-1">{product.brand}</h3>
+                    <span className="font-normal text-color-text line-clamp-1">
+                      {product.name}
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // prevent navigating when clicking wishlist
+                      handleWishlistClick(product);
+                    }}
+                    className="text-lg hover:text-color-primary transition-colors"
                   >
-                    {product.name}
-                  </Link>
+                    {isWishlisted(product.id) ? (
+                      <AiFillHeart className="text-color-primary" />
+                    ) : (
+                      <AiOutlineHeart />
+                    )}
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleWishlistClick(product)}
-                  className="text-lg hover:text-color-primary transition-colors"
-                >
-                  {isWishlisted(product.id) ? (
-                    <AiFillHeart className="text-color-primary" />
-                  ) : (
-                    <AiOutlineHeart />
-                  )}
-                </button>
-              </div>
 
-              <div className="flex items-center gap-1 mb-2">
-                <div className="flex text-color-rating">
-                  {[...Array(5)].map((_, i) => (
-                    i < Math.floor(product.rating) ?
-                      <AiFillStar key={i} className="text-sm" /> :
-                      <AiOutlineStar key={i} className="text-sm" />
-                  ))}
+                <div className="flex items-center gap-1 mb-2">
+                  <div className="flex text-color-rating">
+                    {[...Array(5)].map((_, i) =>
+                      i < Math.floor(product.rating) ? (
+                        <AiFillStar key={i} className="text-sm" />
+                      ) : (
+                        <AiOutlineStar key={i} className="text-sm" />
+                      )
+                    )}
+                  </div>
+                  <span className="text-xs text-color-text-muted">({product.rating})</span>
                 </div>
-                <span className="text-xs text-color-text-muted">({product.rating})</span>
-              </div>
 
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-lg font-light text-color-text">₹ {product.price.toLocaleString('en-IN')}</span>
-                <button
-                  onClick={() => handleAddToCart(product)}
-                  className="text-xs font-medium bg-color-primary text-color-surface px-3 py-2 rounded hover:bg-color-primary-dark transition-colors"
-                >
-                  ADD TO BAG
-                </button>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-lg font-light text-color-text">₹ {product.price.toLocaleString('en-IN')}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // prevent navigating when clicking add to bag
+                      handleAddToCart(product);
+                    }}
+                    className="text-xs font-medium bg-color-primary text-color-surface px-3 py-2 rounded hover:bg-color-primary-dark transition-colors"
+                  >
+                    ADD TO BAG
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         );
       })}
     </div>
+
   );
 };
 
