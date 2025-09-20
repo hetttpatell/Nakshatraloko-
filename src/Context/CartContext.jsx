@@ -7,75 +7,95 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
 
   // ✅ Load cart from backend on mount
-  useEffect(() => {
-    getCart();
-  }, []);
+  
 
   // ✅ Add or increase quantity with API integration
+  // const addToCart = async (product, quantity = 1, size = "", material = "") => {
+  //   try {
+  //     const token = localStorage.getItem("authToken");
+
+  //     // ✅ Fix here
+  //     const cartItem = { productId: product.productid };
+
+  //     const response = await axios.post(
+  //       "http://localhost:8001/api/saveCart",
+  //       cartItem,
+  //       { headers: { Authorization: `${token}` } }
+  //     );
+
+  //     setCart((prev) => {
+  //       const exists = prev.find(
+  //         (p) =>
+  //           p.id === product.productid &&
+  //           p.size === size &&
+  //           p.material === material
+  //       );
+
+  //       if (exists) {
+  //         return [
+  //           ...prev,
+  //           {
+  //             id: product.productid, // ✅ consistent
+  //             name: product.name,
+  //             price: Number(product.price) || 0,
+  //             quantity: Number(quantity) || 1,
+  //             size,
+  //             material,
+  //             image:
+  //               product.image ||
+  //               product.mainImage ||
+  //               product.images?.[0]?.src ||
+  //               "",
+  //           },
+  //         ];
+  //       }
+  //       getCart()
+  //       return [
+  //         ...prev,
+  //         {
+  //           id: product.productid, // ✅ consistent
+  //           name: product.name,
+  //           price: Number(product.price) || 0,
+  //           quantity: Number(quantity) || 1,
+  //           size,
+  //           material,
+  //           image:
+  //             product.image ||
+  //             product.mainImage ||
+  //             product.images?.[0]?.src ||
+  //             "",
+  //         },
+  //       ];
+  //     });
+
+  //     return { success: true, data: response.data };
+  //   } catch (error) {
+  //     console.error("Error adding to cart:", error);
+  //     return { success: false, error: error.message };
+  //   }
+  // };
   const addToCart = async (product, quantity = 1, size = "", material = "") => {
-    try {
-      const token = localStorage.getItem("authToken");
+  try {
+    const token = localStorage.getItem("authToken");
 
-      // ✅ Fix here
-      const cartItem = { productId: product.productid };
+    const cartItem = { productId: product.productid, quantity, size, material };
 
-      const response = await axios.post(
-        "http://localhost:8001/api/saveCart",
-        cartItem,
-        { headers: { Authorization: `${token}` } }
-      );
+    const response = await axios.post(
+      "http://localhost:8001/api/saveCart",
+      cartItem,
+      { headers: { Authorization: `${token}` } }
+    );
 
-      setCart((prev) => {
-        const exists = prev.find(
-          (p) =>
-            p.id === product.productid &&
-            p.size === size &&
-            p.material === material
-        );
+    // ✅ Always refresh cart from backend
+    await getCart();
 
-        if (exists) {
-          return [
-            ...prev,
-            {
-              id: product.productid, // ✅ consistent
-              name: product.name,
-              price: Number(product.price) || 0,
-              quantity: Number(quantity) || 1,
-              size,
-              material,
-              image:
-                product.image ||
-                product.mainImage ||
-                product.images?.[0]?.src ||
-                "",
-            },
-          ];
-        }
-        getCart()
-        return [
-          ...prev,
-          {
-            id: product.productid, // ✅ consistent
-            name: product.name,
-            price: Number(product.price) || 0,
-            quantity: Number(quantity) || 1,
-            size,
-            material,
-            image:
-              product.image ||
-              product.mainImage ||
-              product.images?.[0]?.src ||
-              "",
-          },
-        ];
-      });
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    return { success: false, error: error.message };
+  }
+};
 
-      return { success: true, data: response.data };
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      return { success: false, error: error.message };
-    }
-  };
 
   // ✅ Get cart from backend
   const getCart = async () => {
@@ -121,6 +141,9 @@ export function CartProvider({ children }) {
     }
   };
 
+useEffect(() => {
+    getCart();
+  }, []);
 
   // ✅ Remove item from cart state
   const removeFromCart = (productId) => {

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ShoppingBag, Heart, User, ChevronDown, Menu, X, UserCog, Search, Sparkles, LogOut } from "lucide-react";
 import { useCart } from "../Context/CartContext";
@@ -115,7 +115,7 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
       clearTimeout(leaveTimeoutRef.current);
       leaveTimeoutRef.current = null;
     }
-    
+
     if (item.subMenu && !isMobile) {
       setDropdownOpen(true);
     }
@@ -289,8 +289,13 @@ export default function Header() {
 
   const location = useLocation();
 
-  // Calculate cart and wishlist counts
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  // Enhanced cart count calculation with proper fallback
+  const cartCount = cart?.reduce((sum, item) => {
+    const quantity = item.Quantity || item.quantity || 0;
+    return sum + Number(quantity);
+  }, 0) || 0;
+
+  // Enhanced wishlist count with proper fallback
   const wishlistCount = wishlist.length;
 
   const closeMenu = () => setMenuOpen(false);
@@ -300,39 +305,81 @@ export default function Header() {
     location.pathname.startsWith(path)
   );
 
-  // Fetch cart data when component mounts or login state changes
-  useEffect(() => {
-    const fetchCartData = async () => {
+ // Run only once on mount
+useEffect(() => {
+  const token = localStorage.getItem("authToken");
+  if (token) {
+    fetchWishlist().catch(err => console.error("Error fetching wishlist:", err));
+  } else {
+    setWishlist([]);
+  }
+}, []); // Empty dependency array ensures this runs only once
+
+
+
+  // Enhanced fetch functions with proper error handling and state management
+  const initializeCartAndWishlist = useCallback(async () => {
+    const token = localStorage.getItem("authToken") || localStorage.getItem("token");
+
+    if (token && isLoggedIn) {
       try {
-        const token = localStorage.getItem("authToken");
-        if (token) {
-          await fetchCart();
-        }
+        // Fetch both cart and wishlist in parallel
+        await Promise.all([
+          fetchCart(),
+          fetchWishlist()
+        ]);
       } catch (error) {
-        console.error("Error fetching cart:", error);
+        console.error("Error initializing cart and wishlist:", error);
+      }
+    }
+  }, [isLoggedIn, fetchCart, fetchWishlist]);
+
+  // Initialize data when login state changes
+  useEffect(() => {
+    initializeCartAndWishlist();
+  }, [initializeCartAndWishlist]);
+
+  // Enhanced periodic refresh for live updates
+  useEffect(() => {
+    let refreshInterval;
+
+    if (isLoggedIn) {
+      // Refresh counts every 30 seconds for live updates
+      refreshInterval = setInterval(() => {
+        initializeCartAndWishlist();
+      }, 30000);
+    }
+
+    return () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    };
+  }, [isLoggedIn, initializeCartAndWishlist]);
+
+  // Listen for cart/wishlist updates from other components
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      if (isLoggedIn) {
+        fetchCart();
       }
     };
 
-    fetchCartData();
-  }, [isLoggedIn, fetchCart]);
-
-  // Fetch wishlist data when component mounts or login state changes
-  useEffect(() => {
-    const fetchWishlistData = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        if (token) {
-          await fetchWishlist();
-        } else {
-          setWishlist([]);
-        }
-      } catch (error) {
-        console.error("Error fetching wishlist:", error);
+    const handleWishlistUpdate = () => {
+      if (isLoggedIn) {
+        fetchWishlist();
       }
     };
 
-    fetchWishlistData();
-  }, [isLoggedIn, fetchWishlist, setWishlist]);
+    // Listen for custom events
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    window.addEventListener('wishlistUpdated', handleWishlistUpdate);
+
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+      window.removeEventListener('wishlistUpdated', handleWishlistUpdate);
+    };
+  }, [isLoggedIn, fetchCart, fetchWishlist]);
 
   // Initialize menu items
   useEffect(() => {
@@ -365,19 +412,24 @@ export default function Header() {
       .catch((err) => console.log(err));
   }, []);
 
-  // Check login state when modal closes
+  // Enhanced login state management
   useEffect(() => {
-    if (!showLogin) {
+    const checkLoginState = async () => {
       const token = localStorage.getItem("authToken") || localStorage.getItem("token");
       const userData = localStorage.getItem("user");
 
       if (token) {
         setIsLoggedIn(true);
         if (userData) {
-          const parsedUser = JSON.parse(userData);
-          setUser(parsedUser);
-          if (parsedUser?.role) {
-            setUserrole(parsedUser.role.toLowerCase() === "admin");
+          try {
+            const parsedUser = JSON.parse(userData);
+            setUser(parsedUser);
+            setUserrole(parsedUser?.role?.toLowerCase() === "admin");
+
+            // ✅ Immediately fetch cart & wishlist on login state
+            await Promise.all([fetchCart(), fetchWishlist()]);
+          } catch (error) {
+            console.error("Error parsing user data:", error);
           }
         }
       } else {
@@ -385,8 +437,17 @@ export default function Header() {
         setUser(null);
         setUserrole(false);
       }
+    };
+
+    // Check on component mount
+    checkLoginState();
+
+    // Check when login modal closes
+    if (!showLogin) {
+      checkLoginState();
     }
-  }, [showLogin]);
+  }, [showLogin, fetchCart, fetchWishlist]);
+
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -395,8 +456,31 @@ export default function Header() {
     setIsLoggedIn(false);
     setUser(null);
     setUserrole(false);
-    // Clear cart and wishlist on logout
-    setWishlist([]);
+
+    // Clear cart and wishlist state immediately
+    // Note: These should be handled by the contexts, but we ensure they're cleared
+    window.dispatchEvent(new CustomEvent('userLoggedOut'));
+  };
+
+  // Handle successful login
+  const handleLoginSuccess = async () => {
+    const token = localStorage.getItem("authToken") || localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+
+    if (token && userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        setIsLoggedIn(true);
+        setUserrole(parsedUser.role?.toLowerCase() === "admin");
+
+        // Immediately fetch cart and wishlist data after successful login
+        await initializeCartAndWishlist();
+      } catch (error) {
+        console.error("Error processing login success:", error);
+      }
+    }
+    setShowLogin(false);
   };
 
   // Handle scroll effect
@@ -505,6 +589,13 @@ export default function Header() {
     }
   };
 
+  // Enhanced click handler for wishlist icon
+  const handleWishlistClick = async () => {
+    if (isLoggedIn) {
+      await fetchWishlist();
+    }
+  };
+
   return (
     <>
       <header
@@ -604,7 +695,7 @@ export default function Header() {
               </button>
             )}
 
-            {/* User menu icons */}
+            {/* User menu icons with enhanced live count display */}
             <div className="flex items-center gap-2">
               {userMenuItems.map((item) => (
                 <UserMenuIcon
@@ -619,12 +710,11 @@ export default function Header() {
                         : 0
                   }
                   closeMenu={closeMenu}
-                  onClick={
+                  nClick={
                     item.badgeType === "wishlist"
-                      ? fetchWishlist // Call API only on wishlist click
+                      ? fetchWishlist // refresh wishlist when clicking icon
                       : undefined
-                  }
-                />
+                  } />
               ))}
 
               {/* Admin Panel icon - only show if logged in AND role is admin */}
@@ -801,22 +891,7 @@ export default function Header() {
       {showLogin && (
         <LoginSignup
           onClose={() => setShowLogin(false)}
-          onLoginSuccess={() => {
-            const token = localStorage.getItem("authToken") || localStorage.getItem("token");
-            const userData = localStorage.getItem("user");
-
-            if (token && userData) {
-              const parsedUser = JSON.parse(userData);
-              setUser(parsedUser);
-              setIsLoggedIn(true);
-              setUserrole(parsedUser.role?.toLowerCase() === "admin");
-
-              // Fetch cart and wishlist data after successful login
-              fetchCart();
-              fetchWishlist();
-            }
-            setShowLogin(false);
-          }}
+          onLoginSuccess={handleLoginSuccess}
         />
       )}
 

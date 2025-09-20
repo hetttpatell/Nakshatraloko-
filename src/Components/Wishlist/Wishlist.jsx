@@ -244,7 +244,7 @@ export default function Wishlist() {
             </div>
           </div>
 
-          {transformedWishlist.length > 0 && (
+          {/* {transformedWishlist.length > 0 && (
             <motion.button
               onClick={handleClearAll}
               whileHover={{ scale: 1.05 }}
@@ -254,7 +254,7 @@ export default function Wishlist() {
               <Trash2 size={16} />
               Clear All
             </motion.button>
-          )}
+          )} */}
         </motion.div>
 
         <AnimatePresence>
