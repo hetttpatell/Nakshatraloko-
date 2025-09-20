@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AccordionItem from "./AccordionItem";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineLike, AiFillLike, AiFillHeart, AiOutlineHeart, AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { FiChevronRight, FiZoomIn, FiUser } from "react-icons/fi";
 import { BsStarHalf } from "react-icons/bs";
@@ -35,7 +35,7 @@ const ProductDetails = () => {
   const { id } = useParams(); // id must match productId
   const { state } = useLocation();
   const passedProduct = state?.product;
-
+  const navigate = useNavigate();
   // Review states
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
@@ -596,6 +596,9 @@ const ProductDetails = () => {
                   const res = await toggleWishlist(product.id);
                   if (res.success) {
                     showToast(res.message, "success");
+                    setTimeout(()=>{
+                      navigate("/wishlist")
+                    },2000)
                   } else {
                     showToast(res.message, "error");
                   }

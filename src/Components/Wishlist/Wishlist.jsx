@@ -62,9 +62,10 @@ export default function Wishlist() {
       userId: item.UserID,
       productId: item.ProductID,
       wishlistIsActive: item.WishlistIsActive,
-      mainImage: item.PrimaryImage
-        ? `http://localhost:8001/uploads/${item.PrimaryImage}`
-        : item.img || "/s1.jpeg",
+      mainImage: item.PrimaryImage?.startsWith("http")
+        ? item.PrimaryImage
+        : `http://localhost:8001/uploads/${item.PrimaryImage}` || item.img || "/s1.jpeg",
+
       quantity: 1
     }));
   };
