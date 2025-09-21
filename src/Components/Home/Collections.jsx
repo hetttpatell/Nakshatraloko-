@@ -184,7 +184,7 @@ export default function Collections() {
             >
               <Link to={collection.path} className="block h-full ">
                 {/* Fixed image container height */}
-                <div className="relative h-68 sm:h-32 md:h-40 lg:h-48 xl:h-52 overflow-hidden">
+                <div className="relative h-68 sm:h-32 md:h-40 lg:h-48 xl:h-150 overflow-hidden">
                   <motion.div
                     variants={imageVariants}
                     className="w-full h-full"
