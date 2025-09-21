@@ -7,11 +7,12 @@ import { useWishlist } from "../../Context/WishlistContext";
 import { toast } from "react-toastify";
 import axios from "axios";
 import Toast from "../Product/Toast"; // adjust path if needed
-
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const IMG_URL = import.meta.env.VITE_IMG_URL;
 export default function Wishlist() {
   const { addToCart } = useCart();
-  const { wishlist, addToWishlist, clearWishlist, setWishlist, fetchWishlist } = useWishlist();
+  const { wishlist, addToWishlist, clearWishlist, setWishlist, fetchWishlist } =
+    useWishlist();
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
   const [customToast, setCustomToast] = useState({
@@ -24,10 +25,9 @@ export default function Wishlist() {
     setCustomToast({ message, type, visible: true });
   };
 
-
   useEffect(() => {
-    fetchWishlist()
-  }, [])
+    fetchWishlist();
+  }, []);
   // Fetch wishlist on mount
   useEffect(() => {
     const loadWishlist = async () => {
@@ -46,7 +46,7 @@ export default function Wishlist() {
   // Transform API data
   const transformWishlistData = (apiData) => {
     if (!Array.isArray(apiData)) return [];
-    return apiData.map(item => ({
+    return apiData.map((item) => ({
       id: item.WishlistID,
       name: item.Name,
       price: item.Price ? parseFloat(item.Price) : 0,
@@ -56,26 +56,29 @@ export default function Wishlist() {
       advantages: item.Advantages,
       howToWear: item.HowToWear,
       description: item.Description,
-      discountPercentage: item.DiscountPercentage ? parseFloat(item.DiscountPercentage) : 0,
+      discountPercentage: item.DiscountPercentage
+        ? parseFloat(item.DiscountPercentage)
+        : 0,
       fullname: item.fullname,
       email: item.email,
       userId: item.UserID,
       productId: item.ProductID,
       wishlistIsActive: item.WishlistIsActive,
-      mainImage: item.PrimaryImage?.startsWith("http")
-        ? item.PrimaryImage
-        : `http://localhost:8001/uploads/${item.PrimaryImage}` || item.img || "/s1.jpeg",
-
-      quantity: 1
+      mainImage: item.PrimaryImage
+        ? item.PrimaryImage.startsWith("http")
+          ? item.PrimaryImage
+          : `${IMG_URL}uploads/${item.PrimaryImage}`
+        : item.img || "/s1.jpeg",
+      quantity: 1,
     }));
   };
 
   const transformedWishlist = transformWishlistData(wishlist);
 
   const setItemLoading = (itemId, isLoading) => {
-    setActionLoading(prev => ({
+    setActionLoading((prev) => ({
       ...prev,
-      [itemId]: isLoading
+      [itemId]: isLoading,
     }));
   };
 
@@ -92,7 +95,7 @@ export default function Wishlist() {
 
   //     // Direct API call with axios (toggle wishlist)
   //     const { data } = await axios.post(
-  //       "http://localhost:8001/api/manageWishlist",
+  //       "${BACKEND_URL}manageWishlist",
   //       { productId },
   //       {
   //         headers: {
@@ -106,7 +109,7 @@ export default function Wishlist() {
 
   //       // ✅ Refresh wishlist by calling /listWishlist again
   //       const res = await axios.post(
-  //         "http://localhost:8001/api/listWishlist",
+  //         "${BACKEND_URL}listWishlist",
   //         {},
   //         {
   //           headers: {
@@ -136,30 +139,36 @@ export default function Wishlist() {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:8001/api/manageWishlist",
+        `${BACKEND_URL}manageWishlist`,
         { productId: item.productId },
         { headers: { Authorization: localStorage.getItem("authToken") } }
       );
 
       if (data.success) {
-        showToast(data.message || `${item.name} removed from wishlist`, "error");
-        setWishlist(prev => prev.filter(w => w.ProductID !== item.productId));
+        showToast(
+          data.message || `${item.name} removed from wishlist`,
+          "error"
+        );
+        setWishlist((prev) =>
+          prev.filter((w) => w.ProductID !== item.productId)
+        );
       } else {
         showToast(data.message || "Failed to remove item", "error");
       }
     } catch (error) {
       console.error(error);
-      showToast(error.response?.data?.message || "Something went wrong!", "error");
+      showToast(
+        error.response?.data?.message || "Something went wrong!",
+        "error"
+      );
     } finally {
       setItemLoading(item.id, false);
     }
   };
 
-
-
-
   const handleClearAll = async () => {
-    if (!window.confirm("Are you sure you want to clear your entire wishlist?")) return;
+    if (!window.confirm("Are you sure you want to clear your entire wishlist?"))
+      return;
     try {
       const res = await clearWishlist();
       if (res && res.success) {
@@ -203,7 +212,6 @@ export default function Wishlist() {
       setItemLoading(item.id, false);
     }
   };
-
 
   // Loading UI
   if (loading) {
@@ -260,7 +268,12 @@ export default function Wishlist() {
 
         <AnimatePresence>
           {transformedWishlist.length > 0 ? (
-            <motion.div className="space-y-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ staggerChildren: 0.1 }}>
+            <motion.div
+              className="space-y-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ staggerChildren: 0.1 }}
+            >
               {transformedWishlist.map((item) => (
                 <motion.div
                   key={item.id}
@@ -272,16 +285,23 @@ export default function Wishlist() {
                   className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-lg transition-all"
                 >
                   {/* Image */}
-                  <motion.div className="relative overflow-hidden rounded-xl" whileHover={{ scale: 1.05 }}>
+                  <motion.div
+                    className="relative overflow-hidden rounded-xl"
+                    whileHover={{ scale: 1.05 }}
+                  >
                     <img
                       src={item.mainImage}
                       alt={item.name}
                       className="w-32 h-32 object-cover"
-                      onError={(e) => { e.target.src = "/s1.jpeg"; }}
+                      onError={(e) => {
+                        e.target.src = "/s1.jpeg";
+                      }}
                     />
                     {!item.inStock && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">Out of Stock</span>
+                        <span className="text-white text-sm font-medium">
+                          Out of Stock
+                        </span>
                       </div>
                     )}
                   </motion.div>
@@ -289,17 +309,35 @@ export default function Wishlist() {
                   {/* Info */}
                   <div className="flex-1 text-center sm:text-left space-y-2">
                     <h3 className="text-lg font-semibold">{item.name}</h3>
-                    <p className="text-sm text-gray-500">Added by: {item.fullname} ({item.email})</p>
-                    <p className="text-sm"><strong>Description:</strong> {item.description}</p>
-                    <p className="text-sm"><strong>Advantages:</strong> {item.advantages}</p>
-                    <p className="text-sm"><strong>How To Wear:</strong> {item.howToWear}</p>
+                    <p className="text-sm text-gray-500">
+                      Added by: {item.fullname} ({item.email})
+                    </p>
+                    <p className="text-sm">
+                      <strong>Description:</strong> {item.description}
+                    </p>
+                    <p className="text-sm">
+                      <strong>Advantages:</strong> {item.advantages}
+                    </p>
+                    <p className="text-sm">
+                      <strong>How To Wear:</strong> {item.howToWear}
+                    </p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-lg font-semibold">₹{item.price.toFixed(2)}</span>
+                      <span className="text-lg font-semibold">
+                        ₹{item.price.toFixed(2)}
+                      </span>
                       {item.oldPrice && item.oldPrice > item.price && (
-                        <span className="text-sm text-gray-500 line-through">₹{item.oldPrice.toFixed(2)}</span>
+                        <span className="text-sm text-gray-500 line-through">
+                          ₹{item.oldPrice.toFixed(2)}
+                        </span>
                       )}
                     </div>
-                    <div className={`text-xs px-3 py-1 rounded-2xl font-medium w-40 ${item.inStock ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                    <div
+                      className={`text-xs px-3 py-1 rounded-2xl font-medium w-40 ${
+                        item.inStock
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
                       {item.inStock ? item.stockStatus : "Out of Stock"}
                     </div>
                   </div>
@@ -310,17 +348,28 @@ export default function Wishlist() {
                     <motion.button
                       onClick={() => handleMoveToCart(item)}
                       disabled={!item.inStock || actionLoading[item.id]}
-                      whileHover={{ scale: item.inStock && !actionLoading[item.id] ? 1.05 : 1 }}
-                      whileTap={{ scale: item.inStock && !actionLoading[item.id] ? 0.95 : 1 }}
-                      className={`px-5 py-2.5 text-sm font-medium rounded-full flex items-center gap-2 min-w-[140px] justify-center ${item.inStock && !actionLoading[item.id]
-                        ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)]"
-                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        }`}
+                      whileHover={{
+                        scale:
+                          item.inStock && !actionLoading[item.id] ? 1.05 : 1,
+                      }}
+                      whileTap={{
+                        scale:
+                          item.inStock && !actionLoading[item.id] ? 0.95 : 1,
+                      }}
+                      className={`px-5 py-2.5 text-sm font-medium rounded-full flex items-center gap-2 min-w-[140px] justify-center ${
+                        item.inStock && !actionLoading[item.id]
+                          ? "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)]"
+                          : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      }`}
                     >
                       {actionLoading[item.id] ? (
                         <motion.div
                           animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
                           className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"
                         />
                       ) : (
@@ -336,15 +385,20 @@ export default function Wishlist() {
                       disabled={actionLoading[item.id]}
                       whileHover={{ scale: !actionLoading[item.id] ? 1.05 : 1 }}
                       whileTap={{ scale: !actionLoading[item.id] ? 0.95 : 1 }}
-                      className={`text-sm flex items-center gap-1 px-3 py-2 rounded-lg ${actionLoading[item.id]
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] hover:bg-red-50"
-                        }`}
+                      className={`text-sm flex items-center gap-1 px-3 py-2 rounded-lg ${
+                        actionLoading[item.id]
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] hover:bg-red-50"
+                      }`}
                     >
                       {actionLoading[item.id] ? (
                         <motion.div
                           animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
                           className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"
                         />
                       ) : (
@@ -358,15 +412,29 @@ export default function Wishlist() {
             </motion.div>
           ) : (
             // Empty Wishlist
-            <motion.div className="flex flex-col items-center justify-center mt-32" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} className="p-4 bg-[var(--color-primary)]/10 rounded-full mb-6">
+            <motion.div
+              className="flex flex-col items-center justify-center mt-32"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="p-4 bg-[var(--color-primary)]/10 rounded-full mb-6"
+              >
                 <Heart className="text-[var(--color-primary)]" size={48} />
               </motion.div>
-              <h2 className="text-2xl font-semibold text-[var(--color-text)] mb-2">Your Wishlist is Empty</h2>
+              <h2 className="text-2xl font-semibold text-[var(--color-text)] mb-2">
+                Your Wishlist is Empty
+              </h2>
               <p className="text-[var(--color-text-light)] text-center max-w-sm mb-8">
-                Browse our collection and add your favorite products to your wishlist.
+                Browse our collection and add your favorite products to your
+                wishlist.
               </p>
-              <Link to="/gemstones" className="px-8 py-3 bg-[var(--color-primary)] text-white font-medium rounded-full hover:bg-[var(--color-primary-dark)] flex items-center gap-2">
+              <Link
+                to="/gemstones"
+                className="px-8 py-3 bg-[var(--color-primary)] text-white font-medium rounded-full hover:bg-[var(--color-primary-dark)] flex items-center gap-2"
+              >
                 <Sparkles size={16} /> Browse Products
               </Link>
             </motion.div>
@@ -382,7 +450,6 @@ export default function Wishlist() {
           }
         />
       )}
-
     </div>
   );
 }

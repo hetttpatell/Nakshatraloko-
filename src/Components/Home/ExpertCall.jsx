@@ -7,6 +7,8 @@ import ConsultancyContext from "../../Context/ConsultancyContext";
 import Toast from "../Product/Toast";
 import axios from "axios";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 function ExpertCall({ className = "" }) {
   const { addSubmission } = useContext(ConsultancyContext);
   const [open, setOpen] = useState(false);
@@ -31,7 +33,7 @@ function ExpertCall({ className = "" }) {
     const fetchConsultationTypes = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:8001/api/getAllConsultationsType"
+          `${BACKEND_URL}getAllConsultationsType`
         );
         if (response.data.success && response.data.data) {
           const options = response.data.data.map((item) => ({
@@ -146,7 +148,7 @@ function ExpertCall({ className = "" }) {
 
     // ✅ Save to backend
     const response = await axios.post(
-      "http://localhost:8001/api/saveConsultation",
+      `${BACKEND_URL}saveConsultation`,
       {
         userId: null, // Replace dynamically if needed
         bookingDate: consultationDate || today,

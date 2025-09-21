@@ -17,6 +17,8 @@ import {
   FaChevronRight
 } from "react-icons/fa";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 const Reviews = ({ isMobile }) => {
   const [reviews, setReviews] = useState([]);
   const [filteredReviews, setFilteredReviews] = useState([]);
@@ -38,7 +40,7 @@ const Reviews = ({ isMobile }) => {
           const token = localStorage.getItem("authToken");
 
           const response = await axios.post(
-            "http://localhost:8001/api/getAllReviews",
+            `${BACKEND_URL}getAllReviews`,
             {},
             {
               headers: {
@@ -123,7 +125,7 @@ const Reviews = ({ isMobile }) => {
     try {
       const token = localStorage.getItem("authToken");
 
-      const response = await fetch(`http://localhost:8001/api/approveReview/${reviewId}`, {
+      const response = await fetch(`${BACKEND_URL}approveReview/${reviewId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -150,7 +152,7 @@ const Reviews = ({ isMobile }) => {
     try {
       const token = localStorage.getItem("authToken");
 
-      const response = await fetch(`http://localhost:8001/api/deleteReview/${reviewId}`, {
+      const response = await fetch(`${BACKEND_URL}deleteReview/${reviewId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

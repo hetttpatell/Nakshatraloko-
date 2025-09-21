@@ -5,6 +5,8 @@ import { Phone, Calendar, Clock, User, MessageCircle } from "lucide-react";
 import axios from "axios";
 import Toast from "../Product/Toast";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 export default function ConsultationForm() {
   const [formData, setFormData] = useState({
     name: "",
@@ -37,7 +39,7 @@ export default function ConsultationForm() {
       };
 
       const response = await axios.post(
-        "http://localhost:8001/api/saveConsultation",
+        `${BACKEND_URL}saveConsultation`,
         payload,
         { headers: { Authorization: `${token}` } }
       );

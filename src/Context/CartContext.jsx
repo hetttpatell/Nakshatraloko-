@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
@@ -18,7 +18,7 @@ export function CartProvider({ children }) {
   //     const cartItem = { productId: product.productid };
 
   //     const response = await axios.post(
-  //       "http://localhost:8001/api/saveCart",
+  //       "${BACKEND_URL}saveCart",
   //       cartItem,
   //       { headers: { Authorization: `${token}` } }
   //     );
@@ -81,7 +81,7 @@ export function CartProvider({ children }) {
     const cartItem = { productId: product.productid, quantity, size, material };
 
     const response = await axios.post(
-      "http://localhost:8001/api/saveCart",
+      `${BACKEND_URL}saveCart`,
       cartItem,
       { headers: { Authorization: `${token}` } }
     );
@@ -109,7 +109,7 @@ export function CartProvider({ children }) {
       }
 
       const response = await axios.post(
-        "http://localhost:8001/api/getCart",
+        `${BACKEND_URL}getCart`,
         {},
         {
           headers: {
@@ -171,7 +171,7 @@ const updateQuantity = async (cartId, newQuantity) => {
 
     // Call backend API
     const response = await axios.post(
-      "http://localhost:8001/api/UpdateCartData",
+      `${BACKEND_URL}UpdateCartData`,
       { cartId, quantity: newQuantity },
       {
         headers: {

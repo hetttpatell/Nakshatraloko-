@@ -5,6 +5,9 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 import CouponBanner from "../Coupons/CouponsBanner";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const IMG_URL = import.meta.env.VITE_IMG_URL;
+
 const ProductsPage = () => {
   const { category } = useParams();
 
@@ -24,7 +27,7 @@ const ProductsPage = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.post("http://localhost:8001/api/getAllCatogary");
+        const res = await axios.post(`${BACKEND_URL}getAllCatogary"`);
         if (res.data.success) {
           setCategories(res.data.data.map(c => c.Name));
         } else {
@@ -49,7 +52,7 @@ const ProductsPage = () => {
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
-        const res = await axios.post("http://localhost:8001/api/getFilteredProducts", {
+        const res = await axios.post(`${BACKEND_URL}getFilteredProducts`, {
           p_min_price: null,
           p_max_price: null,
           p_catogaryname: filters.Categories?.trim() || null,
@@ -66,7 +69,7 @@ const ProductsPage = () => {
             img: p.primaryimage
               ? p.primaryimage.startsWith("http")
                 ? p.primaryimage
-                : `http://localhost:8001/uploads${p.primaryimage}`
+                : `${IMG_URL}uploads${p.primaryimage}`
               : null,
             rating: parseFloat(p.avgrating || 0),
             productRating: p.productratings ? parseFloat(p.productratings) : 0, // Individual product rating
@@ -111,7 +114,7 @@ const ProductsPage = () => {
           minRating = min;
         }
 
-        const res = await axios.post("http://localhost:8001/api/getFilteredProducts", {
+        const res = await axios.post(`${BACKEND_URL}getFilteredProducts`, {
           p_min_price: minPrice,
           p_max_price: maxPrice,
           p_catogaryname: filters.Categories?.trim() || null,
@@ -130,7 +133,7 @@ const ProductsPage = () => {
             img: p.primaryimage
               ? p.primaryimage.startsWith("http")
                 ? p.primaryimage
-                : `http://localhost:8001/uploads${p.primaryimage}`
+                : `${IMG_URL}uploads${p.primaryimage}`
               : null,
             rating: parseFloat(p.avgrating || 0),
             productRating: p.productratings ? parseFloat(p.productratings) : 0, // Individual product rating

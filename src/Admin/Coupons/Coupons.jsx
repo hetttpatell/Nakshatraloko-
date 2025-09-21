@@ -19,6 +19,8 @@ import {
 } from "react-icons/fa";
 import Toast from "../../Components/Product/Toast";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 const Coupons = () => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +60,7 @@ const Coupons = () => {
       const token = localStorage.getItem("authToken")
       setLoading(true);
       const response = await axios.post(
-        "http://localhost:8001/api/getAllCoupons",
+        `${BACKEND_URL}getAllCoupons`,
         {},
         {
           headers: {
@@ -107,7 +109,7 @@ const Coupons = () => {
   const fetchProducts = async () => {
     try {
       const token = localStorage.getItem("authToken")
-      const response = await axios.post("http://localhost:8001/api/GetProductForCoupon", {},
+      const response = await axios.post(`${BACKEND_URL}GetProductForCoupon`, {},
         {
           headers: {
             Authorization: `${token}`
@@ -266,7 +268,7 @@ const Coupons = () => {
       // Call backend API
       const token = localStorage.getItem("authToken");
       const response = await axios.post(
-        "http://localhost:8001/api/saveCoupon",
+        `${BACKEND_URL}saveCoupon`,
         backendCoupon,
         {
           headers: {
@@ -441,7 +443,7 @@ const Coupons = () => {
       const token = localStorage.getItem("authToken");
 
       const response = await axios.post(
-        `http://localhost:8001/api/deleteCoupon/${id}`,
+        `${BACKEND_URL}deleteCoupon/${id}`,
         {},
         {
           headers: {

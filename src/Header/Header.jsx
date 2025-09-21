@@ -6,6 +6,7 @@ import { useWishlist } from "../Context/WishlistContext";
 import LoginSignup from "../Components/Login/Login";
 import logo from "/Logo.png";
 import axios from "axios";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 // ---------- MENU DATA ---------- 
 const initialMenuItems = [
@@ -384,7 +385,7 @@ useEffect(() => {
   // Initialize menu items
   useEffect(() => {
     axios
-      .post("http://localhost:8001/api/getAllCatogary")
+      .post(`${BACKEND_URL}getAllCatogary`)
       .then((res) => {
         if (res.data.success) {
           const transformedData = res.data.data.map((category) => ({
@@ -540,7 +541,7 @@ useEffect(() => {
     setIsSearching(true);
     try {
       // Call your search API endpoint
-      const response = await axios.post("http://localhost:8001/api/search", {
+      const response = await axios.post(`${BACKEND_URL}search`, {
         query: query,
       });
 

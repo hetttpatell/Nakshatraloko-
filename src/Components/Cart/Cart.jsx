@@ -8,6 +8,9 @@ import axios from "axios";
 import Toast from "../Product/Toast";
 import { toast } from "react-toastify";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const IMG_URL = import.meta.env.VITE_IMG_URL;
+
 export default function Cart() {
   const { cart, addToCart, removeFromCart, updateQuantity, getCart } = useCart();
   const [loading, setLoading] = useState(true);
@@ -82,7 +85,7 @@ export default function Cart() {
           imagePath = imagePath;
         } else {
           // If relative, prepend server path
-          imagePath = `http://localhost:8001/uploads${imagePath}`;
+          imagePath = `${IMG_URL}uploads${imagePath}`;
         }
 
         return {
@@ -151,7 +154,7 @@ export default function Cart() {
       const token = localStorage.getItem("authToken");
 
       const res = await axios.post(
-        "http://localhost:8001/api/saveCart",
+        `${BACKEND_URL}saveCart`,
         { productId: product.id },
         { headers: { Authorization: `${token}` } }
       );

@@ -4,6 +4,7 @@ import { User, Mail, Calendar, Star, Shield, Bell, Moon, Sun, Zap, CreditCard, M
 import axios from "axios";
 import { FaMobile } from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; // Add this import
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function UserAccount() {
   const [user, setUser] = useState({
@@ -29,7 +30,7 @@ export default function UserAccount() {
       try {
         const token = localStorage.getItem("authToken");
         const res = await axios.post(
-          "http://localhost:8001/api/user/profile",
+          `${BACKEND_URL}user/profile`,
           {},
           { headers: { Authorization: `${token}` } }
         );
@@ -86,7 +87,7 @@ export default function UserAccount() {
       };
 
       const res = await axios.post(
-        "http://localhost:8001/api/updateUser",
+        `${BACKEND_URL}updateUser`,
         payload,
         {
           headers: { Authorization: `${token}` },

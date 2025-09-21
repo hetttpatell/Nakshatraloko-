@@ -7,6 +7,8 @@ import { Sparkles, Zap, ArrowRight, Percent, Check, X } from "lucide-react";
 import axios from "axios";
 import Toast from "../Product/Toast";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 // Background circles component (same as Collections.jsx)
 const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
   <motion.div
@@ -118,7 +120,7 @@ const PaymentPage = () => {
         throw new Error("No authentication token found");
       }
 
-      const response = await axios.post("http://localhost:8001/api/getCart", {}, {
+      const response = await axios.post(`${BACKEND_URL}getCart`, {}, {
         headers: { Authorization: `${token}` }
       });
       console.log("API Response:", response.data); // Add this line
@@ -272,7 +274,7 @@ const PaymentPage = () => {
           // Fetch order by ID
           console.log("Fetching order with ID:", id);
 
-          const response = await axios.post(`http://localhost:8001/api/getOrderById/${id}`, {}, {
+          const response = await axios.post(`${BACKEND_URL}getOrderById/${id}`, {}, {
             headers: {
               'Content-Type': 'application/json'
             }

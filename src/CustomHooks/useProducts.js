@@ -1,6 +1,7 @@
 // hooks/useProducts.js
 import { useState, useEffect } from "react";
 import axios from "axios";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 // Helper to create slug/ID
 const slugify = (str) =>
@@ -20,7 +21,7 @@ export default function useProducts(apiUrl) {
       setError(null);
 
       try {
-        const res = await axios.post("http://localhost:8001/api/getAllProducts");
+        const res = await axios.post(`${BACKEND_URL}getAllProducts`);
 
         if (!isMounted) return;
 

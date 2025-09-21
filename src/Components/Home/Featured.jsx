@@ -4,6 +4,9 @@ import { Heart, Eye, Star, ShoppingCart, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const IMG_URL = import.meta.env.VITE_IMG_URL;
+
 const categories = [
   { id: "all", name: "All" },
   { id: "earrings", name: "Earrings" },
@@ -26,19 +29,19 @@ const getImageUrl = (imageText) => {
   // Already a full URL
   if (imageText.startsWith("http")) {
     return imageText.replace(
-      "http://localhost:8001/uploads/http://localhost:8001/uploads/",
-      "http://localhost:8001/uploads/"
+      `${IMG_URL}uploads/${IMG_URL}/uploads/`,
+      `${IMG_URL}/uploads/`
     );
   }
 
   // Relative path -> prepend server path
-  return `http://localhost:8001/uploads${imageText.startsWith("/") ? imageText : `/${imageText}`}`;
+  return `${IMG_URL}/uploads${imageText.startsWith("/") ? imageText : `/${imageText}`}`;
 };
 
   useEffect(() => {
     let isMounted = true;
 
-    axios.post("http://localhost:8001/api/getFeaturedProducts")
+    axios.post(`${BACKEND_URL}getFeaturedProducts`)
       .then((res) => {
         console.log("Raw API response:", res.data);
 

@@ -7,7 +7,7 @@ import React, { useState, useEffect, useContext } from "react"; import {
 import ConsultancyContext from "../../Context/ConsultancyContext";
 import axios from "axios";
 import { FaSync } from "react-icons/fa";
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const Consultancy = () => {
   // Sample data - in a real app, this would come from your backend
@@ -37,7 +37,7 @@ const Consultancy = () => {
     try {
       const token = localStorage.getItem("authToken");
       const response = await axios.post(
-        "http://localhost:8001/api/getConsultations",
+        `${BACKEND_URL}getConsultations`,
         {},
         { headers: { Authorization: `${token}` } }
       );
@@ -60,7 +60,7 @@ const Consultancy = () => {
     try {
       const token = localStorage.getItem("authToken");
       const response = await axios.post(
-        `http://localhost:8001/api/updateConsultationStatus/${id}`,
+        `${BACKEND_URL}updateConsultationStatus/${id}`,
         { status: newStatus },
         { headers: { Authorization: `${token}` } }
       );

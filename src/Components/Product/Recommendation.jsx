@@ -5,6 +5,9 @@ import { useWishlist } from "../../Context/WishlistContext";
 import { useCart } from "../../Context/CartContext";
 import axios from "axios";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const IMG_URL = import.meta.env.VITE_IMG_URL
+
 const Recommendation = () => {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +41,7 @@ const Recommendation = () => {
         typeof product.Price === "string"
           ? parseFloat(product.Price.replace(/[^\d.]/g, ""))
           : product.Price || product.price,
-      image: `http://localhost:8001/uploads${imagePath}`, // prepend correctly
+      image: `${IMG_URL}uploads${imagePath}`, // prepend correctly
       rating: product.Rating || product.rating || 4.5,
       brand: product.Brand || product.brand || "STYLIUM",
     };
@@ -49,7 +52,7 @@ const Recommendation = () => {
   // Fetch all products and select 4 random ones
   const fetchRecommendedProducts = async () => {
     try {
-      const res = await axios.post("http://localhost:8001/api/getAllProducts");
+      const res = await axios.post(`${BACKEND_URL}getAllProducts`);
 
       const apiProducts = Array.isArray(res.data?.data) ? res.data.data : [];
 

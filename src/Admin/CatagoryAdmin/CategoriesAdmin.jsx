@@ -6,7 +6,8 @@ import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import Toast from "../../Components/Product/Toast";
 import { useProductManagement } from "../../CustomHooks/useProductManagement";
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const IMG_URL = import.meta.env.VITE_IMG_URL
 const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   // State for categories
   const [categories, setCategories] = useState([]);
@@ -45,7 +46,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     const fetchCategories = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.post("http://localhost:8001/api/getAllCatogary");
+        const response = await axios.post(`${BACKEND_URL}getAllCatogary`);
 
         if (response.data.data) {
           // Transform API data to match our component structure
@@ -73,7 +74,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   ? category.IsFeatured
                   : false,
             image: category.Image
-              ? `http://localhost:8001/uploads${category.Image}` // prepend /upload
+              ? `${IMG_URL}uploads${category.Image}` // prepend /upload
               : "/s1.jpeg",
           }));
 
@@ -146,7 +147,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       formData.append("isFeatured", newCategory.isFeatured);
       if (imageFile) formData.append("images", imageFile); // backend expects 'images'
 
-      const res = await axios.post("http://localhost:8001/api/saveCatogary", formData, {
+      const res = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
         headers: { Authorization: token, "Content-Type": "multipart/form-data" }
       });
 
@@ -193,7 +194,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       formData.append("isFeatured", !category.isFeatured); // toggle value
       if (category.image) formData.append("images", category.image);
 
-      const res = await axios.post("http://localhost:8001/api/saveCatogary", formData, {
+      const res = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
         headers: { Authorization: token, "Content-Type": "multipart/form-data" },
       });
 
@@ -259,7 +260,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       formData.append("isFeatured", editingCategory.isFeatured);
       if (imageFile) formData.append("images", imageFile); // or "image" depending on multer field name
 
-      const res = await axios.post("http://localhost:8001/api/saveCatogary", formData, {
+      const res = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
         headers: {
           Authorization: token,
           "Content-Type": "multipart/form-data",
@@ -287,7 +288,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
       // Call API to delete category with token in headers
       const response = await axios.post(
-        `http://localhost:8001/api/deleteCatogary/${id}`,
+        `${BACKEND_URL}deleteCatogary/${id}`,
         {}, // no body needed for delete
         {
           headers: {
@@ -320,7 +321,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
     try {
       // Call API to update visibility
-      const response = await axios.put(`http://localhost:8001/api/updateCategory/${id}`, {
+      const response = await axios.put(`${BACKEND_URL}updateCategory/${id}`, {
         isShown: newVisibility
       });
 
@@ -341,7 +342,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
     try {
       // Call API to update status
-      const response = await axios.put(`http://localhost:8001/api/updateCategory/${id}`, {
+      const response = await axios.put(`${BACKEND_URL}updateCategory/${id}`, {
         isActive: newStatus
       });
 

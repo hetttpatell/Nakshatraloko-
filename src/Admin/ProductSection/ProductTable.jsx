@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { FaEye, FaEdit, FaTrash, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 import { ToastContainer } from "react-toastify";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ProductTable = ({ products, onView, onEdit, onDelete }) => {
   if (products.length === 0) {
@@ -14,7 +15,7 @@ const ProductTable = ({ products, onView, onEdit, onDelete }) => {
   }
   // const handleEdit = async (product) => {
   //   try {
-  //     const response = await axios.get(`http://localhost:8001/api/getProductById/${product.id}`);
+  //     const response = await axios.get(`${BACKEND_URL}getProductById/${product.id}`);
   //     if (response.data.success) {
   //       setSelectedProduct(response.data.data);
   //       setIsModalOpen(true);
@@ -65,7 +66,7 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
     try {
       const token = localStorage.getItem("authToken");
       const response = await axios.post(
-        `http://localhost:8001/api/toggleFeaturedProduct/${product.id}/feature`,
+        `${BACKEND_URL}toggleFeaturedProduct/${product.id}/feature`,
         {},
         { headers: { Authorization: `${token}` } }
       );

@@ -12,6 +12,9 @@ import Toast from "./Toast";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const IMG_URL = import.meta.env.VITE_IMG_URL;
+
 const productquestions = [
   {
     title: "What is the return policy?",
@@ -86,7 +89,7 @@ const ProductDetails = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:8001/api/getReviewsByProduct/${id}`,
+        `${BACKEND_URL}getReviewsByProduct/${id}`,
         {},
         {
           headers:
@@ -131,7 +134,7 @@ const ProductDetails = () => {
 
       const productId = product.id;
       const response = await axios.post(
-        `http://localhost:8001/api/saveProductReview`,
+        `${BACKEND_URL}saveProductReview`,
         {
           productId: productId, // You need to define productId from your component's context
           rating: reviewForm.rating,
@@ -173,7 +176,7 @@ const ProductDetails = () => {
         const token = localStorage.getItem("authToken");
 
         const response = await axios.post(
-          "http://localhost:8001/api/activeCouponProducts",
+          `${BACKEND_URL}activeCouponProducts`,
           {},
           {
             headers: {
@@ -208,7 +211,7 @@ const ProductDetails = () => {
 
     const loadProduct = async () => {
       try {
-        const res = await axios.post(`http://localhost:8001/api/getProductById/${id}`);
+        const res = await axios.post(`${BACKEND_URL}getProductById/${id}`);
         const productData = res.data?.data?.product;
 
         if (!isMounted || !productData) return;
@@ -232,8 +235,8 @@ const ProductDetails = () => {
             let fixedUrl = img.imageData;
 
             // If API duplicates the URL, clean it up
-            if (fixedUrl.includes("http://localhost:8001/uploads/http://localhost:8001/uploads/")) {
-              fixedUrl = fixedUrl.replace("http://localhost:8001/uploads/http://localhost:8001/uploads/", "http://localhost:8001/uploads/");
+            if (fixedUrl.includes(`${IMG_URL}uploads/${IMG_URL}/uploads/`)) {
+              fixedUrl = fixedUrl.replace(`${IMG_URL}uploads/${IMG_URL}uploads/`, `${IMG_URL}uploads/`);
             }
 
             return {
@@ -243,8 +246,8 @@ const ProductDetails = () => {
           }),
           mainImage: productData.images[0]
             ? productData.images[0].imageData.replace(
-              "http://localhost:8001/uploads/http://localhost:8001/uploads/",
-              "http://localhost:8001/uploads"
+              `${IMG_URL}uploads/${IMG_URL}/uploads/`,
+              `${IMG_URL}uploads`
             )
             : " ",
 
@@ -316,7 +319,7 @@ const ProductDetails = () => {
     try {
       const token = localStorage.getItem("authToken");
       const response = await axios.post(
-        `http://localhost:8001/api/review/${reviewId}/like`,
+        `${BACKEND_URL}review/${reviewId}/like`,
         {},
         {
           headers: {
@@ -397,7 +400,7 @@ const ProductDetails = () => {
   const toggleWishlist = async (productId) => {
     try {
       const { data } = await axios.post(
-        "http://localhost:8001/api/manageWishlist",
+        `${BACKEND_URL}manageWishlist`,
         { productId }, // body
         {
           headers: {

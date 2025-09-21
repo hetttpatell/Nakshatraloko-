@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 const CouponBanner = () => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +21,8 @@ const CouponBanner = () => {
   useEffect(() => {
     const fetchCoupons = async () => {
       try {
-        const response = await axios.post("http://localhost:8001/api/getAllCouponsForDisplay");
+        const response = await axios.post(`${BACKEND_URL}getAllCouponsForDisplay`);
+        
         if (response.data.success && Array.isArray(response.data.data)) {
           // Filter active coupons only
           const now = new Date();

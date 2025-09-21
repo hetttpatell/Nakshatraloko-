@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Zap, Heart } from "lucide-react";
 import axios from "axios"; // Make sure to import axios
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const IMG_URL = import.meta.env.VITE_IMG_URL;
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -88,12 +89,14 @@ export default function Collections() {
 
   useEffect(() => {
     axios
-      .post("http://localhost:8001/api/getAllFeaturedCategory")
+      .post(`${BACKEND_URL}getAllFeaturedCategory`)
       .then((res) => {
         if (res.data.success) {
           const transformedData = res.data.data.map((category, index) => ({
             name: category.Name, // updated field
-            img: `http://localhost:8001/uploads/${category.Image} ` || "/abot.jpg", // fallback image
+           img: category.Image
+            ? `${IMG_URL}uploads/${category.Image}`
+            : "/abot.jpg",
             path: `/category/${category.Name.toLowerCase().replace(/\s+/g, '-')}`,
             items: `${category.active_product_count} Products`, // use active product count
             color: "bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)]",

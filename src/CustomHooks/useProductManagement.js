@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useEffect } from "react";
 import axios from "axios";
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import Toast from "../Components/Product/Toast";
 export const useProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -34,8 +34,8 @@ export const useProductManagement = () => {
       setLoading(true);
       setError(null);
 
-      const allResponse = await axios.post("http://localhost:8001/api/getAllProducts");
-      const featuredResponse = await axios.post("http://localhost:8001/api/getFeaturedProducts");
+      const allResponse = await axios.post(`${BACKEND_URL}getAllProducts`);
+      const featuredResponse = await axios.post(`${BACKEND_URL}getFeaturedProducts`);
 
       if (allResponse.data.success && featuredResponse.data.success) {
         const featuredIds = featuredResponse.data.data.map((p) => p.ID);
@@ -83,7 +83,7 @@ export const useProductManagement = () => {
       const token = localStorage.getItem("authToken");
 
       const response = await axios.post(
-        `http://localhost:8001/api/deleteProduct/${productId}`,
+        `${BACKEND_URL}deleteProduct/${productId}`,
         {},
         {
           headers: {
@@ -109,7 +109,7 @@ export const useProductManagement = () => {
   const handleEditProduct = async (productId) => {
     try {
       setIsSaving(true);
-      const response = await axios.post(`http://localhost:8001/api/getProductById/${productId}`);
+      const response = await axios.post(`${BACKEND_URL}getProductById/${productId}`);
       if (response.data.success) {
         const product = response.data.data.product; // Access product correctly
         const normalizedProduct = {

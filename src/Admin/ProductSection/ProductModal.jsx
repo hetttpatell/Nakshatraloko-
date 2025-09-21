@@ -3,6 +3,9 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { FaTimes, FaArrowUp, FaArrowDown, FaTrash, FaPlus, FaMinus, FaSync, FaStar } from "react-icons/fa";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const IMG_URL = import.meta.env.VITE_IMG_URL;
+
 const ProductModal = ({
   title,
   initialProduct = {},
@@ -31,7 +34,7 @@ const ProductModal = ({
   const [apiStatus, setApiStatus] = useState({ loading: false, message: "" });
 
   useEffect(() => {
-    axios.post("http://localhost:8001/api/getAllCatogary")
+    axios.post(`${BACKEND_URL}getAllCatogary`)
       .then((res) => {
         if (res.data.success) {
           setCategoryData(res.data.data);
@@ -112,7 +115,7 @@ const ProductModal = ({
             const uploadsIndex = imageUrl.lastIndexOf("/uploads");
             if (uploadsIndex !== -1) {
               const cleanPath = imageUrl.substring(uploadsIndex);
-              imageUrl = `http://localhost:8001${cleanPath}`;
+              imageUrl = `${IMG_URL}${cleanPath}`;
             }
           }
 
@@ -436,12 +439,12 @@ const ProductModal = ({
       console.log("Making API call to saveProduct with FormData");
 
       const response = await axios.post(
-        "http://localhost:8001/api/saveProduct",
+        `${BACKEND_URL}saveProduct`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
+            "Authorization": `${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
           },
         }
       );

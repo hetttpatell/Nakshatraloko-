@@ -13,7 +13,7 @@ import {
   FaEnvelope,
   FaMapMarkerAlt
 } from "react-icons/fa";
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const Footer = () => {
   const location = useLocation();
   const [isHomePage, setIsHomePage] = useState(false);
@@ -29,7 +29,7 @@ const Footer = () => {
     const fetchCategories = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.post("http://localhost:8001/api/getAllCatogary");
+        const response = await axios.post(`${BACKEND_URL}getAllCatogary`);
 
         if (response.data.data) {
           // Transform API data to match our component structure

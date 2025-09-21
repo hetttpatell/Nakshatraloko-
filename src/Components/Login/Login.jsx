@@ -6,7 +6,7 @@ import Input from "../Input/Input";
 import { useNavigate } from "react-router-dom";
 import api from "../../Utils/api";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const LoginSignup = ({ onClose }) => {
   const [isSignup, setIsSignup] = useState(false);
@@ -27,7 +27,7 @@ const LoginSignup = ({ onClose }) => {
   const navigate = useNavigate()
   // ✅ Google Auth redirect
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8001/api/google";
+    window.location.href = `${BACKEND_URL}google`;
   };
 
   // ✅ Normal login
@@ -45,7 +45,7 @@ const LoginSignup = ({ onClose }) => {
     }
 
     try {
-      const res = await axios.post("http://localhost:8001/api/login", {
+      const res = await axios.post(`${BACKEND_URL}login`, {
         email,
         password,
       });
@@ -126,7 +126,7 @@ const LoginSignup = ({ onClose }) => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8001/api/saveUser",
+        `${BACKEND_URL}saveUser`,
         {
           fullname,
           email: signupEmail,

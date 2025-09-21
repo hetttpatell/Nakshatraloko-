@@ -18,7 +18,7 @@
 //     }
 //     try {
 //       const response = await axios.post(
-//         "http://localhost:8001/api/listWishlist",
+//         "${BACKEND_URL}listWishlist",
 //         {},
 //         { headers: { Authorization: token } }
 //       );
@@ -44,7 +44,7 @@
 
 //     try {
 //       const response = await axios.post(
-//         "http://localhost:8001/api/manageWishlist",
+//         "${BACKEND_URL}manageWishlist",
 //         { productId },
 //         { headers: { Authorization: token } }
 //       );
@@ -69,7 +69,7 @@
 
 //     try {
 //       await axios.post(
-//         "http://localhost:8001/api/clearWishlist",
+//         "${BACKEND_URL}clearWishlist",
 //         {},
 //         { headers: { Authorization: token } }
 //       );
@@ -90,7 +90,7 @@
 // WishlistContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const WishlistContext = createContext();
 
 export function WishlistProvider({ children }) {
@@ -108,7 +108,7 @@ export function WishlistProvider({ children }) {
     }
     try {
       const response = await axios.post(
-        "http://localhost:8001/api/listWishlist",
+        `${BACKEND_URL}listWishlist`,
         {},
         { headers: { Authorization: token } }
       );
@@ -138,7 +138,7 @@ const addToWishlist = async (product) => {
 
   try {
     const { data } = await axios.post( 
-      "http://localhost:8001/api/manageWishlist",
+      `${BACKEND_URL}manageWishlist`,
       { ProductID: productId }, // ✅ Match DB column name
       {
         headers: { Authorization: token },
@@ -175,7 +175,7 @@ const addToWishlist = async (product) => {
 
     try {
       await axios.post(
-        "http://localhost:8001/api/clearWishlist",
+        `${BACKEND_URL}clearWishlist`,
         {},
         { headers: { Authorization: token } }
       );

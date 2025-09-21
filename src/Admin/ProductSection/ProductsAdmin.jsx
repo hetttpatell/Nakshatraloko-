@@ -34,6 +34,7 @@ const MATERIAL_OPTIONS = [
   "Diamond",
   "Platinum",
 ];
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ProductAdmin = ({ isMobile }) => {
   const {
@@ -72,7 +73,7 @@ const ProductAdmin = ({ isMobile }) => {
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
-        const response = await axios.post("http://localhost:8001/api/getFeaturedProducts");
+        const response = await axios.post(`${BACKEND_URL}getFeaturedProducts`);
         if (response.data.success) {
           const featuredIds = response.data.data.map((p) => p.ID);
           setFeaturedProducts(featuredIds);

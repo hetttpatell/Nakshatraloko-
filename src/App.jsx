@@ -21,7 +21,6 @@ function App() {
   const [backendData, setBackendData] = useState(null); // <-- store backend response
   const location = useLocation();
 
-
   const hideFooter = location.pathname.startsWith("/admin");
 
   // useEffect(() => {
@@ -53,6 +52,9 @@ function App() {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
+
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+  
 
   return (
     <ConsultancyProvider>
