@@ -191,7 +191,6 @@ const Recommendation = () => {
         );
       })}
     </div>
-
   );
 };
 

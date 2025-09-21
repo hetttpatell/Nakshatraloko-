@@ -95,9 +95,9 @@ const Footer = () => {
           </div>
 
           {/* Brand Name */}
-          <h3 className={`text-2xl font-playfair font-bold ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-text)]"}`}>
+          {/* <h3 className={`text-2xl font-playfair font-bold ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-text)]"}`}>
             Nakshatraloka
-          </h3>
+          </h3> */}
 
           {/* Brand Description */}
           <p className="text-[var(--color-text-light)] text-sm leading-relaxed">

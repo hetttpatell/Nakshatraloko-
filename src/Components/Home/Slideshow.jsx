@@ -9,8 +9,8 @@ const slides = [
     title: "Dive into Brilliance",
     description: "Discover the sparkle of handpicked gemstones crafted in 925 Silver.",
     buttons: [
-      { text: "Explore Collection", link: "#", primary: true },
-      { text: "Know More", link: "#" },
+      { text: "Explore Collection", link: "/gemstones", primary: true },
+      { text: "Know More", link: "/gemstones" },
     ],
   },
   {
@@ -19,8 +19,8 @@ const slides = [
     title: "Luxury Beyond Time",
     description: "Experience timeless elegance with our exclusive signature designs.",
     buttons: [
-      { text: "Shop Now", link: "#", primary: true },
-      { text: "Learn More", link: "#" },
+      { text: "Shop Now", link: "/categories/Final2", primary: true },
+      { text: "Learn More", link: "/categories/Final2" },
     ],
   },
   {
@@ -29,8 +29,8 @@ const slides = [
     title: "Ocean Blue Gemstone",
     description: "Our signature ocean blue gemstone brings beauty to every moment.",
     buttons: [
-      { text: "View Collection", link: "#", primary: true },
-      { text: "Details", link: "#" },
+      { text: "View Collection", link: "/categories/Het%201", primary: true },
+      { text: "Details", link: "/categories/Het%201" },
     ],
   },
   {
@@ -39,8 +39,8 @@ const slides = [
     title: "Elegance Redefined",
     description: "Crafted with precision, made for those who value true beauty.",
     buttons: [
-      { text: "Explore Now", link: "#", primary: true },
-      { text: "Discover", link: "#" },
+      { text: "Explore Now", link: "/gemstones", primary: true },
+      { text: "Discover", link: "/gemstones" },
     ],
   },
 ];
