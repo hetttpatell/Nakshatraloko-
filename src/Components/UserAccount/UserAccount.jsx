@@ -52,7 +52,7 @@ export default function UserAccount() {
           }));
         }
       } catch (err) {
-        console.error("Failed to fetch user:", err);
+        // console.error("Failed to fetch user:", err);
       }
     };
 
@@ -101,7 +101,7 @@ export default function UserAccount() {
         // alert(res.data.message || "Failed to update profile");
       }
     } catch (err) {
-      console.error("Failed to update user:", err);
+      // console.error("Failed to update user:", err);
       // alert(err.response?.data?.message || "Something went wrong");
     }
   };

@@ -79,12 +79,12 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
           }));
 
 
-          console.log({ data: response });
+          // console.log({ data: response });
 
           setCategories(formattedCategories);
         }
       } catch (err) {
-        console.error("Error fetching categories:", err);
+        // console.error("Error fetching categories:", err);
         setError("Failed to load categories. Please try again.");
       } finally {
         setIsLoading(false);
@@ -166,7 +166,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       }
 
     } catch (err) {
-      console.error(err);
+      // console.error(err);
       // setError("Failed to add category.");
     } finally {
       setIsAdding(false);
@@ -208,7 +208,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       }
 
     } catch (err) {
-      console.error(err);
+      // console.error(err);
       toast.error("Failed to update category");
     }
   };
@@ -278,7 +278,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
         toast.success(response.data.message || "Category updated successfully");
       }
     } catch (err) {
-      console.error(err);
+      // console.error(err);
       setError("Failed to update category.");
     }
   };
@@ -310,7 +310,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       }
 
     } catch (err) {
-      console.error("Error deleting category:", err);
+      // console.error("Error deleting category:", err);
       setError("Failed to delete category. Please try again.");
     }
   };
@@ -331,7 +331,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
         ));
       }
     } catch (err) {
-      console.error("Error updating category visibility:", err);
+      // console.error("Error updating category visibility:", err);
       setError("Failed to update category visibility. Please try again.");
     }
   };
@@ -354,7 +354,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       }
 
     } catch (err) {
-      console.error("Error updating category status:", err);
+      // console.error("Error updating category status:", err);
       setError("Failed to update category status. Please try again.");
     }
   };

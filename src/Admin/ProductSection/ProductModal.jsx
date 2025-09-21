@@ -40,13 +40,14 @@ const ProductModal = ({
           setCategoryData(res.data.data);
         }
       })
-      .catch((err) => console.error("Category fetch error:", err));
+      // .catch((err) => console.error("Category fetch error:", err));
+      .catch((err) => console.log(err));
   }, []);
 
   // Populate state when editing
   useEffect(() => {
     if (initialProduct && Object.keys(initialProduct).length > 0) {
-      console.log("Initial product data:", initialProduct);
+      // console.log("Initial product data:", initialProduct);
 
       // ---------------- Basic fields ----------------
       setName(initialProduct.Name || initialProduct.name || "");
@@ -169,7 +170,7 @@ const ProductModal = ({
     });
 
     if (Object.keys(newErrors).length > 0) {
-      console.log("Validation errors:", newErrors);
+      // console.log("Validation errors:", newErrors);
       setErrors(newErrors);
       setApiStatus({ loading: false, message: "" });
       submittingRef.current = false;
@@ -372,7 +373,7 @@ const ProductModal = ({
       return;
     }
 
-    console.log("All validations passed, building payload");
+    // console.log("All validations passed, building payload");
 
     // --- Build FormData payload ---
     const formData = new FormData();
@@ -432,11 +433,11 @@ const ProductModal = ({
       }
     });
 
-    console.log('Sending FormData with product data');
+    // console.log('Sending FormData with product data');
 
     try {
       setApiStatus({ loading: true, message: "" });
-      console.log("Making API call to saveProduct with FormData");
+      // console.log("Making API call to saveProduct with FormData");
 
       const response = await axios.post(
         `${BACKEND_URL}saveProduct`,
@@ -449,7 +450,7 @@ const ProductModal = ({
         }
       );
 
-      console.log("API response:", response.data);
+      // console.log("API response:", response.data);
 
       if (response.data.success) {
         setApiStatus({ loading: false, message: "success" });
@@ -461,18 +462,18 @@ const ProductModal = ({
         setApiStatus({ loading: false, message: "error" });
       }
     } catch (error) {
-      console.error("❌ Save product failed:", error);
+      // console.error("❌ Save product failed:", error);
       let errorMessage = "Failed to save product";
 
       if (error.response) {
-        console.error("Error data:", error.response.data);
-        console.error("Error status:", error.response.status);
+        // console.error("Error data:", error.response.data);
+        // console.error("Error status:", error.response.status);
         errorMessage = error.response.data.message || errorMessage;
       } else if (error.request) {
-        console.error("Error request:", error.request);
+        // console.error("Error request:", error.request);
         errorMessage = "No response received from server. Please check your connection.";
       } else {
-        console.error("Error message:", error.message);
+        // console.error("Error message:", error.message);
         errorMessage = error.message;
       }
 

@@ -93,7 +93,7 @@ const OrdersManagement = ({ isMobile }) => {
         setOrders(ordersArray);
         setFilteredOrders(ordersArray);
       } catch (err) {
-        console.error("Error fetching orders:", err);
+        // console.error("Error fetching orders:", err);
         setError(err.response?.data?.message || err.message);
       } finally {
         setLoading(false);
@@ -156,9 +156,9 @@ const OrdersManagement = ({ isMobile }) => {
         }
       );
 
-      console.log("Order status updated successfully:", response.data);
+      // console.log("Order status updated successfully:", response.data);
     } catch (err) {
-      console.error("Failed to update order status:", err);
+      // console.error("Failed to update order status:", err);
       // alert("Failed to update order status. Please try again.");
     }
   };

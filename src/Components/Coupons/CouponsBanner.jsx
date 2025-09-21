@@ -35,7 +35,7 @@ const CouponBanner = () => {
           setLoading(false);
         }
       } catch (error) {
-        console.error("Error fetching coupons:", error);
+        // console.error("Error fetching coupons:", error);
         setLoading(false);
       }
     };

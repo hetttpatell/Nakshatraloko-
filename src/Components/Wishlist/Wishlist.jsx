@@ -35,7 +35,7 @@ export default function Wishlist() {
       try {
         await fetchWishlist();
       } catch (error) {
-        console.error("Failed to fetch wishlist:", error);
+        // console.error("Failed to fetch wishlist:", error);
       } finally {
         setLoading(false);
       }
@@ -156,7 +156,7 @@ export default function Wishlist() {
         showToast(data.message || "Failed to remove item", "error");
       }
     } catch (error) {
-      console.error(error);
+      // console.error(error);
       showToast(
         error.response?.data?.message || "Something went wrong!",
         "error"
@@ -177,7 +177,7 @@ export default function Wishlist() {
         toast.error("Failed to clear wishlist");
       }
     } catch (error) {
-      console.error("Error clearing wishlist:", error);
+      // console.error("Error clearing wishlist:", error);
       toast.error("Failed to clear wishlist");
     }
   };
@@ -206,7 +206,7 @@ export default function Wishlist() {
         showToast(res.error || "Failed to add item to cart", "error");
       }
     } catch (error) {
-      console.error("Error moving to cart:", error);
+      // console.error("Error moving to cart:", error);
       showToast("Something went wrong!", "error");
     } finally {
       setItemLoading(item.id, false);

@@ -31,10 +31,10 @@ const ProductsPage = () => {
         if (res.data.success) {
           setCategories(res.data.data.map(c => c.Name));
         } else {
-          console.error("Failed to fetch categories");
+          // console.error("Failed to fetch categories");
         }
       } catch (err) {
-        console.error("Error fetching categories:", err);
+        // console.error("Error fetching categories:", err);
       }
     };
 
@@ -87,7 +87,7 @@ const ProductsPage = () => {
           setError("Failed to load products");
         }
       } catch (err) {
-        console.error(err);
+        // console.error(err);
         setError("Failed to load products");
       }
     };
@@ -154,7 +154,7 @@ const ProductsPage = () => {
           setError("Failed to load products");
         }
       } catch (err) {
-        console.error(err);
+        // console.error(err);
         setError("Failed to load products");
       }
     };

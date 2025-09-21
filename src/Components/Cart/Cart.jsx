@@ -66,7 +66,7 @@ export default function Cart() {
       try {
         await getCart();
       } catch (error) {
-        console.error('Failed to fetch cart:', error);
+        // console.error('Failed to fetch cart:', error);
       } finally {
         setLoading(false);
       }
@@ -144,7 +144,7 @@ export default function Cart() {
         delete quantityUpdateTimers.current[item.id];
       }, 300);
     } else {
-      console.warn(`Cannot add more than ${item.stock} items`);
+      // console.warn(`Cannot add more than ${item.stock} items`);
     }
   };
 
@@ -160,19 +160,19 @@ export default function Cart() {
       );
 
       if (res.data.success) {
-        console.log(`${product.name} removed successfully from server`);
+        // console.log(`${product.name} removed successfully from server`);
         await getCart();
 
         // ✅ Show success toast
         showToast(`${product.name} removed from cart`, "error");
       } else {
-        console.warn(res.data.message);
+        // console.warn(res.data.message);
 
         // ❌ Show error toast
         showToast(res.data.message || "Failed to remove item", "error");
       }
     } catch (err) {
-      console.error("Failed to remove product:", err);
+      // console.error("Failed to remove product:", err);
 
       // ❌ Show error toast
       showToast("Something went wrong while removing item", "error");
@@ -305,7 +305,7 @@ export default function Cart() {
                         alt={product.name}
                         className="w-32 h-32 object-cover"
                         onError={(e) => {
-                          console.log('Image failed to load:', product.image);
+                          // console.log('Image failed to load:', product.image);
                           e.target.src = '/s1.jpeg'; // Fallback image
                         }}
                       />

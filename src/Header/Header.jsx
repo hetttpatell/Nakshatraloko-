@@ -310,7 +310,8 @@ export default function Header() {
 useEffect(() => {
   const token = localStorage.getItem("authToken");
   if (token) {
-    fetchWishlist().catch(err => console.error("Error fetching wishlist:", err));
+    fetchWishlist()
+    // .catch(err => console.error("Error fetching wishlist:", err));
   } else {
     setWishlist([]);
   }
@@ -330,7 +331,7 @@ useEffect(() => {
           fetchWishlist()
         ]);
       } catch (error) {
-        console.error("Error initializing cart and wishlist:", error);
+        // console.error("Error initializing cart and wishlist:", error);
       }
     }
   }, [isLoggedIn, fetchCart, fetchWishlist]);
@@ -410,7 +411,7 @@ useEffect(() => {
           );
         }
       })
-      .catch((err) => console.log(err));
+      // .catch((err) => console.log(err));
   }, []);
 
   // Enhanced login state management
@@ -430,7 +431,7 @@ useEffect(() => {
             // ✅ Immediately fetch cart & wishlist on login state
             await Promise.all([fetchCart(), fetchWishlist()]);
           } catch (error) {
-            console.error("Error parsing user data:", error);
+            // console.error("Error parsing user data:", error);
           }
         }
       } else {
@@ -478,7 +479,7 @@ useEffect(() => {
         // Immediately fetch cart and wishlist data after successful login
         await initializeCartAndWishlist();
       } catch (error) {
-        console.error("Error processing login success:", error);
+        // console.error("Error processing login success:", error);
       }
     }
     setShowLogin(false);
@@ -551,7 +552,7 @@ useEffect(() => {
         setSearchResults([]);
       }
     } catch (error) {
-      console.error("Search error:", error);
+      // console.error("Search error:", error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);

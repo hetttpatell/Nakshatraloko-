@@ -79,7 +79,7 @@ const ProductAdmin = ({ isMobile }) => {
           setFeaturedProducts(featuredIds);
         }
       } catch (err) {
-        console.error("Error fetching featured products:", err);
+        // console.error("Error fetching featured products:", err);
       }
     };
     fetchFeaturedProducts();
@@ -110,7 +110,7 @@ const ProductAdmin = ({ isMobile }) => {
         toast.error(response.data.message || "Failed to save product");
       }
     } catch (error) {
-      console.error("❌ Request failed:", error.response?.data || error.message);
+      // console.error("❌ Request failed:", error.response?.data || error.message);
       toast.error("Something went wrong while saving product");
     } finally {
       setIsSaving(false);
@@ -122,12 +122,12 @@ const ProductAdmin = ({ isMobile }) => {
     setIsSaving(true);
     try {
       // Implement your edit API call here
-      console.log("Editing product:", productData);
+      // console.log("Editing product:", productData);
       toast.success("Product updated successfully!");
       await refreshProducts();
       setIsEditModalOpen(false);
     } catch (error) {
-      console.error("❌ Edit failed:", error);
+      // console.error("❌ Edit failed:", error);
       toast.error("Something went wrong while updating product");
     } finally {
       setIsSaving(false);

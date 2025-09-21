@@ -46,7 +46,7 @@ const Consultancy = () => {
         setSubmissions(response.data.data);
       }
     } catch (error) {
-      console.error("Error fetching consultations:", error);
+      // console.error("Error fetching consultations:", error);
     }
   };
 
@@ -71,11 +71,11 @@ const Consultancy = () => {
           prev.map(sub => (sub.ID === id ? { ...sub, Status: newStatus } : sub))
         );
       } else {
-        console.error("Failed to update status:", response.data.message);
+        // console.error("Failed to update status:", response.data.message);
         // alert("Failed to update status: " + response.data.message);
       }
     } catch (error) {
-      console.error("Error updating status:", error);
+      // console.error("Error updating status:", error);
       // alert("Error updating status. See console for details.");
     }
   };

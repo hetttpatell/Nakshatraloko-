@@ -92,10 +92,10 @@ export default function useProducts(apiUrl) {
             ),
           });
         });
-        console.log("object");
+        // console.log("object");
         setProducts(Array.from(uniqueProducts.values()));
       } catch (err) {
-        console.error("Error fetching products:", err);
+        // console.error("Error fetching products:", err);
         if (isMounted) {
           setError("Failed to load products.");
           setProducts([]);

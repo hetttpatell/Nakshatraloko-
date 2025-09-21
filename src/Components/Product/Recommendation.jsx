@@ -63,7 +63,7 @@ const Recommendation = () => {
 
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching recommended products:", err);
+      // console.error("Error fetching recommended products:", err);
       setLoading(false);
     }
   };

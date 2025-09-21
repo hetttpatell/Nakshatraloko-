@@ -116,7 +116,7 @@ export function WishlistProvider({ children }) {
         setWishlist(response.data.data || []);
       }
     } catch (error) {
-      console.error("Error fetching wishlist:", error);
+      // console.error("Error fetching wishlist:", error);
     }
   };
 
@@ -158,7 +158,7 @@ const addToWishlist = async (product) => {
       message: data.message || "Failed to update wishlist",
     };
   } catch (error) {
-    console.error("Error updating wishlist:", error);
+    // console.error("Error updating wishlist:", error);
     return {
       success: false,
       message: error.response?.data?.message || "Error updating wishlist",
@@ -181,7 +181,7 @@ const addToWishlist = async (product) => {
       );
       await fetchWishlist();
     } catch (error) {
-      console.error(error);
+      // console.error(error);
     }
   };
 

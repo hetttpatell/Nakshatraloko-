@@ -65,8 +65,8 @@ const Admin = () => {
   const token = localStorage.getItem("authToken");
   const userData = localStorage.getItem("user");
   
-  console.log('Token exists:', !!token);
-  console.log('User data in localStorage:', userData);
+  // console.log('Token exists:', !!token);
+  // console.log('User data in localStorage:', userData);
   
   if (!token) {
     navigate("/");
@@ -75,14 +75,14 @@ const Admin = () => {
   
   try {
     let parsedUser = userData ? JSON.parse(userData) : {};
-    console.log('Parsed user from localStorage:', parsedUser);
+    // console.log('Parsed user from localStorage:', parsedUser);
     
     // Fallback: extract user info from token if user data is missing
     if (Object.keys(parsedUser).length === 0) {
-      console.log('No user data in localStorage, extracting from token...');
+      // console.log('No user data in localStorage, extracting from token...');
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        console.log('Token payload:', payload);
+        // console.log('Token payload:', payload);
         parsedUser = {
           id: payload.id,
           email: payload.email,
@@ -90,9 +90,9 @@ const Admin = () => {
           fullname: payload.fullname || payload.email
         };
         localStorage.setItem('user', JSON.stringify(parsedUser));
-        console.log('User data saved to localStorage:', parsedUser);
+        // console.log('User data saved to localStorage:', parsedUser);
       } catch (tokenError) {
-        console.error('Error parsing token:', tokenError);
+        // console.error('Error parsing token:', tokenError);
       }
     }
     
@@ -100,17 +100,17 @@ const Admin = () => {
     
     // Check if user is admin (case-insensitive)
     const userRole = parsedUser.role?.toLowerCase();
-    console.log('User role:', userRole);
+    // console.log('User role:', userRole);
     
     if (userRole !== 'admin') {
-      console.log('User is not admin, redirecting...');
+      // console.log('User is not admin, redirecting...');
       navigate("/");
       return;
     }
     
-    console.log('Admin access granted!');
+    // console.log('Admin access granted!');
   } catch (error) {
-    console.error("Error in authentication check:", error);
+    // console.error("Error in authentication check:", error);
     navigate("/");
   }
 };

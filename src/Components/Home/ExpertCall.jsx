@@ -44,7 +44,7 @@ function ExpertCall({ className = "" }) {
           setConsultationTypeOptionsFull(response.data.data); // Save full objects
         }
       } catch (error) {
-        console.error("Error fetching consultation types:", error);
+        // console.error("Error fetching consultation types:", error);
       }
     };
 
@@ -214,7 +214,7 @@ Preferred Consultation Time: ${consultationTime}`;
     setOpen(false);
 
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     setToastMessage(
       error.response?.data?.message ||
       error.message ||

@@ -43,7 +43,7 @@ const getImageUrl = (imageText) => {
 
     axios.post(`${BACKEND_URL}getFeaturedProducts`)
       .then((res) => {
-        console.log("Raw API response:", res.data);
+        // console.log("Raw API response:", res.data);
 
         if (isMounted) {
           // Extract the actual data array
@@ -72,7 +72,7 @@ const getImageUrl = (imageText) => {
         }
       })
       .catch((err) => {
-        console.error("Error fetching products:", err);
+        // console.error("Error fetching products:", err);
         setLoading(false);
       });
 

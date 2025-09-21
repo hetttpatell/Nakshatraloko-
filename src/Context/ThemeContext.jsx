@@ -32,7 +32,7 @@ export const ThemeProvider = ({ children }) => {
     try {
       localStorage.setItem('darkMode', JSON.stringify(darkMode));
     } catch (error) {
-      console.error('Error saving theme preference:', error);
+      // console.error('Error saving theme preference:', error);
     }
     
     // Apply theme class to document

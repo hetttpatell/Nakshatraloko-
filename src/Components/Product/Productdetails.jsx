@@ -79,11 +79,11 @@ const ProductDetails = () => {
   // Fetch reviews
   const fetchReviews = async () => {
     if (!id) return; // don't call API if id is missing
-    console.log("Fetching reviews for product:", id);
+    // console.log("Fetching reviews for product:", id);
 
     const token = localStorage.getItem("authToken");
     if (!token) {
-      console.warn("No auth token found!");
+      // console.warn("No auth token found!");
       return;
     }
 
@@ -102,11 +102,11 @@ const ProductDetails = () => {
       if (response.data.success) {
         setReviews(Array.isArray(response.data.reviews) ? response.data.reviews : []);
       } else {
-        console.warn(response.data.message);
+        // console.warn(response.data.message);
         setReviews([]);
       }
     } catch (error) {
-      console.error("Error fetching reviews:", error);
+      // console.error("Error fetching reviews:", error);
       setReviews([]);
     } finally {
       setReviewsLoading(false);
@@ -161,7 +161,7 @@ const ProductDetails = () => {
         showToast(response.data.message || "Failed to submit review", "error");
       }
     } catch (error) {
-      console.error("Error submitting review:", error);
+      // console.error("Error submitting review:", error);
       showToast(error.response?.data?.message || "Failed to submit review", "error");
     } finally {
       setIsSubmittingReview(false);
@@ -195,7 +195,7 @@ const ProductDetails = () => {
           setApplicableCoupons(applicable);
         }
       } catch (error) {
-        console.error("Error fetching featured categories:", error);
+        // console.error("Error fetching featured categories:", error);
       } finally {
         setLoadingCoupons(false);
       }
@@ -261,14 +261,14 @@ const ProductDetails = () => {
           shipping: "Delivered in 5-7 business days",
         };
 
-        console.log("Mapped Product:", mapped);
+        // console.log("Mapped Product:", mapped);
         setProduct(mapped);
         setMainImage(mapped.mainImage);
         setSelectedSize(mapped.size[0] || "");
         setSelectedMaterial(mapped.material[0] || "");
         setLoading(false);
       } catch (err) {
-        console.error("Error loading product:", err);
+        // console.error("Error loading product:", err);
         if (isMounted) {
           setError("Failed to load product.");
           setLoading(false);
@@ -336,7 +336,7 @@ const ProductDetails = () => {
         );
       }
     } catch (error) {
-      console.error("Error toggling review like:", error);
+      // console.error("Error toggling review like:", error);
     }
   };
 
@@ -411,7 +411,7 @@ const ProductDetails = () => {
 
       return data; // { success, message }
     } catch (error) {
-      console.error("Wishlist API Error:", error);
+      // console.error("Wishlist API Error:", error);
       return {
         success: false,
         message: error.response?.data?.message || "Error updating wishlist",
@@ -686,7 +686,7 @@ const ProductDetails = () => {
                       }
                     })
                     .catch(err => {
-                      console.error('Failed to copy: ', err);
+                      // console.error('Failed to copy: ', err);
                     });
                 };
 

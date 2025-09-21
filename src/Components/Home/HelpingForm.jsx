@@ -59,7 +59,7 @@ export default function ConsultationForm() {
         });
       }
     } catch (error) {
-      console.error("Error submitting consultation:", error);
+      // console.error("Error submitting consultation:", error);
       setToast({
         message: "Something went wrong.",
         type: "error",

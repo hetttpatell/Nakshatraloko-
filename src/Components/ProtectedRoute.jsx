@@ -152,7 +152,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
         };
         localStorage.setItem("user", JSON.stringify(user));
       } catch (tokenError) {
-        console.error("Error parsing token:", tokenError);
+        // console.error("Error parsing token:", tokenError);
         return <Navigate to="/login" replace />;
       }
     }
@@ -164,7 +164,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
     return children;
   } catch (error) {
-    console.error("Error in ProtectedRoute:", error);
+    // console.error("Error in ProtectedRoute:", error);
     return <Navigate to="/login" replace />;
   }
 };

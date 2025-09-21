@@ -59,7 +59,7 @@ const Footer = () => {
           setCategories(formattedCategories);
         }
       } catch (err) {
-        console.error("Error fetching categories:", err);
+        // console.error("Error fetching categories:", err);
         setError("Failed to load categories. Please try again.");
       } finally {
         setIsLoading(false);

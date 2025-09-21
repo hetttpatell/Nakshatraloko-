@@ -50,7 +50,7 @@ const LoginSignup = ({ onClose }) => {
         password,
       });
 
-      console.log("Login API response:", res.data);
+      // console.log("Login API response:", res.data);
 
       if (res.data.success) {
         setIsLogedin(true);
@@ -84,7 +84,7 @@ const LoginSignup = ({ onClose }) => {
         setError(res.data.message || "Login failed. Please try again.");
       }
     } catch (err) {
-      console.error("Login error:", err);
+      // console.error("Login error:", err);
       setError(err.response?.data?.message || "Something went wrong. Try again.");
     } finally {
       setLoading(false);
@@ -139,7 +139,7 @@ const LoginSignup = ({ onClose }) => {
 
 
 
-      console.log("Signup success:", response.data);
+      // console.log("Signup success:", response.data);
 
       if (response.data.success) {
         // Switch to login tab after successful signup
@@ -149,7 +149,7 @@ const LoginSignup = ({ onClose }) => {
         setError(response.data.errors?.[0]?.msg || "Signup failed");
       }
     } catch (err) {
-      console.error("Signup failed:", err);
+      // console.error("Signup failed:", err);
       setError(err.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);

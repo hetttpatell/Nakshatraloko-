@@ -105,7 +105,7 @@ export default function Collections() {
           setCategoryData(transformedData);
         }
       })
-      .catch((err) => console.log(err));
+      // .catch((err) => console.log(err));
   }, []);
 
   return (

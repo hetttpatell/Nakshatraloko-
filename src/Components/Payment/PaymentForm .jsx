@@ -123,7 +123,7 @@ const PaymentPage = () => {
       const response = await axios.post(`${BACKEND_URL}getCart`, {}, {
         headers: { Authorization: `${token}` }
       });
-      console.log("API Response:", response.data); // Add this line
+      // console.log("API Response:", response.data); // Add this line
       // Check if response has data directly or nested in data property
       let cartData = response.data;
 
@@ -165,7 +165,7 @@ const PaymentPage = () => {
       setTotalAmount(subtotal); // Initially total equals subtotal
 
     } catch (error) {
-      console.error("Error fetching cart:", error);
+      // console.error("Error fetching cart:", error);
       setError("Failed to load cart. Please try again.");
 
       // Fallback to localStorage
@@ -246,7 +246,7 @@ const PaymentPage = () => {
         showToast("Invalid coupon code", "error");
       }
     } catch (error) {
-      console.error("Error applying coupon:", error);
+      // console.error("Error applying coupon:", error);
       setCouponError("Failed to apply coupon. Please try again.");
     }
 
@@ -272,7 +272,7 @@ const PaymentPage = () => {
 
         if (id) {
           // Fetch order by ID
-          console.log("Fetching order with ID:", id);
+          // console.log("Fetching order with ID:", id);
 
           const response = await axios.post(`${BACKEND_URL}getOrderById/${id}`, {}, {
             headers: {
@@ -290,7 +290,7 @@ const PaymentPage = () => {
             orderData = response.data.data;
           }
 
-          console.log("Order data received:", orderData);
+          // console.log("Order data received:", orderData);
 
           setOrder(orderData);
 
@@ -320,7 +320,7 @@ const PaymentPage = () => {
           await fetchCartData();
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        // console.error("Error fetching data:", error);
         setError("Failed to load order details. Please try again.");
       } finally {
         setApiLoading(false);

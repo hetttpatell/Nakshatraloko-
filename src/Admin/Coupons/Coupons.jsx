@@ -97,7 +97,7 @@ const Coupons = () => {
       setCoupons(fetchedCoupons);
       setError(null);
     } catch (err) {
-      console.error("Error fetching coupons:", err);
+      // console.error("Error fetching coupons:", err);
       setError("Failed to load coupons. Please try again later.");
       setCoupons([]);
     } finally {
@@ -126,7 +126,7 @@ const Coupons = () => {
         setProducts(normalizedProducts);
       }
     } catch (err) {
-      console.error("Error fetching products:", err);
+      // console.error("Error fetching products:", err);
       setToast({ message: "Failed to load products", type: "error", visible: true });
     }
   };
@@ -151,7 +151,7 @@ const Coupons = () => {
       ? currentIds.filter(id => id !== productId)
       : [...currentIds, productId];
 
-    console.log("Selected product IDs:", newIds); // ✅ logs only on toggle
+    // console.log("Selected product IDs:", newIds); // ✅ logs only on toggle
 
     return { ...prev, productIds: newIds };
   });
@@ -220,7 +220,7 @@ const Coupons = () => {
   };
 
   useEffect(() => {
-    console.log("Component mounted, fetching coupons and products...");
+    // console.log("Component mounted, fetching coupons and products...");
     fetchCoupons();
     fetchProducts();
   }, []);
@@ -263,7 +263,7 @@ const Coupons = () => {
         productIDs // Use the extracted product IDs
       };
 
-      console.log("Sending coupon to backend:", backendCoupon);
+      // console.log("Sending coupon to backend:", backendCoupon);
 
       // Call backend API
       const token = localStorage.getItem("authToken");
@@ -295,19 +295,19 @@ const Coupons = () => {
       }
 
     } catch (err) {
-      console.error("Error saving coupon:", err);
+      // console.error("Error saving coupon:", err);
 
       let errorMessage = "Failed to save coupon. Please try again.";
 
       if (err.response) {
-        console.error("Error response data:", err.response.data);
-        console.error("Error response status:", err.response.status);
+        // console.error("Error response data:", err.response.data);
+        // console.error("Error response status:", err.response.status);
 
         errorMessage = err.response.data?.message ||
           err.response.data?.error ||
           errorMessage;
       } else if (err.request) {
-        console.error("Error request:", err.request);
+        // console.error("Error request:", err.request);
         errorMessage = "Network error. Please check your connection.";
       }
 
@@ -368,7 +368,7 @@ const Coupons = () => {
         });
       }
     } catch (err) {
-      console.error(err);
+      // console.error(err);
       setError("Failed to save coupon. Please try again.");
     }
   };
@@ -433,7 +433,7 @@ const Coupons = () => {
         setEditingCoupon(null);
       }
     } catch (err) {
-      console.error("Error updating coupon:", err);
+      // console.error("Error updating coupon:", err);
       setError("Failed to update coupon. Please try again.");
     }
   };
@@ -460,7 +460,7 @@ const Coupons = () => {
         setToast({ message: response.data.message || "Failed to delete coupon.", type: "error", visible: true });
       }
     } catch (err) {
-      console.error("Error deleting coupon:", err.response?.data || err);
+      // console.error("Error deleting coupon:", err.response?.data || err);
       setToast({ message: err.response?.data?.error || "Failed to delete coupon. Please try again.", type: "error", visible: true });
     }
   };
@@ -479,7 +479,7 @@ const Coupons = () => {
         ));
       }
     } catch (err) {
-      console.error("Error toggling coupon status:", err);
+      // console.error("Error toggling coupon status:", err);
     }
   };
 

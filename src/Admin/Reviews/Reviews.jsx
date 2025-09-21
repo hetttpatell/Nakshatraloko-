@@ -70,7 +70,7 @@ const Reviews = ({ isMobile }) => {
           throw new Error("Invalid response format from server");
         }
       } catch (err) {
-        console.error("Error fetching reviews:", err);
+        // console.error("Error fetching reviews:", err);
         setError("Failed to load reviews. Please try again later.");
       } finally {
         setLoading(false);
@@ -142,7 +142,7 @@ const Reviews = ({ isMobile }) => {
         throw new Error("Failed to approve review");
       }
     } catch (err) {
-      console.error("Error approving review:", err);
+      // console.error("Error approving review:", err);
       setError("Failed to approve review. Please try again.");
     }
   };
@@ -168,7 +168,7 @@ const Reviews = ({ isMobile }) => {
         throw new Error("Failed to delete review");
       }
     } catch (err) {
-      console.error("Error deleting review:", err);
+      // console.error("Error deleting review:", err);
       setError("Failed to delete review. Please try again.");
     }
   };

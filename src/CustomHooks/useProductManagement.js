@@ -33,8 +33,12 @@ export const useProductManagement = () => {
     try {
       setLoading(true);
       setError(null);
-
-      const allResponse = await axios.post(`${BACKEND_URL}getAllProducts`);
+      const token =localStorage.getItem("authToken")
+      const allResponse = await axios.post(`${BACKEND_URL}getAllProducts`,{},{
+        headers:{
+          Authorization:`${token}`
+        }
+      });
       const featuredResponse = await axios.post(`${BACKEND_URL}getFeaturedProducts`);
 
       if (allResponse.data.success && featuredResponse.data.success) {
@@ -66,7 +70,7 @@ export const useProductManagement = () => {
         throw new Error("Failed to fetch products or featured products");
       }
     } catch (error) {
-      console.error("Failed to load products:", error);
+      // console.error("Failed to load products:", error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -99,7 +103,7 @@ export const useProductManagement = () => {
         showToast("error", response.data.message || "Failed to delete product");
       }
     } catch (error) {
-      console.error("Error deleting product:", error);
+      // console.error("Error deleting product:", error);
       showToast("error", "Failed to delete product. Please try again.");
     } finally {
       setIsSaving(false);
@@ -134,7 +138,7 @@ export const useProductManagement = () => {
         showToast("error", response.data.message || "Failed to fetch product details");
       }
     } catch (error) {
-      console.error("Error fetching product details:", error);
+      // console.error("Error fetching product details:", error);
       showToast("error", "Failed to fetch product details. Please try again.");
     } finally {
       setIsSaving(false);

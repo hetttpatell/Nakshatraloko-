@@ -91,7 +91,7 @@ export function CartProvider({ children }) {
 
     return { success: true, data: response.data };
   } catch (error) {
-    console.error("Error adding to cart:", error);
+    // console.error("Error adding to cart:", error);
     return { success: false, error: error.message };
   }
 };
@@ -103,7 +103,7 @@ export function CartProvider({ children }) {
       const token = localStorage.getItem("authToken");
 
       if (!token) {
-        console.warn("No auth token found, cannot fetch cart");
+        // console.warn("No auth token found, cannot fetch cart");
         setCart([]);
         return;
       }
@@ -132,11 +132,11 @@ export function CartProvider({ children }) {
           };
         }));
       } else {
-        console.warn("Cart API response invalid:", response.data);
+        // console.warn("Cart API response invalid:", response.data);
         setCart([]);
       }
     } catch (error) {
-      console.error("Error fetching cart:", error);
+      // console.error("Error fetching cart:", error);
       setCart([]);
     }
   };
@@ -197,12 +197,12 @@ const updateQuantity = async (cartId, newQuantity) => {
         )
       );
     } else {
-      console.warn("Failed to update quantity on server:", response.data.message);
+      // console.warn("Failed to update quantity on server:", response.data.message);
       // Rollback
       setCart(previousCart);
     }
   } catch (error) {
-    console.error("Error updating quantity on server:", error);
+    // console.error("Error updating quantity on server:", error);
     // Rollback on network/server error
     setCart(previousCart);
   }
