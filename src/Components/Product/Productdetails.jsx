@@ -618,7 +618,7 @@ const ProductDetails = () => {
             </div>
 
             {/* Delivery Section */}
-            <div className="bg-color-surface border border-color-border rounded-sm p-5 flex flex-col gap-4 text-sm mb-6">
+            {/* <div className="bg-color-surface border border-color-border rounded-sm p-5 flex flex-col gap-4 text-sm mb-6">
               <div className="flex gap-3 items-center">
                 <span className="inline-flex items-center justify-center w-8 h-8 bg-color-primary-light rounded-full text-center text-color-primary">
                   🚚
@@ -654,7 +654,7 @@ const ProductDetails = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Coupon Section */}
             <div className="bg-color-surface border border-color-border rounded-sm p-5 flex flex-col gap-4 text-sm mb-6">
