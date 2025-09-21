@@ -33,10 +33,10 @@ export const useProductManagement = () => {
     try {
       setLoading(true);
       setError(null);
-      const token =localStorage.getItem("authToken")
-      const allResponse = await axios.post(`${BACKEND_URL}getAllProducts`,{},{
-        headers:{
-          Authorization:`${token}`
+      const token = localStorage.getItem("authToken")
+      const allResponse = await axios.post(`${BACKEND_URL}getAllProducts`, {}, {
+        headers: {
+          Authorization: `${token}`
         }
       });
       const featuredResponse = await axios.post(`${BACKEND_URL}getFeaturedProducts`);
@@ -114,6 +114,7 @@ export const useProductManagement = () => {
     try {
       setIsSaving(true);
       const response = await axios.post(`${BACKEND_URL}getProductById/${productId}`);
+      console.log({ response });
       if (response.data.success) {
         const product = response.data.data.product; // Access product correctly
         const normalizedProduct = {
@@ -126,12 +127,31 @@ export const useProductManagement = () => {
           IsActive: product.isActive,
           sizes: product.sizes || [],
           images: product.images || [],
-          price: product.price || 0,
-          dummyPrice: product.dummyPrice || 0,
-          discountPercentage: product.discountPercentage || 0,
-          stock: product.stock || 0,
-          primaryImage: product.primaryImage || null,
+          price: product.sizes?.[0]?.price || 0,             // take first size as default
+          dummyPrice: product.sizes?.[0]?.dummyPrice || 0,
+          discountPercentage: product.sizes?.[0]
+            ? Math.round(((product.sizes[0].dummyPrice - product.sizes[0].price) / product.sizes[0].dummyPrice) * 100)
+            : 0,
+          stock: product.sizes?.[0]?.stock || 0,
+          primaryImage: product.images?.find(img => img.isPrimary)?.imageData || null,
         };
+
+        // const normalizedProduct = {
+        //   id: product.id,
+        //   categoryId: product.categoryId,
+        //   Name: product.name,
+        //   Description: product.description,
+        //   Advantages: product.advantages,
+        //   HowToWear: product.howToWear,
+        //   IsActive: product.isActive,
+        //   sizes: product.sizes || [],
+        //   images: product.images || [],
+        //   price: product.price || 0,
+        //   dummyPrice: product.dummyPrice || 0,
+        //   discountPercentage: product.discountPercentage || 0,
+        //   stock: product.stock || 0,
+        //   primaryImage: product.primaryImage || null,
+        // };
         setEditingProduct(normalizedProduct);
         setIsEditModalOpen(true);
       } else {
@@ -152,7 +172,7 @@ export const useProductManagement = () => {
   return {
     products,
     loading,
-    error, 
+    error,
     searchTerm,
     brandFilter,
     statusFilter,

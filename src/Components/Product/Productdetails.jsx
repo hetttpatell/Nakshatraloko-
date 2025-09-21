@@ -233,9 +233,10 @@ const ProductDetails = () => {
 
           images: productData.images.map((img) => {
             let fixedUrl = img.imageData;
+            console.log({fixedUrl})
 
             // If API duplicates the URL, clean it up
-            if (fixedUrl.includes(`${IMG_URL}uploads/${IMG_URL}/uploads/`)) {
+            if (fixedUrl.includes(`${IMG_URL}uploads/${IMG_URL}uploads/`)) {
               fixedUrl = fixedUrl.replace(`${IMG_URL}uploads/${IMG_URL}uploads/`, `${IMG_URL}uploads/`);
             }
 
@@ -246,8 +247,8 @@ const ProductDetails = () => {
           }),
           mainImage: productData.images[0]
             ? productData.images[0].imageData.replace(
-              `${IMG_URL}uploads/${IMG_URL}/uploads/`,
-              `${IMG_URL}uploads`
+              `${IMG_URL}uploads/${IMG_URL}uploads/`,
+              `${IMG_URL}uploads/`
             )
             : " ",
 
