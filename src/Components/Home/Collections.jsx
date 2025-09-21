@@ -2,14 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Zap, Heart } from "lucide-react";
-<<<<<<< HEAD
 import axios from "axios"; // Make sure to import axios
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const IMG_URL = import.meta.env.VITE_IMG_URL;
-=======
-import axios from "axios";
-
->>>>>>> 46387adcb7d4defff6fd08e6acb12e35c5eceaca
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -98,15 +93,10 @@ export default function Collections() {
       .then((res) => {
         if (res.data.success) {
           const transformedData = res.data.data.map((category, index) => ({
-<<<<<<< HEAD
             name: category.Name, // updated field
            img: category.Image
             ? `${IMG_URL}uploads/${category.Image}`
             : "/abot.jpg",
-=======
-            name: category.Name,
-            img: `http://localhost:8001/uploads/${category.Image} ` || "/abot.jpg",
->>>>>>> 46387adcb7d4defff6fd08e6acb12e35c5eceaca
             path: `/category/${category.Name.toLowerCase().replace(/\s+/g, '-')}`,
             items: `${category.active_product_count} Products`,
             color: "bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)]",
