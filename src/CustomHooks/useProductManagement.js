@@ -62,6 +62,7 @@ export const useProductManagement = () => {
             isActive: item.IsActive,
             isFeatured: featuredIds.includes(item.ID),
             primaryImage: item.PrimaryImage,
+            IsSlidShow: item.IsSlidShow || false, // Add this line
           }));
 
         setProducts(normalized);
