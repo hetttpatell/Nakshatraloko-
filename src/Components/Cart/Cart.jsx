@@ -252,17 +252,18 @@ export default function Cart() {
 
           {/* Checkout button - Updated to show login button if not authenticated */}
           {isLoggedIn ? (
-            <button
-              onClick={handleCheckout}
-              disabled={subtotal === 0}
-              className={`w-full max-w-xs mx-auto py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
-                }`}
-            >
-              <Sparkles size={16} />
-              Proceed to Checkout
-            </button>
+            // <button
+            //   onClick={handleCheckout}
+            //   disabled={subtotal === 0}
+            //   className={`w-full max-w-xs mx-auto py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
+            //     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+            //     : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+            //     }`}
+            // >
+            //   <Sparkles size={16} />
+            //   Proceed to Checkout
+            // </button>
+            <></>
           ) : (
             <button
               onClick={handleLoginRedirect}

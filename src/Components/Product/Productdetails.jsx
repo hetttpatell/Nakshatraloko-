@@ -1083,7 +1083,7 @@ const ProductDetails = () => {
 
         {/* Recommendations */}
         <div className="mt-20">
-          <h3 className="text-2xl font-serif font-normal text-color-text mb-10 text-center">You May Also Like</h3>
+          {/* <h3 className="text-2xl font-serif font-normal text-color-text mb-10 text-center">You May Also Like</h3> */}
           <Recommendation products={recommendedProducts} />
         </div>
       </div>
