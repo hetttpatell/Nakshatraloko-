@@ -13,24 +13,13 @@ const ProductTable = ({ products, onView, onEdit, onDelete }) => {
       </div>
     );
   }
-  // const handleEdit = async (product) => {
-  //   try {
-  //     const response = await axios.get(`${BACKEND_URL}getProductById/${product.id}`);
-  //     if (response.data.success) {
-  //       setSelectedProduct(response.data.data);
-  //       setIsModalOpen(true);
-  //     }
-  //   } catch (err) {
-  //     console.error("Failed to fetch product:", err);
-  //   }
-  // };
 
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200">
       <table className="w-full text-left">
         <thead>
           <tr className="bg-gray-50">
-            {["Product", "Price", "Stock", , "Featured", "Status", "Actions"].map(
+            {["Product", "Price", "Stock", "Featured", "Display", "Status", "Actions"].map(
               (header) => (
                 <th key={header} className="p-3 font-semibold text-gray-700">
                   {header}
@@ -58,8 +47,9 @@ const ProductTable = ({ products, onView, onEdit, onDelete }) => {
 const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
   const [isFeatured, setIsFeatured] = useState(product.isFeatured || false);
+  const [isSlidShow, setIsSlidShow] = useState(product.isSlidShow || false);
 
-  const handleToggle = async () => {
+  const handleFeaturedToggle = async () => {
     const newValue = !isFeatured;
     setIsFeatured(newValue); // immediate feedback
 
@@ -75,6 +65,31 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
       setIsFeatured(!newValue); // rollback
     }
   };
+
+  const handleSlidShowToggle = async () => {
+    const newValue = !isSlidShow;
+    setIsSlidShow(newValue); // immediate feedback
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await axios.post(
+        `${BACKEND_URL}toggleSlideshow`,
+        { 
+          productId: product.id,
+          isSlideshow: newValue 
+        },
+        { headers: { Authorization: `${token}` } }
+      );
+      
+      if (!response.data.success) {
+        setIsSlidShow(!newValue); // rollback if API call fails
+      }
+    } catch (err) {
+      console.error("Failed to toggle slideshow:", err);
+      setIsSlidShow(!newValue); // rollback on error
+    }
+  };
+
   return (
     <>
       <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
@@ -99,9 +114,6 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
             </button>
           </div>
         </td>
-
-        {/* Category */}
-        {/* <td className="p-3">{product.categoryId}</td> */}
 
         {/* Price */}
         <td className="p-3 font-medium">
@@ -134,8 +146,7 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
               type="checkbox"
               className="sr-only peer"
               checked={isFeatured}
-              onChange={handleToggle}
-            // disabled={loading} // prevent spamming
+              onChange={handleFeaturedToggle}
             />
             <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 relative 
                           after:content-[''] after:absolute after:top-0.5 after:left-0.5
@@ -145,8 +156,22 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
           </label>
         </td>
 
-
-
+        {/* Display (SlidShow) Toggle */}
+        <td className="p-3">
+          <label className="inline-flex relative items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={isSlidShow}
+              onChange={handleSlidShowToggle}
+            />
+            <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 relative 
+                          after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                          after:bg-white after:border-gray-300 after:border after:rounded-full 
+                          after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full">
+            </div>
+          </label>
+        </td>
 
         {/* Status */}
         <td className="p-3">
@@ -189,7 +214,7 @@ const TableRow = React.memo(({ product, onView, onEdit, onDelete }) => {
       {/* Expanded Row for More Details */}
       {expanded && (
         <tr className="bg-gray-50">
-          <td colSpan="6" className="p-4">
+          <td colSpan="7" className="p-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <h4 className="font-semibold mb-2">Description</h4>
@@ -219,4 +244,4 @@ const ActionButton = ({ icon: Icon, color, onClick, title }) => (
   </button>
 );
 
-export default ProductTable;
+export default ProductTable;  

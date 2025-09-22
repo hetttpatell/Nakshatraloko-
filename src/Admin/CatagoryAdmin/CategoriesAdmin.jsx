@@ -74,7 +74,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   ? category.IsFeatured
                   : false,
             image: category.Image
-              ? `${IMG_URL}uploads${category.Image}` // prepend /upload
+              ? `${IMG_URL}uploads${category.Image}` 
               : "/s1.jpeg",
           }));
 

@@ -144,22 +144,30 @@ const Footer = () => {
             {[
               { label: "Home", to: "/" },
               { label: "Product", to: "/gemstones" },
-              // { label: "About Us", to: "/" },
               { label: "FAQs", to: "/faqs" },
               { label: "Blogs", to: "/blogs" }
             ].map((item) => (
               <li key={item.label}>
                 <Link
                   to={item.to}
+                  onClick={(e) => {
+                    if (item.to === "/" && location.pathname === "/") {
+                      e.preventDefault(); // prevent re-navigation
+                      window.scrollTo({ top: 0, behavior: "smooth" }); // scroll to top
+                    }
+                  }}
                   className="text-[var(--color-text-light)] hover:text-[var(--color-primary)] transition-colors duration-300 text-sm flex items-center group"
-                > 
-                  <span className={`w-1.5 h-1.5 rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity 
-                    "bg-[var(--color-primary)]"`}></span>
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity 
+            "bg-[var(--color-primary)]"`}
+                  ></span>
                   {item.label}
                 </Link>
               </li>
             ))}
           </ul>
+
         </div>
 
         {/* Categories */}

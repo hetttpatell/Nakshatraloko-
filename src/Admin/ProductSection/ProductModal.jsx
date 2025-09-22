@@ -267,7 +267,7 @@ const ProductModal = ({
         const fileIndex2 = newFileIndices.indexOf(targetIndex);
         [newFiles[fileIndex1], newFiles[fileIndex2]] = [newFiles[fileIndex2], newFiles[fileIndex1]];
       }
-
+ 
       return newFiles;
     });
   };
