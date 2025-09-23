@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import axios from "axios"; // Make sure to import axios
+import axios from "axios";
 import {
   FaInstagram,
   FaFacebookF,
@@ -13,7 +13,9 @@ import {
   FaEnvelope,
   FaMapMarkerAlt
 } from "react-icons/fa";
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 const Footer = () => {
   const location = useLocation();
   const [isHomePage, setIsHomePage] = useState(false);
@@ -21,9 +23,33 @@ const Footer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Company contact information
+  const companyInfo = {
+    phone: "+919601394272",
+    phoneDisplay: "+91 96013 94272",
+    email: "customercare@nakshatraloka.com",
+    address: "Gujarat, India",
+    businessName: "Nakshatraloka"
+  };
+
   useEffect(() => {
     setIsHomePage(location.pathname === "/");
   }, [location]);
+
+  // Function to handle phone call
+  const handlePhoneClick = () => {
+    // Using tel: protocol for mobile devices
+    window.location.href = `tel:${companyInfo.phone}`;
+  };
+
+  // Function to handle email
+  const handleEmailClick = () => {
+    // Using mailto: protocol with pre-filled subject
+    const subject = encodeURIComponent(`Inquiry - ${companyInfo.businessName}`);
+    const body = encodeURIComponent("Hello,\n\nI would like to inquire about...");
+
+    window.location.href = `mailto:${companyInfo.email}?subject=${subject}&body=${body}`;
+  };
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -32,11 +58,9 @@ const Footer = () => {
         const response = await axios.post(`${BACKEND_URL}getAllCatogary`);
 
         if (response.data.data) {
-          // Transform API data to match our component structure
           const formattedCategories = response.data.data.map(category => ({
             id: category._id || category.id || category.ID,
             name: category.name || category.Name || "",
-            // Create a URL-friendly slug for the category link
             slug: (category.name || category.Name || "").toLowerCase().replace(/\s+/g, '-'),
             description: category.description || category.Description || "",
             productCount: 0,
@@ -59,7 +83,6 @@ const Footer = () => {
           setCategories(formattedCategories);
         }
       } catch (err) {
-        // console.error("Error fetching categories:", err);
         setError("Failed to load categories. Please try again.");
       } finally {
         setIsLoading(false);
@@ -94,18 +117,49 @@ const Footer = () => {
             />
           </div>
 
-          {/* Brand Name */}
-          {/* <h3 className={`text-2xl font-playfair font-bold ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-text)]"}`}>
-            Nakshatraloka
-          </h3> */}
-
           {/* Brand Description */}
           <p className="text-[var(--color-text-light)] text-sm leading-relaxed">
             Discover exquisite gemstones and jewelry crafted with precision. Each piece is thoughtfully designed to complement your unique style and energy.
           </p>
 
           {/* Social Icons */}
+          {/* Social Icons */}
           <div className="flex space-x-3 mt-2">
+            {[
+              {
+                icon: FaInstagram,
+                label: "Instagram",
+                link: "https://www.instagram.com/nakshatraloka_/?next=%2F&hl=en"
+              },
+              {
+                icon: FaFacebookF,
+                label: "Facebook",
+                link: "https://www.facebook.com/profile.php?id=61579053167053"
+              }
+            ].map((social, idx) => (
+              <a
+                key={idx}
+                href={social.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`p-2 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${isHomePage
+                    ? "bg-white hover:bg-[var(--color-primary)]"
+                    : "bg-[var(--color-surface)] hover:bg-[var(--color-primary)]"
+                  }`}
+                aria-label={social.label}
+              >
+                <social.icon
+                  size={16}
+                  className={`${isHomePage
+                      ? "text-[var(--color-primary-dark)] hover:text-white"
+                      : "text-[var(--color-text)] hover:text-white"
+                    }`}
+                />
+              </a>
+            ))}
+          </div>
+
+          {/* <div className="flex space-x-3 mt-2">
             {[
               { icon: FaInstagram, label: "Instagram" },
               { icon: FaFacebookF, label: "Facebook" },
@@ -130,8 +184,9 @@ const Footer = () => {
                 />
               </a>
             ))}
-          </div>
+          </div> */}
         </div>
+
         {/* Quick Links */}
         <div className="flex flex-col">
           <h3 className={`font-semibold mb-4 text-lg pb-2 border-b ${isHomePage
@@ -152,8 +207,8 @@ const Footer = () => {
                   to={item.to}
                   onClick={(e) => {
                     if (item.to === "/" && location.pathname === "/") {
-                      e.preventDefault(); // prevent re-navigation
-                      window.scrollTo({ top: 0, behavior: "smooth" }); // scroll to top
+                      e.preventDefault();
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                     }
                   }}
                   className="text-[var(--color-text-light)] hover:text-[var(--color-primary)] transition-colors duration-300 text-sm flex items-center group"
@@ -167,7 +222,6 @@ const Footer = () => {
               </li>
             ))}
           </ul>
-
         </div>
 
         {/* Categories */}
@@ -193,7 +247,6 @@ const Footer = () => {
                     <span className={`w-1.5 h-1.5 rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity ${isHomePage ? "bg-[var(--color-primary-dark)]" : "bg-[var(--color-primary)]"}`}></span>
                     {cat.name}
                   </Link>
-
                 </li>
               ))
             ) : (
@@ -214,44 +267,59 @@ const Footer = () => {
           <div className="space-y-3 text-[var(--color-text-light)] text-sm">
             {/* Address */}
             <div className="flex items-start">
-              <FaMapMarkerAlt className={`mt-1 mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
+              <FaMapMarkerAlt
+                className={`mt-1 mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"
+                  }`}
+              />
               <a
-                href="https://www.google.com/maps/search/?api=1&query=ADDRESS_HERE"
+                href="https://www.google.com/maps/search/?api=1&query=Gujarat, India"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:underline"
               >
-                Address here5
+                {companyInfo.address}
               </a>
             </div>
 
             {/* Phone */}
             <div className="flex items-center">
-              <FaPhone className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
-              <a href="tel:+918866378552" className="hover:underline">
-                +91 8866378552
-              </a>
+              <FaPhone
+                className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"
+                  }`}
+              />
+              <button
+                onClick={() => {
+                  window.location.href = `tel:${companyInfo.phone}`;
+                }}
+                className="hover:underline text-left transition-colors duration-200 hover:text-[var(--color-primary)]"
+                aria-label={`Call ${companyInfo.phoneDisplay}`}
+              >
+                {companyInfo.phoneDisplay}
+              </button>
             </div>
+
 
             {/* Email */}
             <div className="flex items-center">
-              <FaEnvelope className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`} />
-              <a
-                href="mailto:nakshatraloka.customercare@gmail.com?subject=Inquiry&body=Hello,"
-                target="_blank"   // optional, some browsers require it
-                rel="noopener noreferrer"
-                className="hover:underline"
+              <FaEnvelope
+                className={`mr-3 ${isHomePage ? "text-[var(--color-primary-dark)]" : "text-[var(--color-primary)]"}`}
+              />
+              <button
+                onClick={() => {
+                  window.open(
+                    `https://mail.google.com/mail/?view=cm&fs=1&to=${companyInfo.email}`,
+                    "_blank"
+                  );
+                }}
+                className="hover:underline text-left transition-colors duration-200 hover:text-[var(--color-primary)]"
+                aria-label={`Email ${companyInfo.email}`}
               >
-                nakshatraloka.customercare@gmail.com
-              </a>
+                {companyInfo.email}
+              </button>
             </div>
 
           </div>
-
-          {/* Newsletter */}
-
         </div>
-
       </div>
 
       {/* Payment Methods & Copyright */}
@@ -260,7 +328,7 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
             <div className="flex items-center space-x-2 text-xs text-[var(--color-text-light)]">
-              <span>© {new Date().getFullYear()} Nakshatraloka. All rights reserved.</span>
+              <span>© {new Date().getFullYear()} {companyInfo.businessName}. All rights reserved.</span>
             </div>
 
             <div className="flex items-center space-x-4">

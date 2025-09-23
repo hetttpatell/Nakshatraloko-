@@ -273,7 +273,7 @@ const Consultancy = () => {
 
       {/* View Details Modal */}
       {selectedSubmission && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-xl bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-4">Consultation Request Details</h3>
@@ -334,7 +334,7 @@ const Consultancy = () => {
 
       {/* Edit Modal */}
       {editingSubmission && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-2xl bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-4">Edit Consultation Request</h3>
@@ -465,7 +465,7 @@ const Consultancy = () => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-xl bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-2">Confirm Deletion</h3>

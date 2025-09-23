@@ -1276,7 +1276,7 @@ const Coupons = () => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 backdrop-blur-2xl bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
             <p className="text-gray-600 mb-6">Are you sure you want to delete this coupon? This action cannot be undone.</p>

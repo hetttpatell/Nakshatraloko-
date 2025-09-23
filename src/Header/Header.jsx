@@ -11,7 +11,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 // ---------- MENU DATA ---------- 
 const initialMenuItems = [
   { label: "Home", to: "/" },
-  { label: "Products", to: "/gemstones" },
+  { label: "Shop", to: "/gemstones" },
   {
     label: "Categories",
     to: "/",
