@@ -95,7 +95,7 @@ export default function Collections() {
           const transformedData = res.data.data.map((category, index) => ({
             name: category.Name, // updated field
            img: category.Image
-            ? `${IMG_URL}uploads/${category.Image}`
+            ? `${IMG_URL}/uploads${category.Image}`
             : "/abot.jpg",
             path: `/category/${category.Name.toLowerCase().replace(/\s+/g, '-')}`,
             items: `${category.active_product_count} Products`,
