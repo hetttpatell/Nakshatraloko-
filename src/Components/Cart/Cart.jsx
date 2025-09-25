@@ -11,6 +11,31 @@ import { toast } from "react-toastify";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const IMG_URL = import.meta.env.VITE_IMG_URL;
 
+const normalizeImage = (url) => {
+  let fixedUrl = url?.trim() || "";
+
+  if (!fixedUrl) return "/s1.jpeg"; // fallback image
+
+  if (fixedUrl.startsWith("http")) {
+    // Clean duplicate slashes
+    fixedUrl = fixedUrl.replace(/([^:]\/)\/+/g, "$1");
+
+    // Replace base uploads path with API path
+    fixedUrl = fixedUrl.replace(
+      /^http:\/\/localhost:8001\/uploads/,
+      `${IMG_URL}/uploads`
+    );
+  } else {
+    // Relative path: prepend /uploads if missing
+    if (!fixedUrl.startsWith("/uploads/")) {
+      fixedUrl = `/uploads/${fixedUrl.replace(/^\/+/, "")}`;
+    }
+    fixedUrl = `${IMG_URL}${fixedUrl}`.replace(/([^:]\/)\/+/g, "$1");
+  }
+
+  return fixedUrl;
+};
+
 export default function Cart() {
   const { cart, addToCart, removeFromCart, updateQuantity, getCart } = useCart();
   const [loading, setLoading] = useState(true);
@@ -96,7 +121,7 @@ export default function Cart() {
           price: parseFloat(item.FirstSizePrice),
           originalPrice: parseFloat(item.FirstDummyPrice),
           discountPercentage: parseFloat(item.DiscountPercentage),
-          image: imagePath || "/s1.jpeg",
+          image: normalizeImage(item.PrimaryImage || item.image || item.primaryimage ||  "/s1.jpeg"),
           category: item.CategoryName,
           inStock: item.Stock > 0,
           stock: item.Stock,

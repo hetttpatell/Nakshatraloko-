@@ -1,13 +1,26 @@
 // components/CategoriesAdmin.jsx
 import React, { useState, useEffect } from "react";
-import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaTimes, FaCheck, FaArrowLeft, FaSearch, FaFilter, FaUpload, FaSync } from "react-icons/fa";
+import {
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaEye,
+  FaEyeSlash,
+  FaTimes,
+  FaCheck,
+  FaArrowLeft,
+  FaSearch,
+  FaFilter,
+  FaUpload,
+  FaSync,
+} from "react-icons/fa";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import Toast from "../../Components/Product/Toast";
 import { useProductManagement } from "../../CustomHooks/useProductManagement";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-const IMG_URL = import.meta.env.VITE_IMG_URL
+const IMG_URL = import.meta.env.VITE_IMG_URL;
 const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   // State for categories
   const [categories, setCategories] = useState([]);
@@ -19,9 +32,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     description: "",
     isShown: true,
     isActive: true,
-    isFeatured: false,   // ✅ new field
-    image: "",          // ✅ new field
-    active_product_count: 0
+    isFeatured: false, // ✅ new field
+    image: "", // ✅ new field
+    active_product_count: 0,
   });
   const [toasts, setToasts] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -34,10 +47,10 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const [imageFile, setImageFile] = useState(null);
   const showToast = (message, type = "success") => {
     const id = Date.now(); // unique id
-    setToasts(prev => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message, type }]);
   };
   const removeToast = (id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   };
   const { refreshProducts } = useProductManagement();
 
@@ -50,34 +63,20 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
         if (response.data.data) {
           // Transform API data to match our component structure
-          const formattedCategories = response.data.data.map(category => ({
+          const formattedCategories = response.data.data.map((category) => ({
             id: category._id || category.id || category.ID,
             name: category.name || category.Name || "",
             description: category.description || category.Description || "",
-            active_product_count: category.active_product_count,
-            isShown:
-              category.isShown !== undefined
-                ? category.isShown
-                : category.IsShown !== undefined
-                  ? category.IsShown
-                  : true,
-            isActive:
-              category.isActive !== undefined
-                ? category.isActive
-                : category.IsActive !== undefined
-                  ? category.IsActive
-                  : true,
-            isFeatured:
-              category.isFeatured !== undefined
-                ? category.isFeatured
-                : category.IsFeatured !== undefined
-                  ? category.IsFeatured
-                  : false,
+            active_product_count: category.active_product_count ?? 0,
+            isShown: category.isShown ?? category.IsShown ?? true,
+            isActive: category.isActive ?? category.IsActive ?? true,
+            isFeatured: category.isFeatured ?? category.IsFeatured ?? false,
             image: category.Image
-              ? `${IMG_URL}uploads${category.Image}` 
+              ? `${
+                  IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/"
+                }uploads/${category.Image.replace(/^\/+/, "")}`
               : "/s1.jpeg",
           }));
-
 
           // console.log({ data: response });
 
@@ -95,30 +94,35 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   }, []);
 
   const handleToggleFeatured = (id) => {
-    setCategories(prev =>
-      prev.map(cat =>
+    setCategories((prev) =>
+      prev.map((cat) =>
         cat.id === id ? { ...cat, isFeatured: !cat.isFeatured } : cat
       )
     );
   };
 
-
-  const activeCount = products.filter(product => {
-    return product.isActive && (product.categoryId?.toString() === category.id || product.category === category.name);
+  const activeCount = products.filter((product) => {
+    return (
+      product.isActive &&
+      (product.categoryId?.toString() === category.id ||
+        product.category === category.name)
+    );
   }).length;
   useEffect(() => {
     if (!products || products.length === 0) return;
 
-    setCategories(prev => prev.map(category => {
-      const activeCount = products.filter(p => {
-        const productCategoryId = p.categoryId?.toString() || p.category?.toString();
-        return p.isActive && productCategoryId === category.id?.toString();
-      }).length;
+    setCategories((prev) =>
+      prev.map((category) => {
+        const activeCount = products.filter((p) => {
+          const productCategoryId =
+            p.categoryId?.toString() || p.category?.toString();
+          return p.isActive && productCategoryId === category.id?.toString();
+        }).length;
 
-      return { ...category, active_product_count: activeCount };
-    }));
+        return { ...category, active_product_count: activeCount };
+      })
+    );
   }, [products]);
-
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -128,7 +132,8 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       reader.onloadend = () => {
         setImagePreview(reader.result);
         if (isAdding) setNewCategory({ ...newCategory, image: reader.result });
-        else if (editingCategory) setEditingCategory({ ...editingCategory, image: reader.result });
+        else if (editingCategory)
+          setEditingCategory({ ...editingCategory, image: reader.result });
       };
       reader.readAsDataURL(file);
     }
@@ -138,52 +143,70 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const handleAddCategory = async () => {
     if (!newCategory.name.trim()) return setError("Category name is required");
     try {
-      setIsAdding(true);
+      setIsAddingCategory(true); // ✅ use the same state as button
       const token = localStorage.getItem("authToken");
       const formData = new FormData();
       formData.append("name", newCategory.name);
       formData.append("description", newCategory.description);
       formData.append("isActive", newCategory.isActive);
       formData.append("isFeatured", newCategory.isFeatured);
-      if (imageFile) formData.append("images", imageFile); // backend expects 'images'
+      if (imageFile) formData.append("images", imageFile);
 
       const res = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
-        headers: { Authorization: token, "Content-Type": "multipart/form-data" }
+        headers: {
+          Authorization: token,
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       if (res.data.success) {
-        setCategories([...categories, {
-          ...newCategory,
-          id: res.data.id || res.data._id,
-          active_product_count: 0,
-          image: res.data.image
-        }]);
-        setNewCategory({ name: "", description: "", isActive: true, isFeatured: false, image: "" });
+        setCategories([
+          ...categories,
+          {
+            ...newCategory,
+            id: res.data.id || res.data._id,
+            active_product_count: 0,
+            image: res.data.image
+              ? `${IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/"}uploads/${
+                  res.data.image
+                }`
+              : "/s1.jpeg",
+          },
+        ]);
+
+        setNewCategory({
+          name: "",
+          description: "",
+          isActive: true,
+          isFeatured: false,
+          image: "",
+        });
         showToast(res.data.message || "Category added successfully", "success");
         setImageFile(null);
         setImagePreview("");
         setError(null);
+        setIsAdding(false);
+        setIsAddingCategory(false); // ✅ also reset here
+        setIsAdding(false);
       }
-
     } catch (err) {
-      // console.error(err);
-      // setError("Failed to add category.");
+      setError("Failed to add category.");
     } finally {
-      setIsAdding(false);
+      setIsAddingCategory(false); // ✅ make sure button is enabled after API call
     }
   };
+
   // if toggeld then this function executes
 
   const handleToggleFeaturedApi = async (category) => {
     try {
-      const featuredCount = categories.filter(cat => cat.isFeatured).length;
+      const featuredCount = categories.filter((cat) => cat.isFeatured).length;
 
       // If trying to enable a 5th category
       if (!category.isFeatured && featuredCount >= 4) {
         showToast("You can only select up to 4 featured categories", "error");
         return;
       }
-
 
       const token = localStorage.getItem("authToken");
       const formData = new FormData();
@@ -195,56 +218,75 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       if (category.image) formData.append("images", category.image);
 
       const res = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
-        headers: { Authorization: token, "Content-Type": "multipart/form-data" },
+        headers: {
+          Authorization: token,
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       if (res.data.success) {
-        setCategories(prev =>
-          prev.map(cat =>
-            cat.id === category.id ? { ...cat, isFeatured: !cat.isFeatured } : cat
+        setCategories((prev) =>
+          prev.map((cat) =>
+            cat.id === category.id
+              ? { ...cat, isFeatured: !cat.isFeatured }
+              : cat
           )
         );
-        showToast(res.data.message || "Category updated successfully", "success");
+        showToast(
+          res.data.message || "Category updated successfully",
+          "success"
+        );
       }
-
     } catch (err) {
       // console.error(err);
       toast.error("Failed to update category");
     }
   };
 
-
   // Filter products for the selected category
   const filteredProducts = selectedCategory
+    ? products
+        .filter((product) => {
+          // First check if product has the categoryId matching selected category
+          if (
+            product.categoryId === selectedCategory.id ||
+            (product.category &&
+              product.category.toString() === selectedCategory.id.toString())
+          ) {
+            return true;
+          }
 
-    ? products.filter(product => {
-      // First check if product has the categoryId matching selected category
-      if (product.categoryId === selectedCategory.id ||
-        (product.category && product.category.toString() === selectedCategory.id.toString())) {
-        return true;
-      }
+          // Fallback: check if product name or description contains category name
+          return (
+            product.name
+              .toLowerCase()
+              .includes(selectedCategory.name.toLowerCase()) ||
+            (product.description &&
+              product.description
+                .toLowerCase()
+                .includes(selectedCategory.name.toLowerCase()))
+          );
+        })
+        .filter((product) => {
+          // Apply search filter
+          if (
+            searchTerm &&
+            !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            !product.description
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())
+          ) {
+            return false;
+          }
 
+          // Apply status filter
+          if (statusFilter !== "all") {
+            const inStockFilter = statusFilter === "inStock";
+            if (product.inStock !== inStockFilter) return false;
+          }
 
-      // Fallback: check if product name or description contains category name
-      return (
-        product.name.toLowerCase().includes(selectedCategory.name.toLowerCase()) ||
-        (product.description && product.description.toLowerCase().includes(selectedCategory.name.toLowerCase()))
-      );
-    }).filter(product => {
-      // Apply search filter
-      if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !product.description.toLowerCase().includes(searchTerm.toLowerCase())) {
-        return false;
-      }
-
-      // Apply status filter
-      if (statusFilter !== "all") {
-        const inStockFilter = statusFilter === "inStock";
-        if (product.inStock !== inStockFilter) return false;
-      }
-
-      return true;
-    })
+          return true;
+        })
     : [];
 
   const handleEditCategory = async () => {
@@ -269,7 +311,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
       if (res.data.success) {
         setCategories(
-          categories.map((cat) => (cat.id === editingCategory.id ? editingCategory : cat))
+          categories.map((cat) =>
+            cat.id === editingCategory.id ? editingCategory : cat
+          )
         );
         setEditingCategory(null);
         setImageFile(null);
@@ -298,17 +342,19 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       );
       //toast
       if (response.data.success) {
-        setCategories(categories.filter(cat => cat.id !== id));
+        setCategories(categories.filter((cat) => cat.id !== id));
         setDeleteConfirm(null);
         // ✅ Show success toast using your custom Toast component
-        showToast(response.data.message || "Category deleted successfully", "success");
+        showToast(
+          response.data.message || "Category deleted successfully",
+          "success"
+        );
 
         // If the deleted category was selected, go back to categories list
         if (selectedCategory && selectedCategory.id === id) {
           setSelectedCategory(null);
         }
       }
-
     } catch (err) {
       // console.error("Error deleting category:", err);
       setError("Failed to delete category. Please try again.");
@@ -316,19 +362,21 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   };
 
   const toggleCategoryVisibility = async (id) => {
-    const category = categories.find(cat => cat.id === id);
+    const category = categories.find((cat) => cat.id === id);
     const newVisibility = !category.isShown;
 
     try {
       // Call API to update visibility
       const response = await axios.put(`${BACKEND_URL}updateCategory/${id}`, {
-        isShown: newVisibility
+        isShown: newVisibility,
       });
 
       if (response.data.success) {
-        setCategories(categories.map(cat =>
-          cat.id === id ? { ...cat, isShown: newVisibility } : cat
-        ));
+        setCategories(
+          categories.map((cat) =>
+            cat.id === id ? { ...cat, isShown: newVisibility } : cat
+          )
+        );
       }
     } catch (err) {
       // console.error("Error updating category visibility:", err);
@@ -337,22 +385,26 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   };
 
   const toggleCategoryStatus = async (id) => {
-    const category = categories.find(cat => cat.id === id);
+    const category = categories.find((cat) => cat.id === id);
     const newStatus = !category.isActive;
 
     try {
       // Call API to update status
       const response = await axios.put(`${BACKEND_URL}updateCategory/${id}`, {
-        isActive: newStatus
+        isActive: newStatus,
       });
 
       if (response.data.success) {
-        setCategories(categories.map(cat =>
-          cat.id === id ? { ...cat, isActive: newStatus } : cat
-        ));
-        showToast(`Category ${newStatus ? "activated" : "deactivated"} successfully`, "success");
+        setCategories(
+          categories.map((cat) =>
+            cat.id === id ? { ...cat, isActive: newStatus } : cat
+          )
+        );
+        showToast(
+          `Category ${newStatus ? "activated" : "deactivated"} successfully`,
+          "success"
+        );
       }
-
     } catch (err) {
       // console.error("Error updating category status:", err);
       setError("Failed to update category status. Please try again.");
@@ -389,8 +441,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   }
 
   // Render product list for selected category
-  const renderProductList = () => {
-  };
+  const renderProductList = () => {};
 
   // Render categories list
   const renderCategoriesList = () => {
@@ -405,7 +456,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
         {/* Header and Add Button */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Categories Management</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Categories Management
+          </h2>
 
           <div className="flex items-center gap-3">
             {/* Refresh Button */}
@@ -433,11 +486,15 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             <h3 className="text-lg font-semibold mb-3">Add New Category</h3>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category Name *
+              </label>
               <input
                 type="text"
                 value={newCategory.name}
-                onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, name: e.target.value })
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter category name"
               />
@@ -445,7 +502,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category Image</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category Image
+                </label>
                 <div className="flex items-center gap-2">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -462,15 +521,26 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                 </div>
                 {imagePreview && (
                   <div className="mt-2">
-                    <img src={imagePreview} alt="Preview" className="w-20 h-20 object-cover rounded" />
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-20 h-20 object-cover rounded"
+                    />
                   </div>
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
                 <textarea
                   value={newCategory.description}
-                  onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewCategory({
+                      ...newCategory,
+                      description: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter category description"
                   rows="4"
@@ -479,25 +549,46 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             </div>
 
             <div className="flex items-center gap-6 mb-4">
-              <div className="flex items-center">
-              </div>
+              <div className="flex items-center"></div>
               <div className="flex items-center">
                 <button
-                  onClick={() => setNewCategory({ ...newCategory, isActive: !newCategory.isActive })}
+                  onClick={() =>
+                    setNewCategory({
+                      ...newCategory,
+                      isActive: !newCategory.isActive,
+                    })
+                  }
                   type="button"
-                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${newCategory.isActive ? 'bg-green-600' : 'bg-gray-300'}`}
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
+                    newCategory.isActive ? "bg-green-600" : "bg-gray-300"
+                  }`}
                 >
-                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${newCategory.isActive ? 'translate-x-6' : 'translate-x-0'}`} />
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                      newCategory.isActive ? "translate-x-6" : "translate-x-0"
+                    }`}
+                  />
                 </button>
                 <span className="text-sm">Active</span>
               </div>
               <div className="flex items-center">
                 <button
-                  onClick={() => setNewCategory({ ...newCategory, isFeatured: !newCategory.isFeatured })}
+                  onClick={() =>
+                    setNewCategory({
+                      ...newCategory,
+                      isFeatured: !newCategory.isFeatured,
+                    })
+                  }
                   type="button"
-                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${newCategory.isFeatured ? 'bg-yellow-600' : 'bg-gray-300'}`}
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
+                    newCategory.isFeatured ? "bg-yellow-600" : "bg-gray-300"
+                  }`}
                 >
-                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${newCategory.isFeatured ? 'translate-x-6' : 'translate-x-0'}`} />
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                      newCategory.isFeatured ? "translate-x-6" : "translate-x-0"
+                    }`}
+                  />
                 </button>
                 <span className="text-sm">Featured</span>
               </div>
@@ -522,7 +613,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                     isShown: true,
                     isActive: true,
                     isFeatured: false,
-                    image: ""
+                    image: "",
                   });
                 }}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
@@ -544,11 +635,13 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                 <th className="p-3 font-semibold text-gray-700">Status</th>
                 <th className="p-3 font-semibold text-gray-700">Featured</th>
                 <th className="p-3 font-semibold text-gray-700">Visibilty</th>
-                <th className="p-3 font-semibold text-gray-700 text-right">Actions</th>
+                <th className="p-3 font-semibold text-gray-700 text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
-              {categories.map(category => (
+              {categories.map((category) => (
                 <tr
                   key={category.id}
                   className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
@@ -556,7 +649,11 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                 >
                   <td className="p-3">
                     {category.image ? (
-                      <img src={category.image} alt={category.name} className="w-12 h-12 rounded object-cover" />
+                      <img
+                        src={category.image}
+                        alt={category.name}
+                        className="w-12 h-12 rounded object-cover"
+                      />
                     ) : (
                       <span className="text-gray-400 text-sm">No Image</span>
                     )}
@@ -566,14 +663,20 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                       {category.active_product_count || 0} Active Products
                     </span>
                     {category.isFeatured && (
-                      <span className="text-yellow-600 font-medium text-xs">★ Featured</span>
+                      <span className="text-yellow-600 font-medium text-xs">
+                        ★ Featured
+                      </span>
                     )}
                   </td>
 
                   <td className="p-3">
                     <div>
-                      <p className="font-medium text-gray-800">{category.name}</p>
-                      <p className="text-sm text-gray-500">{category.description}</p>
+                      <p className="font-medium text-gray-800">
+                        {category.name}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {category.description}
+                      </p>
                     </div>
                   </td>
 
@@ -584,8 +687,12 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   </td> */}
                   <td className="p-3">
                     <div className="flex items-center">
-                      <span className={`w-3 h-3 rounded-full mr-2 ${category.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      {category.isActive ? 'Active' : 'Inactive'}
+                      <span
+                        className={`w-3 h-3 rounded-full mr-2 ${
+                          category.isActive ? "bg-green-500" : "bg-gray-400"
+                        }`}
+                      />
+                      {category.isActive ? "Active" : "Inactive"}
                     </div>
                   </td>
                   <td className="p-3">
@@ -596,16 +703,19 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                           handleToggleFeaturedApi(category);
                         }}
                         type="button"
-                        className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${category.isFeatured ? "bg-blue-600" : "bg-gray-300"
-                          }`}
+                        className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
+                          category.isFeatured ? "bg-blue-600" : "bg-gray-300"
+                        }`}
                       >
                         <div
-                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${category.isFeatured ? "translate-x-6" : "translate-x-0"
-                            }`}
+                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                            category.isFeatured
+                              ? "translate-x-6"
+                              : "translate-x-0"
+                          }`}
                         />
                       </button>
                       <span className="text-sm">Featured</span>
-
                     </div>
                   </td>
 
@@ -616,28 +726,39 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                       ) : (
                         <FaEyeSlash className="text-gray-500 mr-1" />
                       )}
-                      {category.isShown ? 'Visible' : 'Hidden'}
+                      {category.isShown ? "Visible" : "Hidden"}
                     </div>
                   </td>
                   <td className="p-3">
-                    <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="flex justify-end gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
                         onClick={() => toggleCategoryVisibility(category.id)}
-                        className={`p-2 rounded transition-colors ${category.isShown
-                          ? 'text-green-500 hover:bg-green-50'
-                          : 'text-gray-500 hover:bg-gray-100'
-                          }`}
-                        title={category.isShown ? 'Hide category' : 'Show category'}
+                        className={`p-2 rounded transition-colors ${
+                          category.isShown
+                            ? "text-green-500 hover:bg-green-50"
+                            : "text-gray-500 hover:bg-gray-100"
+                        }`}
+                        title={
+                          category.isShown ? "Hide category" : "Show category"
+                        }
                       >
                         {category.isShown ? <FaEye /> : <FaEyeSlash />}
                       </button>
                       <button
                         onClick={() => toggleCategoryStatus(category.id)}
-                        className={`p-2 rounded transition-colors ${category.isActive
-                          ? 'text-green-500 hover:bg-green-50'
-                          : 'text-gray-500 hover:bg-gray-100'
-                          }`}
-                        title={category.isActive ? 'Deactivate category' : 'Activate category'}
+                        className={`p-2 rounded transition-colors ${
+                          category.isActive
+                            ? "text-green-500 hover:bg-green-50"
+                            : "text-gray-500 hover:bg-gray-100"
+                        }`}
+                        title={
+                          category.isActive
+                            ? "Deactivate category"
+                            : "Activate category"
+                        }
                       >
                         {category.isActive ? <FaCheck /> : <FaTimes />}
                       </button>
@@ -685,11 +806,18 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
               <div className="space-y-4">
                 {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category Name *
+                  </label>
                   <input
                     type="text"
                     value={editingCategory.name}
-                    onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                    onChange={(e) =>
+                      setEditingCategory({
+                        ...editingCategory,
+                        name: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter category name"
                   />
@@ -697,10 +825,17 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
                   <textarea
                     value={editingCategory.description}
-                    onChange={(e) => setEditingCategory({ ...editingCategory, description: e.target.value })}
+                    onChange={(e) =>
+                      setEditingCategory({
+                        ...editingCategory,
+                        description: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter category description"
                     rows="4"
@@ -709,7 +844,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
                 {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category Image</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category Image
+                  </label>
                   <div className="flex items-center gap-2">
                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -726,7 +863,11 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   </div>
                   {imagePreview && (
                     <div className="mt-2">
-                      <img src={imagePreview} alt="Preview" className="w-20 h-20 object-cover rounded" />
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-20 h-20 object-cover rounded"
+                      />
                     </div>
                   )}
                 </div>
@@ -735,25 +876,54 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                 <div className="flex items-center gap-6">
                   <div className="flex items-center">
                     <button
-                      onClick={() => setEditingCategory({ ...editingCategory, isActive: !editingCategory.isActive })}
+                      onClick={() =>
+                        setEditingCategory({
+                          ...editingCategory,
+                          isActive: !editingCategory.isActive,
+                        })
+                      }
                       type="button"
-                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isActive ? 'bg-green-600' : 'bg-gray-300'}`}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
+                        editingCategory.isActive
+                          ? "bg-green-600"
+                          : "bg-gray-300"
+                      }`}
                     >
-                      <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isActive ? 'translate-x-6' : 'translate-x-0'}`} />
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          editingCategory.isActive
+                            ? "translate-x-6"
+                            : "translate-x-0"
+                        }`}
+                      />
                     </button>
                     <span className="text-sm">Active</span>
                   </div>
                   <div className="flex items-center">
                     <button
-                      onClick={() => setEditingCategory({ ...editingCategory, isFeatured: !editingCategory.isFeatured })}
+                      onClick={() =>
+                        setEditingCategory({
+                          ...editingCategory,
+                          isFeatured: !editingCategory.isFeatured,
+                        })
+                      }
                       type="button"
-                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isFeatured ? 'bg-yellow-600' : 'bg-gray-300'}`}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
+                        editingCategory.isFeatured
+                          ? "bg-yellow-600"
+                          : "bg-gray-300"
+                      }`}
                     >
-                      <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isFeatured ? 'translate-x-6' : 'translate-x-0'}`} />
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          editingCategory.isFeatured
+                            ? "translate-x-6"
+                            : "translate-x-0"
+                        }`}
+                      />
                     </button>
                     <span className="text-sm">Featured</span>
                   </div>
-
                 </div>
               </div>
 
@@ -788,7 +958,8 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-2">Confirm Deletion</h3>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete the category "{deleteConfirm.name}"? This action cannot be undone.
+                Are you sure you want to delete the category "
+                {deleteConfirm.name}"? This action cannot be undone.
               </p>
               <div className="flex justify-end gap-3">
                 <button
@@ -809,7 +980,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
         </div>
       )}
       <div className="fixed top-6 right-6 z-50 flex flex-col gap-2">
-        {toasts.map(toastItem => (
+        {toasts.map((toastItem) => (
           <Toast
             key={toastItem.id}
             message={toastItem.message}
@@ -818,7 +989,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
           />
         ))}
       </div>
-
     </div>
   );
 };

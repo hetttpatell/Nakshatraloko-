@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import AccordionItem from "./AccordionItem";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { AiOutlineLike, AiFillLike, AiFillHeart, AiOutlineHeart, AiFillStar, AiOutlineStar } from "react-icons/ai";
+import {
+  AiOutlineLike,
+  AiFillLike,
+  AiFillHeart,
+  AiOutlineHeart,
+  AiFillStar,
+  AiOutlineStar,
+} from "react-icons/ai";
 import { FiChevronRight, FiZoomIn, FiUser } from "react-icons/fi";
 import { BsStarHalf } from "react-icons/bs";
 import Recommendation from "./Recommendation";
@@ -18,20 +25,24 @@ const IMG_URL = import.meta.env.VITE_IMG_URL;
 const productquestions = [
   {
     title: "What is the return policy?",
-    content: "We offer a 30-day return policy for all unworn items in their original packaging with proof of purchase."
+    content:
+      "We offer a 30-day return policy for all unworn items in their original packaging with proof of purchase.",
   },
   {
     title: "Are the gemstones authentic?",
-    content: "Yes, all our gemstones are 100% authentic and come with a certificate of authenticity."
+    content:
+      "Yes, all our gemstones are 100% authentic and come with a certificate of authenticity.",
   },
   {
     title: "Do you offer custom designs?",
-    content: "Yes, we offer custom design services. Please contact our customer service team for more information."
+    content:
+      "Yes, we offer custom design services. Please contact our customer service team for more information.",
   },
   {
     title: "How long does shipping take?",
-    content: "Standard shipping takes 3-5 business days. Express shipping is available for an additional fee with 1-2 day delivery."
-  }
+    content:
+      "Standard shipping takes 3-5 business days. Express shipping is available for an additional fee with 1-2 day delivery.",
+  },
 ];
 
 const ProductDetails = () => {
@@ -46,7 +57,7 @@ const ProductDetails = () => {
     rating: 0,
     title: "",
     content: "",
-    hoverRating: 0
+    hoverRating: 0,
   });
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -75,6 +86,29 @@ const ProductDetails = () => {
   const { addToWishlist, wishlist } = useWishlist();
   const { addToCart } = useCart();
 
+  const normalizeImage = (url) => {
+    let fixedUrl = url?.trim() || "";
+
+    // If the URL already has the host (http://localhost:8001)
+    if (fixedUrl.startsWith("http")) {
+      // Remove double slashes
+      fixedUrl = fixedUrl.replace(/([^:]\/)\/+/g, "$1");
+
+      // Replace the base URL to use your API uploads path
+      fixedUrl = fixedUrl.replace(
+        /^http:\/\/localhost:8001\/uploads/,
+        `${IMG_URL}/uploads`
+      );
+    } else {
+      // Relative path: prepend /uploads if missing
+      if (!fixedUrl.startsWith("/uploads/")) {
+        fixedUrl = `/uploads/${fixedUrl.replace(/^\/+/, "")}`;
+      }
+      fixedUrl = `${IMG_URL}${fixedUrl}`.replace(/([^:]\/)\/+/g, "$1");
+    }
+
+    return fixedUrl;
+  };
 
   // Fetch reviews
   const fetchReviews = async () => {
@@ -92,15 +126,16 @@ const ProductDetails = () => {
         `${BACKEND_URL}getReviewsByProduct/${id}`,
         {},
         {
-          headers:
-          {
-            Authorization: `${token}`
-          }
+          headers: {
+            Authorization: `${token}`,
+          },
         }
       );
 
       if (response.data.success) {
-        setReviews(Array.isArray(response.data.reviews) ? response.data.reviews : []);
+        setReviews(
+          Array.isArray(response.data.reviews) ? response.data.reviews : []
+        );
       } else {
         // console.warn(response.data.message);
         setReviews([]);
@@ -120,10 +155,13 @@ const ProductDetails = () => {
     }
   };
 
-
   // Submit review
   const submitReview = async () => {
-    if (!reviewForm.rating || !reviewForm.title.trim() || !reviewForm.content.trim()) {
+    if (
+      !reviewForm.rating ||
+      !reviewForm.title.trim() ||
+      !reviewForm.content.trim()
+    ) {
       showToast("Please fill in all fields and provide a rating", "error");
       return;
     }
@@ -138,7 +176,7 @@ const ProductDetails = () => {
         {
           productId: productId, // You need to define productId from your component's context
           rating: reviewForm.rating,
-          reviewText: reviewForm.content.trim()
+          reviewText: reviewForm.content.trim(),
         },
         {
           headers: {
@@ -153,7 +191,7 @@ const ProductDetails = () => {
           rating: 0,
           title: "",
           content: "",
-          hoverRating: 0
+          hoverRating: 0,
         });
         setShowReviewForm(false);
         fetchReviews(); // Refresh reviews
@@ -162,7 +200,10 @@ const ProductDetails = () => {
       }
     } catch (error) {
       // console.error("Error submitting review:", error);
-      showToast(error.response?.data?.message || "Failed to submit review", "error");
+      showToast(
+        error.response?.data?.message || "Failed to submit review",
+        "error"
+      );
     } finally {
       setIsSubmittingReview(false);
     }
@@ -190,7 +231,7 @@ const ProductDetails = () => {
 
           // Find coupons applicable to this product
           const applicable = response.data.data.filter(
-            item => item.productid === parseInt(id)
+            (item) => item.productid === parseInt(id)
           );
           setApplicableCoupons(applicable);
         }
@@ -225,33 +266,23 @@ const ProductDetails = () => {
           brand: "Unknown Brand",
 
           // ⭐ Rating setup
-          rating: productData.avgRating && productData.avgRating <= 5
-            ? productData.avgRating
-            : 0, // fallback: no rating yet, safe default
+          rating:
+            productData.avgRating && productData.avgRating <= 5
+              ? productData.avgRating
+              : 0, // fallback: no rating yet, safe default
           reviews: productData.reviews || 0,
           reviewList: productData.reviewList || [],
 
-          images: productData.images.map((img) => {
-            let fixedUrl = img.imageData;
-            console.log({fixedUrl})
+          // Usage for images array
+          images: productData.images.map((img) => ({
+            src: normalizeImage(img.imageData),
+            alt: img.altText || productData.name,
+          })),
 
-            // If API duplicates the URL, clean it up
-            if (fixedUrl.includes(`${IMG_URL}uploads/${IMG_URL}uploads/`)) {
-              fixedUrl = fixedUrl.replace(`${IMG_URL}uploads/${IMG_URL}uploads/`, `${IMG_URL}uploads/`);
-            }
-
-            return {
-              src: fixedUrl,
-              alt: img.altText || productData.name,
-            };
-          }),
+          // Apply to main image
           mainImage: productData.images[0]
-            ? productData.images[0].imageData.replace(
-              `${IMG_URL}uploads/${IMG_URL}uploads/`,
-              `${IMG_URL}uploads/`
-            )
-            : " ",
-
+            ? normalizeImage(productData.images[0].imageData)
+            : "",
 
           size: productData.sizes.map((s) => s.size), // extract just size
           sizeDetails: productData.sizes, // keep full details
@@ -330,9 +361,9 @@ const ProductDetails = () => {
       );
 
       if (response.data.success) {
-        setLikedReviews(prev =>
+        setLikedReviews((prev) =>
           prev.includes(reviewId)
-            ? prev.filter(id => id !== reviewId)
+            ? prev.filter((id) => id !== reviewId)
             : [...prev, reviewId]
         );
       }
@@ -363,7 +394,8 @@ const ProductDetails = () => {
 
   const handleImageZoom = (e) => {
     if (!isImageZoomed) return;
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const { left, top, width, height } =
+      e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - left) / width) * 100;
     const y = ((e.clientY - top) / height) * 100;
     setZoomStyle({ transformOrigin: `${x}% ${y}%`, transform: "scale(2)" });
@@ -440,7 +472,9 @@ const ProductDetails = () => {
         <nav className="text-sm text-color-text-muted mb-6 flex items-center">
           <span className="hover:text-color-primary cursor-pointer">Home</span>
           <FiChevronRight className="mx-2 text-xs" />
-          <span className="hover:text-color-primary cursor-pointer">Jewelry</span>
+          <span className="hover:text-color-primary cursor-pointer">
+            Jewelry
+          </span>
           <FiChevronRight className="mx-2 text-xs" />
           <span className="text-color-primary">{product.name}</span>
         </nav>
@@ -455,9 +489,10 @@ const ProductDetails = () => {
                   <div
                     key={index}
                     className={`relative w-20 h-24 sm:w-24 sm:h-28 rounded-sm cursor-pointer border transition-all duration-300 ease-in-out
-                      ${mainImage === img.src
-                        ? "ring-2 ring-color-primary ring-offset-2 scale-105 border-color-primary"
-                        : "border-color-border hover:border-color-primary opacity-80 hover:opacity-100"
+                      ${
+                        mainImage === img.src
+                          ? "ring-2 ring-color-primary ring-offset-2 scale-105 border-color-primary"
+                          : "border-color-border hover:border-color-primary opacity-80 hover:opacity-100"
                       }`}
                     onClick={() => {
                       setMainImage(img.src);
@@ -475,7 +510,9 @@ const ProductDetails = () => {
 
               {/* Main image */}
               <div
-                className={`relative w-full max-w-lg aspect-[3/4] bg-color-surface rounded-lg shadow-lg mx-auto order-1 lg:order-2 overflow-hidden group ${isImageZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+                className={`relative w-full max-w-lg aspect-[3/4] bg-color-surface rounded-lg shadow-lg mx-auto order-1 lg:order-2 overflow-hidden group ${
+                  isImageZoomed ? "cursor-zoom-out" : "cursor-zoom-in"
+                }`}
                 onClick={() => setIsImageZoomed(!isImageZoomed)}
                 onMouseMove={handleImageZoom}
                 onMouseLeave={resetZoom}
@@ -489,7 +526,7 @@ const ProductDetails = () => {
 
                 <div className="absolute bottom-4 right-4 bg-black/70 text-color-surface text-xs px-3 py-2 rounded-full flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <FiZoomIn className="text-sm" />
-                  {isImageZoomed ? 'Click to zoom out' : 'Click to zoom'}
+                  {isImageZoomed ? "Click to zoom out" : "Click to zoom"}
                 </div>
               </div>
             </div>
@@ -498,34 +535,46 @@ const ProductDetails = () => {
           {/* Details Section */}
           <div className="flex-1 flex flex-col">
             <div className="mb-6">
-              <h2 className="text-sm font-medium text-color-primary uppercase tracking-wider mb-2">{product.brand}</h2>
-              <h1 className="text-3xl font-serif font-normal text-color-text leading-tight mb-4">{product.name}</h1>
-
+              <h2 className="text-sm font-medium text-color-primary uppercase tracking-wider mb-2">
+                {product.brand}
+              </h2>
+              <h1 className="text-3xl font-serif font-normal text-color-text leading-tight mb-4">
+                {product.name}
+              </h1>
 
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex items-center text-color-rating">
                   {renderStars(product.rating)}
                 </div>
-                <span className="text-sm text-color-text-muted">({reviews.length} reviews)</span>
-                <span className="text-sm font-medium text-color-accent-green ml-4">In Stock</span>
+                <span className="text-sm text-color-text-muted">
+                  ({reviews.length} reviews)
+                </span>
+                <span className="text-sm font-medium text-color-accent-green ml-4">
+                  In Stock
+                </span>
               </div>
               <div className="text-2xl font-light text-color-text mb-2">
-                <span className="line-through text-color-text-muted mr-2">₹ {getOriginalPrice()}</span>
+                <span className="line-through text-color-text-muted mr-2">
+                  ₹ {getOriginalPrice()}
+                </span>
                 ₹ {getAdjustedPrice()}
               </div>
             </div>
 
             {/* Size Picker */}
             <div className="mb-6">
-              <label className="block text-xs font-semibold mb-3 text-color-text tracking-wider uppercase">SELECT SIZE</label>
+              <label className="block text-xs font-semibold mb-3 text-color-text tracking-wider uppercase">
+                SELECT SIZE
+              </label>
               <div className="flex flex-wrap gap-3">
                 {product.size.map((item) => (
                   <button
                     key={item}
-                    className={`px-5 py-2.5 rounded-sm text-sm font-medium transition-all duration-200 ${selectedSize === item
-                      ? "bg-color-primary text-color-surface border border-color-primary shadow-md"
-                      : "bg-color-surface text-color-text border border-color-border hover:border-color-primary hover:shadow-md"
-                      }`}
+                    className={`px-5 py-2.5 rounded-sm text-sm font-medium transition-all duration-200 ${
+                      selectedSize === item
+                        ? "bg-color-primary text-color-surface border border-color-primary shadow-md"
+                        : "bg-color-surface text-color-text border border-color-border hover:border-color-primary hover:shadow-md"
+                    }`}
                     onClick={() => setSelectedSize(item)}
                   >
                     {item}
@@ -567,7 +616,9 @@ const ProductDetails = () => {
                   value={quantity}
                   min={1}
                   className="w-12 text-center bg-transparent focus:outline-none text-color-text font-medium"
-                  onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                  onChange={(e) =>
+                    setQuantity(Math.max(1, Number(e.target.value)))
+                  }
                 />
                 <button
                   className="px-4 py-2 text-lg text-color-text-muted hover:bg-color-primary hover:text-color-surface transition-all duration-200"
@@ -578,8 +629,12 @@ const ProductDetails = () => {
               </div>
 
               <div>
-                <span className="text-xs text-color-text-muted block mb-1">TOTAL PRICE</span>
-                <div className="text-xl font-semibold text-color-primary">₹ {getAdjustedPrice()}</div>
+                <span className="text-xs text-color-text-muted block mb-1">
+                  TOTAL PRICE
+                </span>
+                <div className="text-xl font-semibold text-color-primary">
+                  ₹ {getAdjustedPrice()}
+                </div>
               </div>
             </div>
 
@@ -601,16 +656,17 @@ const ProductDetails = () => {
                   if (res.success) {
                     showToast(res.message, "success");
                     setTimeout(() => {
-                      navigate("/wishlist")
-                    }, 2000)
+                      navigate("/wishlist");
+                    }, 2000);
                   } else {
                     showToast(res.message, "error");
                   }
                 }}
-                className={`px-6 py-3.5 font-medium text-sm transition-all duration-200 ${isWishlisted
-                  ? "bg-color-primary text-color-surface hover:bg-opacity-90"
-                  : "bg-color-surface text-color-text border border-color-border hover:border-color-primary"
-                  }`}
+                className={`px-6 py-3.5 font-medium text-sm transition-all duration-200 ${
+                  isWishlisted
+                    ? "bg-color-primary text-color-surface hover:bg-opacity-90"
+                    : "bg-color-surface text-color-text border border-color-border hover:border-color-primary"
+                }`}
               >
                 {isWishlisted ? (
                   <AiFillHeart className="inline mr-2 text-lg" />
@@ -667,57 +723,67 @@ const ProductDetails = () => {
                   🎫
                 </span>
                 <div>
-                  <div className="font-semibold text-color-text">Special Offers</div>
+                  <div className="font-semibold text-color-text">
+                    Special Offers
+                  </div>
                   <div className="text-xs text-color-text-muted">
                     Available discounts for your order
                   </div>
                 </div>
               </div>
 
-              {!loadingCoupons && applicableCoupons.map((coupon, index) => {
-                const copyToClipboard = () => {
-                  navigator.clipboard.writeText(coupon.couponcode)
-                    .then(() => {
-                      const element = document.getElementById(`coupon-${index}`);
-                      if (element) {
-                        element.textContent = "✓ Copied!";
-                        setTimeout(() => {
-                          element.textContent = "Tap to copy"; // message after 2 seconds
-                        }, 2000);
-                      }
-                    })
-                    .catch(err => {
-                      // console.error('Failed to copy: ', err);
-                    });
-                };
+              {!loadingCoupons &&
+                applicableCoupons.map((coupon, index) => {
+                  const copyToClipboard = () => {
+                    navigator.clipboard
+                      .writeText(coupon.couponcode)
+                      .then(() => {
+                        const element = document.getElementById(
+                          `coupon-${index}`
+                        );
+                        if (element) {
+                          element.textContent = "✓ Copied!";
+                          setTimeout(() => {
+                            element.textContent = "Tap to copy"; // message after 2 seconds
+                          }, 2000);
+                        }
+                      })
+                      .catch((err) => {
+                        // console.error('Failed to copy: ', err);
+                      });
+                  };
 
-                return (
-                  <div key={index} className="flex gap-3 items-center mt-2">
-                    <span className="inline-flex items-center justify-center w-8 h-8 bg-color-accent-green/20 rounded-full text-center text-color-accent-green">
-                      🔖
-                    </span>
-                    <div className="flex-1">
-                      <div
-                        className="font-semibold text-color-text cursor-pointer"
-                        onDoubleClick={copyToClipboard}
-                      >
-                        Use code: <span className="text-color-primary">{coupon.couponcode}</span>
-                        <span
-                          id={`coupon-${index}`}
-                          className="ml-2 text-xs text-color-text-muted"
+                  return (
+                    <div key={index} className="flex gap-3 items-center mt-2">
+                      <span className="inline-flex items-center justify-center w-8 h-8 bg-color-accent-green/20 rounded-full text-center text-color-accent-green">
+                        🔖
+                      </span>
+                      <div className="flex-1">
+                        <div
+                          className="font-semibold text-color-text cursor-pointer"
+                          onDoubleClick={copyToClipboard}
                         >
-                          Double tap to copy
-                        </span>
-                      </div>
-                      <div className="text-xs text-color-text-muted">
-                        Save {coupon.DiscountType === 'PERCENTAGE'
-                          ? `${coupon.DiscountValue}%`
-                          : `₹${coupon.DiscountValue}`}
+                          Use code:{" "}
+                          <span className="text-color-primary">
+                            {coupon.couponcode}
+                          </span>
+                          <span
+                            id={`coupon-${index}`}
+                            className="ml-2 text-xs text-color-text-muted"
+                          >
+                            Double tap to copy
+                          </span>
+                        </div>
+                        <div className="text-xs text-color-text-muted">
+                          Save{" "}
+                          {coupon.DiscountType === "PERCENTAGE"
+                            ? `${coupon.DiscountValue}%`
+                            : `₹${coupon.DiscountValue}`}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
 
               {loadingCoupons && (
                 <div className="flex gap-3 items-center">
@@ -725,7 +791,9 @@ const ProductDetails = () => {
                     🎫
                   </span>
                   <div>
-                    <div className="font-semibold text-color-text">Checking for offers...</div>
+                    <div className="font-semibold text-color-text">
+                      Checking for offers...
+                    </div>
                     <div className="text-xs text-color-text-muted">
                       Loading available discounts
                     </div>
@@ -749,25 +817,26 @@ const ProductDetails = () => {
         <div className="border-b border-color-border mb-8 mt-12">
           <div className="flex space-x-8">
             <button
-              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === "description"
-                ? "border-color-primary text-color-primary"
-                : "border-transparent text-color-text-muted hover:text-color-text"
-                }`}
+              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                activeTab === "description"
+                  ? "border-color-primary text-color-primary"
+                  : "border-transparent text-color-text-muted hover:text-color-text"
+              }`}
               onClick={() => handleTabChange("description")}
             >
               DESCRIPTION
             </button>
 
             <button
-              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === "reviews"
-                ? "border-color-primary text-color-primary"
-                : "border-transparent text-color-text-muted hover:text-color-text"
-                }`}
+              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                activeTab === "reviews"
+                  ? "border-color-primary text-color-primary"
+                  : "border-transparent text-color-text-muted hover:text-color-text"
+              }`}
               onClick={() => handleTabChange("reviews")}
             >
               REVIEWS ({reviews.length})
             </button>
-
           </div>
         </div>
 
@@ -777,21 +846,31 @@ const ProductDetails = () => {
             {/* Left Column: About & Advantages */}
             <div>
               {/* About This Masterpiece */}
-              <h3 className="text-xl font-serif font-normal text-color-text mb-6">About This Masterpiece</h3>
-              <p className="text-color-text-light mb-4 leading-relaxed">{product.description}</p>
+              <h3 className="text-xl font-serif font-normal text-color-text mb-6">
+                About This Masterpiece
+              </h3>
+              <p className="text-color-text-light mb-4 leading-relaxed">
+                {product.description}
+              </p>
 
               {/* How to Wear */}
               {product.howToWear && (
                 <>
-                  <h4 className="text-lg font-serif font-medium text-color-text mb-2">How to Wear</h4>
-                  <p className="text-color-text-light mb-6 leading-relaxed">{product.howToWear}</p>
+                  <h4 className="text-lg font-serif font-medium text-color-text mb-2">
+                    How to Wear
+                  </h4>
+                  <p className="text-color-text-light mb-6 leading-relaxed">
+                    {product.howToWear}
+                  </p>
                 </>
               )}
 
               {/* Craftsmanship & Advantages */}
               {product.advantages.length > 0 && (
                 <>
-                  <h4 className="text-xl font-serif font-normal text-color-text mb-4">Craftsmanship & Advantages</h4>
+                  <h4 className="text-xl font-serif font-normal text-color-text mb-4">
+                    Craftsmanship & Advantages
+                  </h4>
                   <ul className="text-color-text-light space-y-3">
                     {product.advantages.map((adv, idx) => (
                       <li key={idx} className="flex items-start">
@@ -806,11 +885,17 @@ const ProductDetails = () => {
 
             {/* Right Column: Shipping & Care */}
             <div>
-              <h3 className="text-xl font-serif font-normal text-color-text mb-6">Shipping & Care</h3>
-              <p className="text-color-text-light mb-6 leading-relaxed">{product.shipping}</p>
+              <h3 className="text-xl font-serif font-normal text-color-text mb-6">
+                Shipping & Care
+              </h3>
+              <p className="text-color-text-light mb-6 leading-relaxed">
+                {product.shipping}
+              </p>
 
               <div className="bg-color-background-alt p-6 border border-color-border rounded-sm">
-                <h4 className="font-serif font-normal text-color-text mb-3">Jewelry Care Instructions</h4>
+                <h4 className="font-serif font-normal text-color-text mb-3">
+                  Jewelry Care Instructions
+                </h4>
                 <ul className="text-sm text-color-text-light space-y-2">
                   <li className="flex items-start">
                     <span className="text-color-primary mr-2">•</span>
@@ -836,14 +921,19 @@ const ProductDetails = () => {
             {/* Review Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
               <div className="mb-6 md:mb-0">
-                <h2 className="text-2xl font-serif font-normal text-color-text mb-2">Customer Reviews</h2>
+                <h2 className="text-2xl font-serif font-normal text-color-text mb-2">
+                  Customer Reviews
+                </h2>
                 <div className="flex items-center">
                   <div className="flex text-color-rating mr-2">
                     {[...Array(5)].map((_, i) => {
                       if (i < Math.floor(product.rating)) {
                         // Full star
                         return <AiFillStar key={i} className="text-lg" />;
-                      } else if (i === Math.floor(product.rating) && product.rating % 1 !== 0) {
+                      } else if (
+                        i === Math.floor(product.rating) &&
+                        product.rating % 1 !== 0
+                      ) {
                         // Half star
                         return <BsStarHalf key={i} className="text-lg" />;
                       } else {
@@ -852,7 +942,9 @@ const ProductDetails = () => {
                       }
                     })}
                   </div>
-                  <span className="text-color-text-muted text-sm">Based on {reviews.length} reviews</span>
+                  <span className="text-color-text-muted text-sm">
+                    Based on {reviews.length} reviews
+                  </span>
                 </div>
               </div>
 
@@ -860,15 +952,19 @@ const ProductDetails = () => {
                 className="bg-color-primary text-color-surface px-6 py-3 rounded-sm text-sm font-medium hover:bg-opacity-90 transition-colors"
                 onClick={() => setShowReviewForm(!showReviewForm)}
               >
-                {showReviewForm ? 'CANCEL' : 'WRITE A REVIEW'}
+                {showReviewForm ? "CANCEL" : "WRITE A REVIEW"}
               </button>
             </div>
 
             {/* Write Review Form */}
             {showReviewForm && (
               <div className="bg-color-surface border-2 border-color-border rounded-lg p-8 mb-10 shadow-sm">
-                <h3 className="text-xl font-serif font-normal text-color-text mb-2">Write a Review</h3>
-                <p className="text-color-text-muted text-sm mb-8">What is it like to use this Product?</p>
+                <h3 className="text-xl font-serif font-normal text-color-text mb-2">
+                  Write a Review
+                </h3>
+                <p className="text-color-text-muted text-sm mb-8">
+                  What is it like to use this Product?
+                </p>
 
                 {/* Rating Section */}
                 <div className="mb-6">
@@ -881,11 +977,21 @@ const ProductDetails = () => {
                         key={star}
                         type="button"
                         className="text-2xl transition-colors duration-200 hover:scale-110"
-                        onMouseEnter={() => setReviewForm(prev => ({ ...prev, hoverRating: star }))}
-                        onMouseLeave={() => setReviewForm(prev => ({ ...prev, hoverRating: 0 }))}
-                        onClick={() => setReviewForm(prev => ({ ...prev, rating: star }))}
+                        onMouseEnter={() =>
+                          setReviewForm((prev) => ({
+                            ...prev,
+                            hoverRating: star,
+                          }))
+                        }
+                        onMouseLeave={() =>
+                          setReviewForm((prev) => ({ ...prev, hoverRating: 0 }))
+                        }
+                        onClick={() =>
+                          setReviewForm((prev) => ({ ...prev, rating: star }))
+                        }
                       >
-                        {star <= (reviewForm.hoverRating || reviewForm.rating) ? (
+                        {star <=
+                        (reviewForm.hoverRating || reviewForm.rating) ? (
                           <AiFillStar className="text-color-rating" />
                         ) : (
                           <AiOutlineStar className="text-color-text-muted" />
@@ -893,9 +999,10 @@ const ProductDetails = () => {
                       </button>
                     ))}
                     <span className="ml-3 text-sm text-color-text-muted">
-                      {reviewForm.rating > 0 && (
-                        `${reviewForm.rating} star${reviewForm.rating > 1 ? 's' : ''}`
-                      )}
+                      {reviewForm.rating > 0 &&
+                        `${reviewForm.rating} star${
+                          reviewForm.rating > 1 ? "s" : ""
+                        }`}
                     </span>
                   </div>
                 </div>
@@ -908,7 +1015,12 @@ const ProductDetails = () => {
                   <input
                     type="text"
                     value={reviewForm.title}
-                    onChange={(e) => setReviewForm(prev => ({ ...prev, title: e.target.value }))}
+                    onChange={(e) =>
+                      setReviewForm((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
                     placeholder="Great Product!"
                     className="w-full px-4 py-3 border-2 border-color-border rounded-sm bg-color-background focus:border-color-primary focus:outline-none text-color-text placeholder-color-text-muted transition-colors duration-200"
                     maxLength={100}
@@ -925,7 +1037,12 @@ const ProductDetails = () => {
                   </label>
                   <textarea
                     value={reviewForm.content}
-                    onChange={(e) => setReviewForm(prev => ({ ...prev, content: e.target.value }))}
+                    onChange={(e) =>
+                      setReviewForm((prev) => ({
+                        ...prev,
+                        content: e.target.value,
+                      }))
+                    }
                     placeholder="Share your thoughts about this product..."
                     rows={6}
                     className="w-full px-4 py-3 border-2 border-color-border rounded-sm bg-color-background focus:border-color-primary focus:outline-none text-color-text placeholder-color-text-muted resize-none transition-colors duration-200"
@@ -938,7 +1055,9 @@ const ProductDetails = () => {
 
                 {/* Review Tips */}
                 <div className="bg-color-background border-2 border-color-border rounded-sm p-6 mb-8">
-                  <h4 className="text-sm font-semibold text-color-text mb-3 uppercase tracking-wider">Review Tips</h4>
+                  <h4 className="text-sm font-semibold text-color-text mb-3 uppercase tracking-wider">
+                    Review Tips
+                  </h4>
                   <ul className="text-sm text-color-text-light space-y-2">
                     <li className="flex items-start">
                       <span className="text-color-primary mr-3 mt-1">•</span>
@@ -963,10 +1082,15 @@ const ProductDetails = () => {
                 <div className="flex gap-4">
                   <button
                     onClick={submitReview}
-                    disabled={isSubmittingReview || !reviewForm.rating || !reviewForm.title.trim() || !reviewForm.content.trim()}
+                    disabled={
+                      isSubmittingReview ||
+                      !reviewForm.rating ||
+                      !reviewForm.title.trim() ||
+                      !reviewForm.content.trim()
+                    }
                     className="bg-color-primary text-color-surface px-8 py-3 rounded-sm text-sm font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSubmittingReview ? 'SUBMITTING...' : 'SUBMIT REVIEW'}
+                    {isSubmittingReview ? "SUBMITTING..." : "SUBMIT REVIEW"}
                   </button>
                   <button
                     onClick={() => {
@@ -975,7 +1099,7 @@ const ProductDetails = () => {
                         rating: 0,
                         title: "",
                         content: "",
-                        hoverRating: 0
+                        hoverRating: 0,
                       });
                     }}
                     className="border-2 border-color-border px-8 py-3 rounded-sm text-sm font-semibold text-color-text hover:border-color-primary transition-colors"
@@ -990,11 +1114,15 @@ const ProductDetails = () => {
             <div className="space-y-8">
               {reviewsLoading ? (
                 <div className="text-center py-12">
-                  <div className="text-color-text-muted">Loading reviews...</div>
+                  <div className="text-color-text-muted">
+                    Loading reviews...
+                  </div>
                 </div>
               ) : reviews.length === 0 ? (
                 <div className="text-center py-16 border-2 border-color-border border-dashed rounded-lg">
-                  <div className="text-color-text-muted mb-2">No reviews yet</div>
+                  <div className="text-color-text-muted mb-2">
+                    No reviews yet
+                  </div>
                   <p className="text-sm text-color-text-light mb-4">
                     Be the first to share your thoughts!
                   </p>
@@ -1018,17 +1146,30 @@ const ProductDetails = () => {
                           <FiUser className="text-xl text-color-text-muted" />
                         </div>
                         <div>
-                          <h4 className="font-semibold text-color-text">{review.UserName}</h4>
+                          <h4 className="font-semibold text-color-text">
+                            {review.UserName}
+                          </h4>
                           <div className="flex items-center gap-2 mt-1">
-
                             <div className="flex text-color-rating">
                               {[...Array(5)].map((_, i) => {
                                 if (i < Math.floor(review.Rating)) {
-                                  return <AiFillStar key={i} className="text-sm" />;
-                                } else if (i === Math.floor(review.Rating) && review.Rating % 1 !== 0) {
-                                  return <BsStarHalf key={i} className="text-sm" />;
+                                  return (
+                                    <AiFillStar key={i} className="text-sm" />
+                                  );
+                                } else if (
+                                  i === Math.floor(review.Rating) &&
+                                  review.Rating % 1 !== 0
+                                ) {
+                                  return (
+                                    <BsStarHalf key={i} className="text-sm" />
+                                  );
                                 } else {
-                                  return <AiOutlineStar key={i} className="text-sm text-color-text-muted" />;
+                                  return (
+                                    <AiOutlineStar
+                                      key={i}
+                                      className="text-sm text-color-text-muted"
+                                    />
+                                  );
                                 }
                               })}
                             </div>
@@ -1077,7 +1218,6 @@ const ProductDetails = () => {
                 ))
               )}
             </div>
-
           </div>
         )}
 

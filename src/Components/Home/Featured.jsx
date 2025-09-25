@@ -29,13 +29,13 @@ const getImageUrl = (imageText) => {
   // Already a full URL
   if (imageText.startsWith("http")) {
     return imageText.replace(
-      `${IMG_URL}uploads/${IMG_URL}uploads/`,
-      `${IMG_URL}uploads/`
+      `${IMG_URL}/uploads/${IMG_URL}uploads/`,
+      `${IMG_URL}/uploads/`
     );
   }
 
   // Relative path -> prepend server path
-  return `${IMG_URL}uploads${imageText.startsWith("/") ? imageText : `/${imageText}`}`;
+  return `${IMG_URL}/uploads${imageText.startsWith("/") ? imageText : `/${imageText}`}`;
 };
 
   useEffect(() => {

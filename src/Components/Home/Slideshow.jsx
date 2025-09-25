@@ -30,6 +30,7 @@ export default function HeroSection() {
   const transformProductToSlide = (product, index) => {
     let imageUrl = product.primaryImage?.trim() || "";
 
+   
     if (imageUrl.startsWith("http")) {
       // Already a full URL
       imageUrl = imageUrl.replace(/([^:]\/)\/+/g, "$1");
@@ -39,6 +40,7 @@ export default function HeroSection() {
         imageUrl = `/uploads${imageUrl}`;
       }
       imageUrl = `${IMG_URL}${imageUrl}`.replace(/([^:]\/)\/+/g, "$1");
+      console.log({imageUrl})
     }
 
     return {

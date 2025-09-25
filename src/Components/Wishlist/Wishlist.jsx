@@ -9,6 +9,29 @@ import axios from "axios";
 import Toast from "../Product/Toast"; // adjust path if needed
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const IMG_URL = import.meta.env.VITE_IMG_URL;
+
+const normalizeImage = (url) => {
+  let fixedUrl = url?.trim() || "";
+
+  if (!fixedUrl) return "/s1.jpeg"; // fallback image
+
+  if (fixedUrl.startsWith("http")) {
+    fixedUrl = fixedUrl.replace(/([^:]\/)\/+/g, "$1");
+    fixedUrl = fixedUrl.replace(
+      /^http:\/\/localhost:8001\/uploads/,
+      `${IMG_URL}/uploads`
+    );
+  } else {
+    if (!fixedUrl.startsWith("/uploads/")) {
+      fixedUrl = `/uploads/${fixedUrl.replace(/^\/+/, "")}`;
+    }
+    fixedUrl = `${IMG_URL}${fixedUrl}`.replace(/([^:]\/)\/+/g, "$1");
+  }
+
+  return fixedUrl;
+};
+
+
 export default function Wishlist() {
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, clearWishlist, setWishlist, fetchWishlist } =
@@ -64,11 +87,7 @@ export default function Wishlist() {
       userId: item.UserID,
       productId: item.ProductID,
       wishlistIsActive: item.WishlistIsActive,
-      mainImage: item.PrimaryImage
-        ? item.PrimaryImage.startsWith("http")
-          ? item.PrimaryImage
-          : `${IMG_URL}uploads/${item.PrimaryImage}`
-        : item.img || "/s1.jpeg",
+      mainImage: normalizeImage(item.PrimaryImage || item.img),
       quantity: 1,
     }));
   };
