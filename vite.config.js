@@ -9,7 +9,7 @@ export default defineConfig({
     hmr: {
       overlay: false,
     },
-    allowedHosts: ['nakshatraloka.com'], // 👈 allow your domain
+    allowedHosts: ['nakshatraloka.com', 'www.nakshatraloka.com'], // 👈 allow your domain
     host: '0.0.0.0', // 👈 optional: listen on all addresses
   },
   plugins: [
