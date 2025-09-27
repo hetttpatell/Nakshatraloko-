@@ -71,7 +71,7 @@ export default function useProducts(apiUrl) {
 
           uniqueProducts.set(productId, {
             id: productId,
-            category: p.Category || p.category || "Uncategorized",
+            category: p.Category || p.category || " ",
             name: p.Name || p.name || "Gemstone Product",
             description:
               p.Description || p.description || "Beautiful gemstone jewelry",

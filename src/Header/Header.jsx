@@ -673,7 +673,7 @@ useEffect(() => {
           {/* Right side icons */}
           <div className="flex items-center gap-2">
             {/* Search icon - only show on pages where search is enabled */}
-            {shouldShowSearch && (
+            {/* {shouldShowSearch && (
               <button
                 onClick={() => {
                   setSearchOpen(!searchOpen);
@@ -695,7 +695,7 @@ useEffect(() => {
               >
                 <Search className="h-5 w-5" />
               </button>
-            )}
+            )} */}
 
             {/* User menu icons with enhanced live count display */}
             <div className="flex items-center gap-2">

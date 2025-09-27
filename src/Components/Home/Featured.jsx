@@ -54,8 +54,8 @@ const getImageUrl = (imageText) => {
             id: p.ID,
             name: p.Name,
             description: p.Description,
-            category: p.CatogaryName || "Uncategorized",
-            subcategory: p.CatogaryName || "Uncategorized",
+            category: p.CatogaryName || " ",
+            subcategory: p.CatogaryName || " ",
             price: p.Price || "N/A",
             originalPrice: p.DummyPrice || null,
             img: getImageUrl(p.ImageText),   // ✅ fixed
