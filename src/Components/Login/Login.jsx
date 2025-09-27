@@ -23,19 +23,20 @@ const LoginSignup = ({ onClose }) => {
   const [signupPassword, setSignupPassword] = useState("");
 
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate()
+  
   // ✅ Google Auth redirect
   const handleGoogleLogin = () => {
     window.location.href = `${BACKEND_URL}google`;
   };
 
   // ✅ Normal login
-
-  // Replace your login function with:
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
     if (!email || !password) {
@@ -49,8 +50,6 @@ const LoginSignup = ({ onClose }) => {
         email,
         password,
       });
-
-      // console.log("Login API response:", res.data);
 
       if (res.data.success) {
         setIsLogedin(true);
@@ -84,7 +83,6 @@ const LoginSignup = ({ onClose }) => {
         setError(res.data.message || "Login failed. Please try again.");
       }
     } catch (err) {
-      // console.error("Login error:", err);
       setError(err.response?.data?.message || "Something went wrong. Try again.");
     } finally {
       setLoading(false);
@@ -94,6 +92,8 @@ const LoginSignup = ({ onClose }) => {
   // ✅ Signup function
   const handleSignup = async (e) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
 
     // Validate required fields
     if (!fullname || !signupEmail || !phone || !signupPassword) {
@@ -122,7 +122,6 @@ const LoginSignup = ({ onClose }) => {
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       const response = await axios.post(
@@ -132,24 +131,22 @@ const LoginSignup = ({ onClose }) => {
           email: signupEmail,
           phone: phone.replace(/\D/g, ""),
           password_hash: signupPassword,
-        },
-        { withCredentials: true }   // 👈 add this
+        }
       );
-
-
-
-
-      // console.log("Signup success:", response.data);
 
       if (response.data.success) {
         // Switch to login tab after successful signup
         setIsSignup(false);
-        setError("Signup successful! Please login.");
+        setSuccess("Signup successful! Please login.");
+        // Clear signup form fields
+        setFullname("");
+        setSignupEmail("");
+        setPhone("");
+        setSignupPassword("");
       } else {
         setError(response.data.errors?.[0]?.msg || "Signup failed");
       }
     } catch (err) {
-      // console.error("Signup failed:", err);
       setError(err.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
@@ -188,7 +185,11 @@ const LoginSignup = ({ onClose }) => {
         <div className="flex justify-center mb-6 border-b border-[var(--color-border)] relative">
           <div className="relative">
             <button
-              onClick={() => setIsSignup(false)}
+              onClick={() => {
+                setIsSignup(false);
+                setError("");
+                setSuccess("");
+              }}
               className={`px-6 py-3 font-semibold transition-colors duration-300 ${!isSignup
                 ? "text-[var(--color-primary)]"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
@@ -207,7 +208,11 @@ const LoginSignup = ({ onClose }) => {
 
           <div className="relative">
             <button
-              onClick={() => setIsSignup(true)}
+              onClick={() => {
+                setIsSignup(true);
+                setError("");
+                setSuccess("");
+              }}
               className={`px-6 py-3 font-semibold transition-colors duration-300 ${isSignup
                 ? "text-[var(--color-primary)]"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
@@ -242,6 +247,13 @@ const LoginSignup = ({ onClose }) => {
           </span>
           <div className="flex-1 h-px bg-[var(--color-border)]"></div>
         </div>
+
+        {/* Success message */}
+        {success && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-center">
+            <p className="text-green-700 text-sm font-medium">{success}</p>
+          </div>
+        )}
 
         {/* Form */}
         <AnimatePresence mode="wait">

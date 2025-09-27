@@ -105,7 +105,7 @@ const Footer = () => {
       )}
 
       {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10 overflow-hidden">
         {/* Brand Section */}
         <div className="flex flex-col space-y-4 items-start">
           {/* Brand Logo */}
@@ -143,16 +143,16 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`p-2 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${isHomePage
-                    ? "bg-white hover:bg-[var(--color-primary)]"
-                    : "bg-[var(--color-surface)] hover:bg-[var(--color-primary)]"
+                  ? "bg-white hover:bg-[var(--color-primary)]"
+                  : "bg-[var(--color-surface)] hover:bg-[var(--color-primary)]"
                   }`}
                 aria-label={social.label}
               >
                 <social.icon
                   size={16}
                   className={`${isHomePage
-                      ? "text-[var(--color-primary-dark)] hover:text-white"
-                      : "text-[var(--color-text)] hover:text-white"
+                    ? "text-[var(--color-primary-dark)] hover:text-white"
+                    : "text-[var(--color-text)] hover:text-white"
                     }`}
                 />
               </a>
