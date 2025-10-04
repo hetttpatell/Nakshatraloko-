@@ -76,11 +76,13 @@ const getImageUrl = (imageText) => {
         setLoading(false);
       });
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
+      
+      return () => {
+        isMounted = false;
+      };
+    }, []);
+    
+    console.log({apiProducts: products})
 
   const filteredProducts =
     activeCategory === "all"

@@ -43,7 +43,7 @@ const Recommendation = () => {
         typeof product.Price === "string"
           ? parseFloat(product.Price.replace(/[^\d.]/g, ""))
           : product.Price || product.price,
-      image: `${IMG_URL}uploads${imagePath}`, // prepend correctly
+      image: `${IMG_URL}/uploads${imagePath}`, // prepend correctly
       rating: product.Rating || product.rating || 4.5,
       brand: product.Brand || product.brand || "STYLIUM",
     };

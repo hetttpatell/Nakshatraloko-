@@ -17,6 +17,7 @@ import { useWishlist } from "../../Context/WishlistContext";
 import { useCart } from "../../Context/CartContext";
 import Toast from "./Toast";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -250,57 +251,127 @@ const ProductDetails = () => {
     setLoading(true);
     setError(null);
 
+    // const loadProduct = async () => {
+    //   try {
+    //     const res = await axios.post(`${BACKEND_URL}getProductById/${id}`);
+    //     const productData = res.data?.data?.product;
+
+    //     if (!isMounted || !productData) return;
+
+    //     // Map API response to UI-friendly structure
+    //     const mapped = {
+    //       id: productData.id,
+    //       name: productData.name,
+    //       description: productData.description,
+    //       howToWear: productData.howToWear || "",
+    //       brand: "Unknown Brand",
+
+    //       // ⭐ Rating setup
+    //       rating:
+    //         productData.avgRating && productData.avgRating <= 5
+    //           ? productData.avgRating
+    //           : 0, // fallback: no rating yet, safe default
+    //       reviews: productData.reviews || 0,
+    //       reviewList: productData.reviewList || [],
+
+    //       // Usage for images array
+    //       images: productData.images.map((img) => ({
+    //         src: normalizeImage(img.imageData),
+    //         alt: img.altText || productData.name,
+    //       })),
+
+    //       // Apply to main image
+    //       mainImage: productData.images[0]
+    //         ? normalizeImage(productData.images[0].imageData)
+    //         : "",
+
+    //       size: productData.sizes.map((s) => s.size), // extract just size
+    //       sizeDetails: productData.sizes, // keep full details
+    //       material: ["Leather", "Synthetic"], // fallback until API provides
+    //       advantages: productData.advantages
+    //         ? productData.advantages.split(",").map((a) => a.trim())
+    //         : [],
+    //       shipping: "Delivered in 5-7 business days",
+    //     };
+
+    //     // console.log("Mapped Product:", mapped);
+    //     setProduct(mapped);
+    //     setMainImage(mapped.mainImage);
+    //     setSelectedSize(mapped.size[0] || "");
+    //     setSelectedMaterial(mapped.material[0] || "");
+    //     setLoading(false);
+    //   } catch (err) {
+    //     // console.error("Error loading product:", err);
+    //     if (isMounted) {
+    //       setError("Failed to load product.");
+    //       setLoading(false);
+    //     }
+    //   }
+    // };
+
     const loadProduct = async () => {
       try {
-        const res = await axios.post(`${BACKEND_URL}getProductById/${id}`);
-        const productData = res.data?.data?.product;
+        const token = localStorage.getItem("authToken");
+        let userId = null;
 
+        // ✅ Decode userId from JWT (if logged in)
+        if (token) {
+          try {
+            const decoded = jwtDecode(token);
+            userId = decoded?.id || decoded?.userId || null; // adjust based on your JWT payload key
+          } catch (err) {
+            console.warn("Invalid token:", err);
+          }
+        }
+
+        // ✅ Make request
+        const res = await axios.post(
+          `${BACKEND_URL}getProductById/${id}`,
+          { userId }, // include userId in body
+          {
+            headers: token ? { Authorization: token } : {},
+          }
+        );
+
+        const productData = res.data?.data?.product;
         if (!isMounted || !productData) return;
 
-        // Map API response to UI-friendly structure
+        // --- map productData as before ---
         const mapped = {
           id: productData.id,
           name: productData.name,
           description: productData.description,
           howToWear: productData.howToWear || "",
           brand: "Unknown Brand",
-
-          // ⭐ Rating setup
           rating:
             productData.avgRating && productData.avgRating <= 5
               ? productData.avgRating
-              : 0, // fallback: no rating yet, safe default
+              : 0,
           reviews: productData.reviews || 0,
           reviewList: productData.reviewList || [],
-
-          // Usage for images array
           images: productData.images.map((img) => ({
             src: normalizeImage(img.imageData),
             alt: img.altText || productData.name,
           })),
-
-          // Apply to main image
           mainImage: productData.images[0]
             ? normalizeImage(productData.images[0].imageData)
             : "",
-
-          size: productData.sizes.map((s) => s.size), // extract just size
-          sizeDetails: productData.sizes, // keep full details
-          material: ["Leather", "Synthetic"], // fallback until API provides
+          size: productData.sizes.map((s) => s.size),
+          sizeDetails: productData.sizes,
+          material: ["Leather", "Synthetic"],
           advantages: productData.advantages
             ? productData.advantages.split(",").map((a) => a.trim())
             : [],
           shipping: "Delivered in 5-7 business days",
+          isInWishlist: !!productData.isInWishlist,
         };
 
-        // console.log("Mapped Product:", mapped);
         setProduct(mapped);
         setMainImage(mapped.mainImage);
         setSelectedSize(mapped.size[0] || "");
         setSelectedMaterial(mapped.material[0] || "");
         setLoading(false);
       } catch (err) {
-        // console.error("Error loading product:", err);
         if (isMounted) {
           setError("Failed to load product.");
           setLoading(false);
@@ -341,7 +412,8 @@ const ProductDetails = () => {
     return stars;
   };
 
-  const isWishlisted = wishlist.some((item) => item.id === product?.id);
+  const isWishlisted =
+    product?.isInWishlist || wishlist.some((item) => item.id === product?.id);
 
   const showToast = (message, type = "success") => {
     setCustomToast({ message, type, visible: true });
