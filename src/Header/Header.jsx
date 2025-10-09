@@ -592,11 +592,11 @@ useEffect(() => {
   };
 
   // Enhanced click handler for wishlist icon
-  const handleWishlistClick = async () => {
-    if (isLoggedIn) {
-      await fetchWishlist();
-    }
-  };
+  // const handleWishlistClick = async () => {
+  //   if (isLoggedIn) {
+  //     await fetchWishlist();
+  //   }
+  // };
 
   return (
     <>

@@ -159,13 +159,13 @@ This is your cosmic home.`,
               </div>
             </motion.div>
 
-            <motion.button
+            {/* <motion.button
               className="px-8 py-3.5 bg-[var(--color-primary)] text-white font-medium rounded-lg hover:bg-[var(--color-primary-dark)] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-base"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               Discover Our Wisdom
-            </motion.button>
+            </motion.button> */}
           </motion.div>
 
           {/* Image Content */}

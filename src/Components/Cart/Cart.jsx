@@ -120,7 +120,7 @@ export default function Cart() {
           description: item.Description,
           price: parseFloat(item.FirstSizePrice),
           originalPrice: parseFloat(item.FirstDummyPrice),
-          discountPercentage: parseFloat(item.DiscountPercentage),
+          discountPercentage: item.DiscountPercentage,
           image: normalizeImage(item.PrimaryImage || item.image || item.primaryimage ||  "/s1.jpeg"),
           category: item.CategoryName,
           inStock: item.Stock > 0,
