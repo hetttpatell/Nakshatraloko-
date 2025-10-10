@@ -30,6 +30,7 @@ const LoginSignup = ({ onClose }) => {
   // ✅ Google Auth redirect
   const handleGoogleLogin = () => {
     window.location.href = `${BACKEND_URL}google`;
+    console.log(import.meta.env.VITE_BACKEND_URL);
   };
 
   // ✅ Normal login
