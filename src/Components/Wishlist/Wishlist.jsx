@@ -31,7 +31,6 @@ const normalizeImage = (url) => {
   return fixedUrl;
 };
 
-
 export default function Wishlist() {
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, clearWishlist, setWishlist, fetchWishlist } =
@@ -72,8 +71,8 @@ export default function Wishlist() {
     return apiData.map((item) => ({
       id: item.WishlistID,
       name: item.Name,
-      price: item.Price ? parseFloat(item.Price) : 0,
-      oldPrice: item.DummyPrice ? parseFloat(item.DummyPrice) : null,
+      price: item.Price ? item.Price : 0,
+      oldPrice: item.DummyPrice ? item.DummyPrice : null,
       stockStatus: item.StockStatus || "Out of Stock",
       inStock: item.StockStatus === "In Stock",
       advantages: item.Advantages,
@@ -325,39 +324,76 @@ export default function Wishlist() {
                     )}
                   </motion.div>
 
-                  {/* Info */}
-                  <div className="flex-1 text-center sm:text-left space-y-2">
-                    <h3 className="text-lg font-semibold">{item.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      Added by: {item.fullname} ({item.email})
-                    </p>
-                    <p className="text-sm">
-                      <strong>Description:</strong> {item.description}
-                    </p>
-                    <p className="text-sm">
-                      <strong>Advantages:</strong> {item.advantages}
-                    </p>
-                    <p className="text-sm">
-                      <strong>How To Wear:</strong> {item.howToWear}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-lg font-semibold">
-                        ₹{item.price.toFixed(2)}
+                  {/* Info Section */}
+                  <div className="flex-1 text-center sm:text-left space-y-3 font-[var(--font-poppins)] text-color-text">
+                    {/* Product Name */}
+                    <h3 className="text-xl sm:text-2xl font-playfair text-color-primary tracking-wide italic underline">
+                      {item.name}
+                    </h3>
+
+                    {/* Added by */}
+                    {/* <p className="text-sm text-color-text-muted italic">
+                      Added by{" "}
+                      <span className="font-medium text-color-primary">
+                        {item.fullname}
+                      </span>{" "}
+                      (
+                      <span className="text-color-text-light">
+                        {item.email}
+                      </span>
+                      )
+                    </p> */}
+
+                    {/* Description Block */}
+                    <div className="space-y-4 text-color-text-light">
+                      <div>
+                        <h4 className="font-semibold uppercase text-color-primary tracking-wider mb-2 font-playfair">
+                          Description
+                        </h4>
+                        <p className="text-color-text leading-relaxed font-inter">
+                          {item.description}
+                        </p>
+                      </div>
+
+                      {/* <div>
+                        <h4 className="font-semibold uppercase text-color-primary tracking-wider mb-2 font-playfair">
+                          Advantages
+                        </h4>
+                        <p className="text-color-text leading-relaxed font-inter">
+                          {item.advantages}
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold uppercase text-color-primary tracking-wider mb-2 font-playfair">
+                          How To Wear
+                        </h4>
+                        <p className="text-color-text leading-relaxed font-inter">
+                          {item.howToWear}
+                        </p>
+                      </div> */}
+                    </div>
+                    {/* Price */}
+                    <div className="flex items-center justify-center sm:justify-start gap-3 mt-3">
+                      <span className="text-2xl font-semibold text-color-primary font-[var(--font-cinzel)]">
+                        ₹{item.price}
                       </span>
                       {item.oldPrice && item.oldPrice > item.price && (
-                        <span className="text-sm text-gray-500 line-through">
-                          ₹{item.oldPrice.toFixed(2)}
+                        <span className="text-base text-color-text-muted line-through">
+                          ₹{item.oldPrice}
                         </span>
                       )}
                     </div>
+
+                    {/* Stock Badge */}
                     <div
-                      className={`text-xs px-3 py-1 rounded-2xl font-medium w-40 ${
+                      className={`text-xs flex items-center justify-center px-4 py-1.5 rounded-full font-medium w-40 sm:mx-0 mx-auto border transition-all duration-300 ${
                         item.inStock
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                          ? "bg-[var(--color-primary-light)] text-color-primary border-color-primary"
+                          : "bg-[var(--color-background-alt)] text-[var(--color-accent-red)] border-[var(--color-accent-red)]"
                       }`}
                     >
-                      {item.inStock ? item.stockStatus : "Out of Stock"}
+                      {item.inStock ? "In Stock" : "Out of Stock"}
                     </div>
                   </div>
 

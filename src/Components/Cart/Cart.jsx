@@ -1,7 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useCart } from "../../Context/CartContext";
 import Recommendations from "../Product/Recommendation";
-import { Minus, Plus, Trash2, ShoppingBag, Sparkles, Zap, LogIn } from "lucide-react";
+import {
+  Minus,
+  Plus,
+  Trash2,
+  ShoppingBag,
+  Sparkles,
+  Zap,
+  LogIn,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
@@ -37,7 +45,8 @@ const normalizeImage = (url) => {
 };
 
 export default function Cart() {
-  const { cart, addToCart, removeFromCart, updateQuantity, getCart } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity, getCart } =
+    useCart();
   const [loading, setLoading] = useState(true);
   const [transformedCart, setTransformedCart] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -46,7 +55,7 @@ export default function Cart() {
     type: "success",
     visible: false,
   });
-  
+
   const navigate = useNavigate();
 
   const showToast = (message, type = "success") => {
@@ -67,13 +76,13 @@ export default function Cart() {
       toast.error("Your cart is empty!");
       return;
     }
-    
+
     // Check if user is logged in
     if (!isLoggedIn) {
       toast.info("Please log in to proceed to checkout");
       return;
     }
-    
+
     navigate("/payment");
   };
 
@@ -121,7 +130,9 @@ export default function Cart() {
           price: parseFloat(item.FirstSizePrice),
           originalPrice: parseFloat(item.FirstDummyPrice),
           discountPercentage: item.DiscountPercentage,
-          image: normalizeImage(item.PrimaryImage || item.image || item.primaryimage ||  "/s1.jpeg"),
+          image: normalizeImage(
+            item.PrimaryImage || item.image || item.primaryimage || "/s1.jpeg"
+          ),
           category: item.CategoryName,
           inStock: item.Stock > 0,
           stock: item.Stock,
@@ -154,8 +165,10 @@ export default function Cart() {
 
     if (newQuantity <= item.stock) {
       // 1️⃣ Update local state immediately
-      setTransformedCart(prev =>
-        prev.map((p) => (p.id === item.id ? { ...p, quantity: newQuantity } : p))
+      setTransformedCart((prev) =>
+        prev.map((p) =>
+          p.id === item.id ? { ...p, quantity: newQuantity } : p
+        )
       );
 
       // 2️⃣ Debounce backend update
@@ -205,20 +218,28 @@ export default function Cart() {
   };
 
   // Background circles component
-  const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
+  const BackgroundCircle = ({
+    top,
+    left,
+    size,
+    color,
+    delay,
+    duration,
+    yMovement,
+  }) => (
     <motion.div
       className={`absolute ${size} rounded-full ${color}`}
       style={{ top: `${top}%`, left: `${left}%` }}
       animate={{
         y: [0, yMovement, 0],
         scale: [1, 1.1, 1],
-        rotate: [0, 5, 0]
+        rotate: [0, 5, 0],
       }}
       transition={{
         duration: duration,
         repeat: Infinity,
         ease: "easeInOut",
-        delay: delay
+        delay: delay,
       }}
     />
   );
@@ -239,9 +260,33 @@ export default function Cart() {
   return (
     <div className="bg-gradient-to-b from-[var(--color-primary-light)]/30 to-[var(--color-background)] min-h-screen py-14 px-4 sm:px-6 lg:px-12 relative overflow-hidden">
       {/* Background elements */}
-      <BackgroundCircle top={10} left={5} size="w-16 h-16" color="bg-[var(--color-primary)]/10" delay={0} duration={8} yMovement={15} />
-      <BackgroundCircle top={80} left={90} size="w-20 h-20" color="bg-[var(--color-primary)]/10" delay={1} duration={7} yMovement={-12} />
-      <BackgroundCircle top={30} left={85} size="w-12 h-12" color="bg-[var(--color-primary)]/10" delay={2} duration={9} yMovement={10} />
+      <BackgroundCircle
+        top={10}
+        left={5}
+        size="w-16 h-16"
+        color="bg-[var(--color-primary)]/10"
+        delay={0}
+        duration={8}
+        yMovement={15}
+      />
+      <BackgroundCircle
+        top={80}
+        left={90}
+        size="w-20 h-20"
+        color="bg-[var(--color-primary)]/10"
+        delay={1}
+        duration={7}
+        yMovement={-12}
+      />
+      <BackgroundCircle
+        top={30}
+        left={85}
+        size="w-12 h-12"
+        color="bg-[var(--color-primary)]/10"
+        delay={2}
+        duration={9}
+        yMovement={10}
+      />
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Title */}
@@ -324,7 +369,11 @@ export default function Cart() {
                     <motion.div
                       className="relative overflow-hidden rounded-xl"
                       whileHover={{ scale: 1.05 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 10,
+                      }}
                     >
                       <img
                         src={product.image}
@@ -332,17 +381,19 @@ export default function Cart() {
                         className="w-32 h-32 object-cover"
                         onError={(e) => {
                           // console.log('Image failed to load:', product.image);
-                          e.target.src = '/s1.jpeg'; // Fallback image
+                          e.target.src = "/s1.jpeg"; // Fallback image
                         }}
                       />
                       {!product.inStock && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                          <span className="text-white text-sm font-medium">Out of Stock</span>
+                          <span className="text-white text-sm font-medium">
+                            Out of Stock
+                          </span>
                         </div>
                       )}
                       {product.discountPercentage > 0 && (
                         <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                          {product.discountPercentage.toFixed(0)}% OFF
+                          {product.discountPercentage}% OFF
                         </div>
                       )}
                     </motion.div>
@@ -370,8 +421,8 @@ export default function Cart() {
 
                       <div className="flex items-center gap-2">
                         {product.inStock ? (
-                          <p className="text-green-600 text-sm font-medium bg-green-100 px-2 py-1 rounded-full">
-                            In Stock ({product.stock} left)
+                          <p className="bg-[var(--color-primary-light)] text-color-primary border-color-primary px-4 py-2 rounded-2xl text-center w-fit mx-auto sm:mx-0">
+                            In Stock
                           </p>
                         ) : (
                           <p className="text-red-600 text-sm font-medium bg-red-100 px-2 py-1 rounded-full">
@@ -386,10 +437,12 @@ export default function Cart() {
                         </div>
                         {product.originalPrice > product.price && (
                           <div className="text-sm text-gray-500 line-through">
-                            ₹{(product.originalPrice * product.quantity).toFixed(2)}
+                            ₹
+                            {(product.originalPrice * product.quantity).toFixed(
+                              2
+                            )}
                           </div>
-                        )
-                        }
+                        )}
                       </div>
                       <div className="text-xs text-[var(--color-text-light)]">
                         (₹{product.price.toFixed(2)} × {product.quantity})
@@ -404,7 +457,12 @@ export default function Cart() {
                           <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
                             <motion.button
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => handleQuantityChange(product, product.quantity - 1)}
+                              onClick={() =>
+                                handleQuantityChange(
+                                  product,
+                                  product.quantity - 1
+                                )
+                              }
                               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
                               disabled={product.quantity <= 1}
                               type="button"
@@ -412,11 +470,18 @@ export default function Cart() {
                               <Minus size={14} />
                             </motion.button>
 
-                            <span className="w-8 text-center font-medium">{product.quantity}</span>
+                            <span className="w-8 text-center font-medium">
+                              {product.quantity}
+                            </span>
 
                             <motion.button
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => handleQuantityChange(product, product.quantity + 1)}
+                              onClick={() =>
+                                handleQuantityChange(
+                                  product,
+                                  product.quantity + 1
+                                )
+                              }
                               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
                               disabled={product.quantity >= product.stock}
                               type="button"
@@ -424,7 +489,6 @@ export default function Cart() {
                               <Plus size={14} />
                             </motion.button>
                           </div>
-
                         </div>
                       )}
 
@@ -449,15 +513,25 @@ export default function Cart() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <h3 className="text-xl font-semibold mb-6 text-[var(--color-text)]">Order Summary</h3>
+                <h3 className="text-xl font-semibold mb-6 text-[var(--color-text)]">
+                  Order Summary
+                </h3>
                 <div className="space-y-4">
                   <div className="flex justify-between text-[var(--color-text)]">
                     <span>Subtotal ({transformedCart.length} items)</span>
                     <span>₹{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[var(--color-text-light)]">Shipping</span>
-                    <span className={shipping === 0 ? "text-green-600 font-medium" : "text-[var(--color-text-light)]"}>
+                    <span className="text-[var(--color-text-light)]">
+                      Shipping
+                    </span>
+                    <span
+                      className={
+                        shipping === 0
+                          ? "text-green-600 font-medium"
+                          : "text-[var(--color-text-light)]"
+                      }
+                    >
                       {shipping === 0 ? "Free" : `₹${shipping}`}
                     </span>
                   </div>
@@ -476,16 +550,17 @@ export default function Cart() {
                   >
                     Continue Shopping
                   </Link>
-                  
+
                   {/* Updated checkout button in summary section */}
                   {isLoggedIn ? (
                     <button
                       onClick={handleCheckout}
                       disabled={subtotal === 0}
-                      className={`w-full py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
-                        }`}
+                      className={`w-full py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${
+                        subtotal === 0
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
+                      }`}
                     >
                       <Sparkles size={16} />
                       Proceed to Checkout
@@ -513,12 +588,15 @@ export default function Cart() {
               <motion.div
                 animate={{
                   scale: [1, 1.1, 1],
-                  rotate: [0, 5, 0]
+                  rotate: [0, 5, 0],
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
                 className="inline-flex items-center justify-center w-24 h-24 bg-[var(--color-primary)]/10 rounded-full mb-6"
               >
-                <ShoppingBag className="text-[var(--color-primary)]" size={40} />
+                <ShoppingBag
+                  className="text-[var(--color-primary)]"
+                  size={40}
+                />
               </motion.div>
               <p className="text-2xl font-semibold text-[var(--color-text)] mb-2">
                 Your bag is empty
@@ -558,7 +636,6 @@ export default function Cart() {
           }
         />
       )}
-
     </div>
   );
 }
