@@ -6,7 +6,7 @@ import Input from "../Input/Input";
 import { useNavigate } from "react-router-dom";
 import api from "../../Utils/api";
 
-const BACKEND_URL = import.meta.env.VITE_LIVE_BACKEND_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const LoginSignup = ({ onClose }) => {
   const [isSignup, setIsSignup] = useState(false);
