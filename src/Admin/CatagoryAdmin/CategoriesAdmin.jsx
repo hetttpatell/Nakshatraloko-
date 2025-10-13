@@ -19,8 +19,10 @@ import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import Toast from "../../Components/Product/Toast";
 import { useProductManagement } from "../../CustomHooks/useProductManagement";
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const IMG_URL = import.meta.env.VITE_IMG_URL;
+
 const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   // State for categories
   const [categories, setCategories] = useState([]);
@@ -32,8 +34,8 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     description: "",
     isShown: true,
     isActive: true,
-    isFeatured: false, // ✅ new field
-    image: "", // ✅ new field
+    isFeatured: false,
+    image: "",
     active_product_count: 0,
   });
   const [toasts, setToasts] = useState([]);
@@ -43,16 +45,69 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [imagePreview, setImagePreview] = useState(""); // For image preview
+  const [imagePreview, setImagePreview] = useState("");
   const [imageFile, setImageFile] = useState(null);
+
+  const { refreshProducts } = useProductManagement();
+
+  // Helper functions
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return "/s1.jpeg";
+    return `${IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/"}uploads/${imagePath.replace(/^\/+/, "")}`;
+  };
+
   const showToast = (message, type = "success") => {
-    const id = Date.now(); // unique id
+    const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
   };
+
   const removeToast = (id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
-  const { refreshProducts } = useProductManagement();
+
+  const resetAddForm = () => {
+    setNewCategory({
+      name: "",
+      description: "",
+      isShown: true,
+      isActive: true,
+      isFeatured: false,
+      image: "",
+      active_product_count: 0,
+    });
+    setImageFile(null);
+    setImagePreview("");
+    setIsAdding(false);
+    setError(null);
+  };
+
+  // Unified API function
+  const saveCategoryAPI = async (categoryData, imageFile = null) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const formData = new FormData();
+      
+      // Append all category data
+      Object.keys(categoryData).forEach(key => {
+        if (key !== 'image' && key !== 'active_product_count') {
+          formData.append(key, categoryData[key]);
+        }
+      });
+      
+      if (imageFile) formData.append("images", imageFile);
+
+      const response = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
+        headers: {
+          Authorization: token,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
 
   // Fetch categories from API
   useEffect(() => {
@@ -62,7 +117,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
         const response = await axios.post(`${BACKEND_URL}getAllCatogary`);
 
         if (response.data.data) {
-          // Transform API data to match our component structure
           const formattedCategories = response.data.data.map((category) => ({
             id: category._id || category.id || category.ID,
             name: category.name || category.Name || "",
@@ -71,19 +125,12 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             isShown: category.isShown ?? category.IsShown ?? true,
             isActive: category.isActive ?? category.IsActive ?? true,
             isFeatured: category.isFeatured ?? category.IsFeatured ?? false,
-            image: category.Image
-              ? `${
-                  IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/"
-                }uploads/${category.Image.replace(/^\/+/, "")}`
-              : "/s1.jpeg",
+            image: getImageUrl(category.Image),
           }));
-
-          // console.log({ data: response });
 
           setCategories(formattedCategories);
         }
       } catch (err) {
-        // console.error("Error fetching categories:", err);
         setError("Failed to load categories. Please try again.");
       } finally {
         setIsLoading(false);
@@ -93,29 +140,14 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     fetchCategories();
   }, []);
 
-  const handleToggleFeatured = (id) => {
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.id === id ? { ...cat, isFeatured: !cat.isFeatured } : cat
-      )
-    );
-  };
-
-  const activeCount = products.filter((product) => {
-    return (
-      product.isActive &&
-      (product.categoryId?.toString() === category.id ||
-        product.category === category.name)
-    );
-  }).length;
+  // Update active product counts
   useEffect(() => {
     if (!products || products.length === 0) return;
 
     setCategories((prev) =>
       prev.map((category) => {
         const activeCount = products.filter((p) => {
-          const productCategoryId =
-            p.categoryId?.toString() || p.category?.toString();
+          const productCategoryId = p.categoryId?.toString() || p.category?.toString();
           return p.isActive && productCategoryId === category.id?.toString();
         }).length;
 
@@ -124,6 +156,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     );
   }, [products]);
 
+  // Image upload handler
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -141,222 +174,111 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
   // Add new category
   const handleAddCategory = async () => {
-    if (!newCategory.name.trim()) return setError("Category name is required");
+    if (!newCategory.name.trim()) {
+      setError("Category name is required");
+      return;
+    }
+
     try {
-      setIsAddingCategory(true); // ✅ use the same state as button
-      const token = localStorage.getItem("authToken");
-      const formData = new FormData();
-      formData.append("name", newCategory.name);
-      formData.append("description", newCategory.description);
-      formData.append("isActive", newCategory.isActive);
-      formData.append("isFeatured", newCategory.isFeatured);
-      if (imageFile) formData.append("images", imageFile);
-
-      const res = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
-        headers: {
-          Authorization: token,
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (res.data.success) {
+      setIsAddingCategory(true);
+      const result = await saveCategoryAPI(newCategory, imageFile);
+      
+      if (result.success) {
         setCategories([
           ...categories,
           {
             ...newCategory,
-            id: res.data.id || res.data._id,
+            id: result.id || result._id,
             active_product_count: 0,
-            image: res.data.image
-              ? `${IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/"}uploads/${
-                  res.data.image
-                }`
-              : "/s1.jpeg",
+            image: getImageUrl(result.image),
           },
         ]);
 
-        setNewCategory({
-          name: "",
-          description: "",
-          isActive: true,
-          isFeatured: false,
-          image: "",
-        });
-        showToast(res.data.message || "Category added successfully", "success");
-        setImageFile(null);
-        setImagePreview("");
-        setError(null);
-        setIsAdding(false);
-        setIsAddingCategory(false); // ✅ also reset here
-        setIsAdding(false);
+        resetAddForm();
+        showToast(result.message || "Category added successfully", "success");
       }
     } catch (err) {
       setError("Failed to add category.");
     } finally {
-      setIsAddingCategory(false); // ✅ make sure button is enabled after API call
+      setIsAddingCategory(false);
     }
   };
 
-  // if toggeld then this function executes
-
+  // Toggle featured status
   const handleToggleFeaturedApi = async (category) => {
     try {
       const featuredCount = categories.filter((cat) => cat.isFeatured).length;
 
-      // If trying to enable a 5th category
       if (!category.isFeatured && featuredCount >= 4) {
         showToast("You can only select up to 4 featured categories", "error");
         return;
       }
 
-      const token = localStorage.getItem("authToken");
-      const formData = new FormData();
-      formData.append("id", category.id);
-      formData.append("name", category.name);
-      formData.append("description", category.description);
-      formData.append("isActive", category.isActive);
-      formData.append("isFeatured", !category.isFeatured); // toggle value
-      if (category.image) formData.append("images", category.image);
+      const updatedCategory = {
+        ...category,
+        isFeatured: !category.isFeatured
+      };
 
-      const res = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
-        headers: {
-          Authorization: token,
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (res.data.success) {
+      const result = await saveCategoryAPI(updatedCategory);
+      
+      if (result.success) {
         setCategories((prev) =>
           prev.map((cat) =>
-            cat.id === category.id
-              ? { ...cat, isFeatured: !cat.isFeatured }
-              : cat
+            cat.id === category.id ? updatedCategory : cat
           )
         );
-        showToast(
-          res.data.message || "Category updated successfully",
-          "success"
-        );
+        showToast(result.message || "Category updated successfully", "success");
       }
     } catch (err) {
-      // console.error(err);
-      toast.error("Failed to update category");
+      showToast("Failed to update category", "error");
     }
   };
 
-  // Filter products for the selected category
-  const filteredProducts = selectedCategory
-    ? products
-        .filter((product) => {
-          // First check if product has the categoryId matching selected category
-          if (
-            product.categoryId === selectedCategory.id ||
-            (product.category &&
-              product.category.toString() === selectedCategory.id.toString())
-          ) {
-            return true;
-          }
-
-          // Fallback: check if product name or description contains category name
-          return (
-            product.name
-              .toLowerCase()
-              .includes(selectedCategory.name.toLowerCase()) ||
-            (product.description &&
-              product.description
-                .toLowerCase()
-                .includes(selectedCategory.name.toLowerCase()))
-          );
-        })
-        .filter((product) => {
-          // Apply search filter
-          if (
-            searchTerm &&
-            !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-            !product.description
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase())
-          ) {
-            return false;
-          }
-
-          // Apply status filter
-          if (statusFilter !== "all") {
-            const inStockFilter = statusFilter === "inStock";
-            if (product.inStock !== inStockFilter) return false;
-          }
-
-          return true;
-        })
-    : [];
-
+  // Edit category
   const handleEditCategory = async () => {
-    if (!editingCategory.name.trim()) return;
+    if (!editingCategory?.name?.trim()) return;
 
     try {
-      const token = localStorage.getItem("authToken");
-      const formData = new FormData();
-      formData.append("id", editingCategory.id); // <-- include ID here
-      formData.append("name", editingCategory.name);
-      formData.append("description", editingCategory.description);
-      formData.append("isActive", editingCategory.isActive);
-      formData.append("isFeatured", editingCategory.isFeatured);
-      if (imageFile) formData.append("images", imageFile); // or "image" depending on multer field name
-
-      const res = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
-        headers: {
-          Authorization: token,
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (res.data.success) {
-        setCategories(
-          categories.map((cat) =>
-            cat.id === editingCategory.id ? editingCategory : cat
-          )
-        );
+      const result = await saveCategoryAPI(editingCategory, imageFile);
+      
+      if (result.success) {
+        setCategories(categories.map((cat) =>
+          cat.id === editingCategory.id ? editingCategory : cat
+        ));
         setEditingCategory(null);
         setImageFile(null);
         setImagePreview("");
-        // ✅ Show success toast
-        toast.success(response.data.message || "Category updated successfully");
+        showToast(result.message || "Category updated successfully", "success");
       }
     } catch (err) {
-      // console.error(err);
       setError("Failed to update category.");
     }
   };
+
+  // Delete category
   const handleDeleteCategory = async (id) => {
     try {
-      const token = localStorage.getItem("authToken"); // ✅ get token
-
-      // Call API to delete category with token in headers
+      const token = localStorage.getItem("authToken");
       const response = await axios.post(
         `${BACKEND_URL}deleteCatogary/${id}`,
-        {}, // no body needed for delete
+        {},
         {
           headers: {
-            Authorization: token, // ✅ pass token
+            Authorization: token,
           },
         }
       );
-      //toast
+
       if (response.data.success) {
         setCategories(categories.filter((cat) => cat.id !== id));
         setDeleteConfirm(null);
-        // ✅ Show success toast using your custom Toast component
-        showToast(
-          response.data.message || "Category deleted successfully",
-          "success"
-        );
+        showToast(response.data.message || "Category deleted successfully", "success");
 
-        // If the deleted category was selected, go back to categories list
         if (selectedCategory && selectedCategory.id === id) {
           setSelectedCategory(null);
         }
       }
     } catch (err) {
-      // console.error("Error deleting category:", err);
       setError("Failed to delete category. Please try again.");
     }
   };
@@ -366,7 +288,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     const newVisibility = !category.isShown;
 
     try {
-      // Call API to update visibility
       const response = await axios.put(`${BACKEND_URL}updateCategory/${id}`, {
         isShown: newVisibility,
       });
@@ -379,7 +300,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
         );
       }
     } catch (err) {
-      // console.error("Error updating category visibility:", err);
       setError("Failed to update category visibility. Please try again.");
     }
   };
@@ -389,7 +309,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     const newStatus = !category.isActive;
 
     try {
-      // Call API to update status
       const response = await axios.put(`${BACKEND_URL}updateCategory/${id}`, {
         isActive: newStatus,
       });
@@ -406,10 +325,51 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
         );
       }
     } catch (err) {
-      // console.error("Error updating category status:", err);
       setError("Failed to update category status. Please try again.");
     }
   };
+
+  // Filter products for the selected category
+  const filteredProducts = selectedCategory
+    ? products
+        .filter((product) => {
+          if (
+            product.categoryId === selectedCategory.id ||
+            (product.category &&
+              product.category.toString() === selectedCategory.id.toString())
+          ) {
+            return true;
+          }
+
+          return (
+            product.name
+              .toLowerCase()
+              .includes(selectedCategory.name.toLowerCase()) ||
+            (product.description &&
+              product.description
+                .toLowerCase()
+                .includes(selectedCategory.name.toLowerCase()))
+          );
+        })
+        .filter((product) => {
+          if (
+            searchTerm &&
+            !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            !product.description
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())
+          ) {
+            return false;
+          }
+
+          if (statusFilter !== "all") {
+            const inStockFilter = statusFilter === "inStock";
+            if (product.inStock !== inStockFilter) return false;
+          }
+
+          return true;
+        })
+    : [];
 
   // Render loading state
   if (isLoading) {
@@ -441,7 +401,115 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   }
 
   // Render product list for selected category
-  const renderProductList = () => {};
+  const renderProductList = () => {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+          >
+            <FaArrowLeft /> Back to Categories
+          </button>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Products in {selectedCategory.name}
+          </h2>
+        </div>
+
+        {/* Search and Filter */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1">
+            <div className="relative">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div className="w-full md:w-48">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="inStock">In Stock</option>
+              <option value="outOfStock">Out of Stock</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Products List */}
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="p-3 font-semibold text-gray-700">Product</th>
+                <th className="p-3 font-semibold text-gray-700">Name</th>
+                <th className="p-3 font-semibold text-gray-700">Price</th>
+                <th className="p-3 font-semibold text-gray-700">Stock</th>
+                <th className="p-3 font-semibold text-gray-700">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts.map((product) => (
+                <tr key={product.id} className="border-b border-gray-200 hover:bg-gray-50">
+                  <td className="p-3">
+                    {product.image ? (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-12 h-12 rounded object-cover"
+                      />
+                    ) : (
+                      <span className="text-gray-400 text-sm">No Image</span>
+                    )}
+                  </td>
+                  <td className="p-3">
+                    <div>
+                      <p className="font-medium text-gray-800">{product.name}</p>
+                      <p className="text-sm text-gray-500 truncate max-w-xs">
+                        {product.description}
+                      </p>
+                    </div>
+                  </td>
+                  <td className="p-3 font-medium">${product.price}</td>
+                  <td className="p-3">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      product.inStock 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {product.inStock ? 'In Stock' : 'Out of Stock'}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      product.isActive 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {product.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredProducts.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No products found in this category.
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Render categories list
   const renderCategoriesList = () => {
@@ -549,7 +617,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             </div>
 
             <div className="flex items-center gap-6 mb-4">
-              <div className="flex items-center"></div>
               <div className="flex items-center">
                 <button
                   onClick={() =>
@@ -603,19 +670,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                 {isAddingCategory ? "Adding..." : "Add Category"}
               </button>
               <button
-                onClick={() => {
-                  setIsAdding(false);
-                  setImagePreview("");
-                  setImageFile(null);
-                  setNewCategory({
-                    name: "",
-                    description: "",
-                    isShown: true,
-                    isActive: true,
-                    isFeatured: false,
-                    image: "",
-                  });
-                }}
+                onClick={resetAddForm}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
               >
                 Cancel
@@ -680,11 +735,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                     </div>
                   </td>
 
-                  {/* <td className="p-3">
-                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                      {category.productCount} products
-                    </span>
-                  </td> */}
                   <td className="p-3">
                     <div className="flex items-center">
                       <span
@@ -699,7 +749,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                     <div className="flex items-center">
                       <button
                         onClick={(e) => {
-                          e.stopPropagation(); // prevent row click
+                          e.stopPropagation();
                           handleToggleFeaturedApi(category);
                         }}
                         type="button"
@@ -804,7 +854,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             <div className="p-6">
               <h3 className="text-xl font-semibold mb-4">Edit Category</h3>
               <div className="space-y-4">
-                {/* Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Category Name *
@@ -823,7 +872,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   />
                 </div>
 
-                {/* Description */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description
@@ -842,7 +890,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   />
                 </div>
 
-                {/* Image Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Category Image
@@ -872,7 +919,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   )}
                 </div>
 
-                {/* Active & Featured toggles */}
                 <div className="flex items-center gap-6">
                   <div className="flex items-center">
                     <button
@@ -927,7 +973,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => {
@@ -979,6 +1024,8 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
           </div>
         </div>
       )}
+
+      {/* Toast Notifications */}
       <div className="fixed top-6 right-6 z-50 flex flex-col gap-2">
         {toasts.map((toastItem) => (
           <Toast
