@@ -1,7 +1,16 @@
 // components/ProductModal.jsx
 import axios from "axios";
 import React, { useState, useEffect } from "react";
-import { FaTimes, FaArrowUp, FaArrowDown, FaTrash, FaPlus, FaMinus, FaSync, FaStar } from "react-icons/fa";
+import {
+  FaTimes,
+  FaArrowUp,
+  FaArrowDown,
+  FaTrash,
+  FaPlus,
+  FaMinus,
+  FaSync,
+  FaStar,
+} from "react-icons/fa";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const IMG_URL = import.meta.env.VITE_IMG_URL;
@@ -25,7 +34,7 @@ const ProductModal = ({
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [sizes, setSizes] = useState([
-    { size: "", price: "", dummyPrice: "", stock: "" }
+    { size: "", price: "", dummyPrice: "", stock: "" },
   ]);
   const [images, setImages] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
@@ -33,8 +42,30 @@ const ProductModal = ({
   const [categoryData, setCategoryData] = useState([]);
   const [apiStatus, setApiStatus] = useState({ loading: false, message: "" });
 
+  const getCleanImagePath = (url) => {
+    if (!url) return "";
+    // Find "/api/uploads/" in the string
+    const idx = url.indexOf("/api/uploads/");
+    if (idx !== -1) {
+      // Keep only the part after "/api/uploads/"
+      return url.substring(idx + "/api/uploads".length);
+    }
+    const idx2 = url.indexOf("/uploads/");
+    if (idx2 !== -1) {
+      return url.substring(idx2 + "/uploads".length);
+    }
+    // If already relative like "/product-xxx.png", return as-is
+    return url.startsWith("/") ? url : `/${url}`;
+  };
+
+  const sanitizedImages = images.map((img) => ({
+    ...img,
+    imageData: getCleanImagePath(img.imageData),
+  }));
+
   useEffect(() => {
-    axios.post(`${BACKEND_URL}getAllCatogary`)
+    axios
+      .post(`${BACKEND_URL}getAllCatogary`)
       .then((res) => {
         if (res.data.success) {
           setCategoryData(res.data.data);
@@ -55,29 +86,34 @@ const ProductModal = ({
         initialProduct.CategoryID !== undefined
           ? parseInt(initialProduct.CategoryID)
           : initialProduct.categoryId !== undefined
-            ? parseInt(initialProduct.categoryId)
-            : ""
+          ? parseInt(initialProduct.categoryId)
+          : ""
       );
-      setDescription(initialProduct.Description || initialProduct.description || "");
-      setAdvantages(initialProduct.Advantages || initialProduct.advantages || "");
+      setDescription(
+        initialProduct.Description || initialProduct.description || ""
+      );
+      setAdvantages(
+        initialProduct.Advantages || initialProduct.advantages || ""
+      );
       setHowToWear(initialProduct.HowToWear || initialProduct.howToWear || "");
       setIsActive(
         initialProduct.IsActive !== undefined
           ? initialProduct.IsActive
           : initialProduct.isActive !== undefined
-            ? initialProduct.isActive
-            : true
+          ? initialProduct.isActive
+          : true
       );
-      
+
       // ---------------- Rating field ----------------
-      const initialRating = initialProduct.Rating !== undefined
-        ? parseFloat(initialProduct.Rating)
-        : initialProduct.rating !== undefined
+      const initialRating =
+        initialProduct.Rating !== undefined
+          ? parseFloat(initialProduct.Rating)
+          : initialProduct.rating !== undefined
           ? parseFloat(initialProduct.rating)
           : initialProduct.productRatings !== undefined
-            ? parseFloat(initialProduct.productRatings)
-            : 0;
-          
+          ? parseFloat(initialProduct.productRatings)
+          : 0;
+
       // Ensure rating is between 0 and 5
       setRating(Math.min(Math.max(initialRating, 0), 5));
 
@@ -106,17 +142,21 @@ const ProductModal = ({
       }
 
       // ---------------- Images ----------------
-      const productImages = initialProduct.Images || initialProduct.images || [];
+      const productImages =
+        initialProduct.Images || initialProduct.images || [];
       if (Array.isArray(productImages) && productImages.length > 0) {
         const formattedImages = productImages.map((img) => {
           let imageUrl = img.imageData || img.imageUrl || "";
 
           if (imageUrl) {
-            // ✅ Always keep only the last "/uploads/..." part
-            const uploadsIndex = imageUrl.lastIndexOf("/uploads");
-            if (uploadsIndex !== -1) {
-              const cleanPath = imageUrl.substring(uploadsIndex);
-              imageUrl = `${IMG_URL}${cleanPath}`;
+            const uploadsIndex = imageUrl.indexOf("/api/uploads");
+            const uploadsFallback = imageUrl.indexOf("/uploads");
+            const startIndex =
+              uploadsIndex !== -1 ? uploadsIndex : uploadsFallback;
+
+            if (startIndex !== -1) {
+              const cleanPath = imageUrl.substring(startIndex);
+              imageUrl = `${IMG_URL}${cleanPath.replace(/([^:]\/)\/+/g, "$1")}`;
             }
           }
 
@@ -189,7 +229,7 @@ const ProductModal = ({
         isPrimary: images.length === 0,
         isActive: true,
         file: file,
-        isExisting: false
+        isExisting: false,
       };
 
       newImageFiles.push(file);
@@ -204,7 +244,7 @@ const ProductModal = ({
   };
 
   const removeImage = (index) => {
-    setImages(prev => {
+    setImages((prev) => {
       const newImages = [...prev];
       newImages.splice(index, 1);
 
@@ -218,7 +258,7 @@ const ProductModal = ({
 
     // Only remove from imageFiles if it's a new file (not an existing image)
     if (!images[index].isExisting) {
-      setImageFiles(prev => {
+      setImageFiles((prev) => {
         const newFiles = [...prev];
         newFiles.splice(index, 1);
         return newFiles;
@@ -227,10 +267,10 @@ const ProductModal = ({
   };
 
   const setPrimaryImage = (index) => {
-    setImages(prev => {
+    setImages((prev) => {
       return prev.map((img, i) => ({
         ...img,
-        isPrimary: i === index
+        isPrimary: i === index,
       }));
     });
   };
@@ -243,31 +283,40 @@ const ProductModal = ({
       return;
     }
 
-    setImages(prev => {
+    setImages((prev) => {
       const newImages = [...prev];
       const targetIndex = direction === "up" ? index - 1 : index + 1;
 
       // Swap positions
-      [newImages[index], newImages[targetIndex]] = [newImages[targetIndex], newImages[index]];
+      [newImages[index], newImages[targetIndex]] = [
+        newImages[targetIndex],
+        newImages[index],
+      ];
 
       return newImages;
     });
 
     // Only rearrange imageFiles for new images
-    setImageFiles(prev => {
+    setImageFiles((prev) => {
       const newFiles = [...prev];
       // Find the indices of new files in the images array
       const newFileIndices = images
         .map((img, idx) => (!img.isExisting ? idx : -1))
-        .filter(idx => idx !== -1);
+        .filter((idx) => idx !== -1);
 
       // If both images at these indices are new files, swap them
-      if (newFileIndices.includes(index) && newFileIndices.includes(targetIndex)) {
+      if (
+        newFileIndices.includes(index) &&
+        newFileIndices.includes(targetIndex)
+      ) {
         const fileIndex1 = newFileIndices.indexOf(index);
         const fileIndex2 = newFileIndices.indexOf(targetIndex);
-        [newFiles[fileIndex1], newFiles[fileIndex2]] = [newFiles[fileIndex2], newFiles[fileIndex1]];
+        [newFiles[fileIndex1], newFiles[fileIndex2]] = [
+          newFiles[fileIndex2],
+          newFiles[fileIndex1],
+        ];
       }
- 
+
       return newFiles;
     });
   };
@@ -279,7 +328,9 @@ const ProductModal = ({
 
     // Auto-calculate dummyPrice if price changes and dummyPrice is empty
     if (field === "price" && !newSizes[index].dummyPrice) {
-      newSizes[index].dummyPrice = Math.round(parseFloat(value || 0) * 1.2).toString();
+      newSizes[index].dummyPrice = Math.round(
+        parseFloat(value || 0) * 1.2
+      ).toString();
     }
 
     setSizes(newSizes);
@@ -317,181 +368,205 @@ const ProductModal = ({
   // Handle numeric input change for rating
   const handleRatingInputChange = (e) => {
     let value = parseFloat(e.target.value);
-    
+
     // Ensure value is between 0 and 5
     if (isNaN(value)) value = 0;
     value = Math.min(Math.max(value, 0), 5);
-    
+
     setRating(value);
   };
 
   const submittingRef = React.useRef(false);
 
-  const handleSubmit = React.useCallback(async (e) => {
-    e.preventDefault();
+  const handleSubmit = React.useCallback(
+    async (e) => {
+      e.preventDefault();
 
-    if (submittingRef.current) return;
-    submittingRef.current = true;
-    setErrors({});
-    setApiStatus({ loading: true, message: "" });
-
-    const newErrors = {};
-
-    // --- Validations ---
-    if (!categoryId) {
-      newErrors.categoryId = "Please select a category";
-    }
-    if (!name.trim()) {
-      newErrors.name = "Please enter a product name";
-    }
-    if (images.filter(img => img.isExisting || img.file).length === 0) {
-      newErrors.images = "Please upload at least one image";
-    }
-
-    // Validate each size
-    sizes.forEach((size, index) => {
-      if (!size.size) newErrors[`size-${index}`] = "Size is required";
-      if (!size.price || parseFloat(size.price) <= 0) newErrors[`price-${index}`] = "Valid price is required";
-      if (!size.dummyPrice || parseFloat(size.dummyPrice) <= 0) newErrors[`dummyPrice-${index}`] = "Valid dummy price is required";
-      if (!size.stock || parseInt(size.stock) < 0) newErrors[`stock-${index}`] = "Valid stock quantity is required";
-    });
-
-    // Category validation - compare as numbers
-    const numericCategoryId = parseInt(categoryId, 10);
-    const selectedCategory = categoryData.find(cat =>
-      cat.ID === numericCategoryId
-    );
-
-    if (!selectedCategory && categoryId) {
-      newErrors.categoryId = "Invalid category selected";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setApiStatus({ loading: false, message: "" });
-      submittingRef.current = false;
-      return;
-    }
-
-    // console.log("All validations passed, building payload");
-
-    // --- Build FormData payload ---
-    const formData = new FormData();
-
-    // Add basic fields
-    formData.append("id", isEditing ? (initialProduct?.id || 0) : 0);
-    formData.append("categoryId", numericCategoryId);
-    formData.append("name", name.trim());
-    formData.append("description", description?.trim() || "");
-    formData.append("advantages", advantages?.trim() || "");
-    formData.append("howToWear", howToWear?.trim() || "");
-    formData.append("isActive", Boolean(isActive));
-    formData.append("rating", parseFloat(rating) || 0);
-    formData.append("productRatings", parseFloat(rating) || 0); // Add rating to productRatings field
-    formData.append("createdBy", 1);
-
-    // Add sizes as JSON string
-    const sizesData = sizes.map((size) => {
-      const parsedSize = parseFloat(size.size);
-      return {
-        size: !isNaN(parsedSize) ? parsedSize : size.size,
-        price: parseFloat(size.price) || 0,
-        dummyPrice: parseFloat(size.dummyPrice) || 0,
-        stock: parseInt(size.stock, 10) || 0,
-      };
-    });
-    formData.append("sizes", JSON.stringify(sizesData));
-
-    // Add images metadata as JSON string
-    const imagesMeta = images.map((img, index) => ({
-      id: img.id || null,
-      altText: img.altText?.trim() || "",
-      isPrimary: Boolean(img.isPrimary),
-      isActive: Boolean(img.isActive),
-      order: index,
-      isExisting: Boolean(img.isExisting),
-      originalUrl: img.originalUrl || img.imageData
-    }));
-    formData.append("imageFiles", JSON.stringify(imagesMeta));
-
-    // Handle existing images properly
-    const existingImages = images
-      .filter(img => img.isExisting)
-      .map((img, idx) => ({
-        id: img.id,
-        image: img.originalUrl,
-        altText: img.altText || "",
-        isPrimary: img.isPrimary,
-        isActive: true
-      }));
-    formData.append("existingImageUrls", JSON.stringify(existingImages));
-
-    // Append only new image files with proper field name
-    images.forEach((img) => {
-      if (img.file && !img.isExisting) {
-        formData.append("images", img.file);
-      }
-    });
-
-    // console.log('Sending FormData with product data');
-
-    try {
+      if (submittingRef.current) return;
+      submittingRef.current = true;
+      setErrors({});
       setApiStatus({ loading: true, message: "" });
-      // console.log("Making API call to saveProduct with FormData");
 
-      const response = await axios.post(
-        `${BACKEND_URL}saveProduct`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "Authorization": `${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
-          },
-        }
+      const newErrors = {};
+
+      // --- Validations ---
+      if (!categoryId) {
+        newErrors.categoryId = "Please select a category";
+      }
+      if (!name.trim()) {
+        newErrors.name = "Please enter a product name";
+      }
+      if (images.filter((img) => img.isExisting || img.file).length === 0) {
+        newErrors.images = "Please upload at least one image";
+      }
+
+      // Validate each size
+      sizes.forEach((size, index) => {
+        if (!size.size) newErrors[`size-${index}`] = "Size is required";
+        if (!size.price || parseFloat(size.price) <= 0)
+          newErrors[`price-${index}`] = "Valid price is required";
+        if (!size.dummyPrice || parseFloat(size.dummyPrice) <= 0)
+          newErrors[`dummyPrice-${index}`] = "Valid dummy price is required";
+        if (!size.stock || parseInt(size.stock) < 0)
+          newErrors[`stock-${index}`] = "Valid stock quantity is required";
+      });
+
+      // Category validation - compare as numbers
+      const numericCategoryId = parseInt(categoryId, 10);
+      const selectedCategory = categoryData.find(
+        (cat) => cat.ID === numericCategoryId
       );
 
-      // console.log("API response:", response.data);
+      if (!selectedCategory && categoryId) {
+        newErrors.categoryId = "Invalid category selected";
+      }
 
-      if (response.data.success) {
-        setApiStatus({ loading: false, message: "success" });
-        onSave(response.data);
-      } else {
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        setApiStatus({ loading: false, message: "" });
+        submittingRef.current = false;
+        return;
+      }
+
+      // console.log("All validations passed, building payload");
+
+      // --- Build FormData payload ---
+      const formData = new FormData();
+
+      // Add basic fields
+      formData.append("id", isEditing ? initialProduct?.id || 0 : 0);
+      formData.append("categoryId", numericCategoryId);
+      formData.append("name", name.trim());
+      formData.append("description", description?.trim() || "");
+      formData.append("advantages", advantages?.trim() || "");
+      formData.append("howToWear", howToWear?.trim() || "");
+      formData.append("isActive", Boolean(isActive));
+      formData.append("rating", parseFloat(rating) || 0);
+      formData.append("productRatings", parseFloat(rating) || 0); // Add rating to productRatings field
+      formData.append("createdBy", 1);
+
+      // Add sizes as JSON string
+      const sizesData = sizes.map((size) => {
+        const parsedSize = parseFloat(size.size);
+        return {
+          size: !isNaN(parsedSize) ? parsedSize : size.size,
+          price: parseFloat(size.price) || 0,
+          dummyPrice: parseFloat(size.dummyPrice) || 0,
+          stock: parseInt(size.stock, 10) || 0,
+        };
+      });
+      formData.append("sizes", JSON.stringify(sizesData));
+
+      // Add images metadata as JSON string
+      const imagesMeta = images.map((img, index) => ({
+        id: img.id || null,
+        altText: img.altText?.trim() || "",
+        isPrimary: Boolean(img.isPrimary),
+        isActive: Boolean(img.isActive),
+        order: index,
+        isExisting: Boolean(img.isExisting),
+        originalUrl: img.originalUrl || img.imageData,
+      }));
+      formData.append("imageFiles", JSON.stringify(imagesMeta));
+
+      // Handle existing images properly
+      const existingImages = images
+        .filter((img) => img.isExisting)
+        .map((img, idx) => ({
+          id: img.id,
+          image: img.originalUrl,
+          altText: img.altText || "",
+          isPrimary: img.isPrimary,
+          isActive: true,
+        }));
+      formData.append("existingImageUrls", JSON.stringify(existingImages));
+
+      // Append only new image files with proper field name
+      images.forEach((img) => {
+        if (img.file && !img.isExisting) {
+          formData.append("images", img.file);
+        }
+      });
+
+      // console.log('Sending FormData with product data');
+
+      try {
+        setApiStatus({ loading: true, message: "" });
+        // console.log("Making API call to saveProduct with FormData");
+
+        const response = await axios.post(
+          `${BACKEND_URL}saveProduct`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `${
+                localStorage.getItem("authToken") ||
+                localStorage.getItem("token")
+              }`,
+            },
+          }
+        );
+
+        // console.log("API response:", response.data);
+
+        if (response.data.success) {
+          setApiStatus({ loading: false, message: "success" });
+          onSave(response.data);
+        } else {
+          setErrors({
+            submit: response.data.message || "Failed to save product",
+          });
+          setApiStatus({ loading: false, message: "error" });
+        }
+      } catch (error) {
+        // console.error("❌ Save product failed:", error);
+        let errorMessage = "Failed to save product";
+
+        if (error.response) {
+          // console.error("Error data:", error.response.data);
+          // console.error("Error status:", error.response.status);
+          errorMessage = error.response.data.message || errorMessage;
+        } else if (error.request) {
+          // console.error("Error request:", error.request);
+          errorMessage =
+            "No response received from server. Please check your connection.";
+        } else {
+          // console.error("Error message:", error.message);
+          errorMessage = error.message;
+        }
+
         setErrors({
-          submit: response.data.message || "Failed to save product",
+          submit: errorMessage,
         });
         setApiStatus({ loading: false, message: "error" });
+      } finally {
+        setApiStatus({ loading: false, message: "" });
+        submittingRef.current = false;
       }
-    } catch (error) {
-      // console.error("❌ Save product failed:", error);
-      let errorMessage = "Failed to save product";
-
-      if (error.response) {
-        // console.error("Error data:", error.response.data);
-        // console.error("Error status:", error.response.status);
-        errorMessage = error.response.data.message || errorMessage;
-      } else if (error.request) {
-        // console.error("Error request:", error.request);
-        errorMessage = "No response received from server. Please check your connection.";
-      } else {
-        // console.error("Error message:", error.message);
-        errorMessage = error.message;
-      }
-
-      setErrors({
-        submit: errorMessage,
-      });
-      setApiStatus({ loading: false, message: "error" });
-    } finally {
-      setApiStatus({ loading: false, message: "" });
-      submittingRef.current = false;
-    }
-  }, [name, categoryId, sizes, images, isActive, description, advantages, howToWear, rating, isEditing, initialProduct, categoryData, onSave]);
+    },
+    [
+      name,
+      categoryId,
+      sizes,
+      images,
+      isActive,
+      description,
+      advantages,
+      howToWear,
+      rating,
+      isEditing,
+      initialProduct,
+      categoryData,
+      onSave,
+    ]
+  );
 
   // Clean up object URLs when component unmounts
   useEffect(() => {
     return () => {
-      images.forEach(img => {
-        if (img.imageData && img.imageData.startsWith('blob:')) {
+      images.forEach((img) => {
+        if (img.imageData && img.imageData.startsWith("blob:")) {
           URL.revokeObjectURL(img.imageData);
         }
       });
@@ -505,7 +580,7 @@ const ProductModal = ({
       const isFullStar = starValue <= Math.floor(rating);
       const isHalfStar = rating % 1 >= 0.5 && starValue === Math.ceil(rating);
       const isHovered = starValue <= hoverRating;
-      
+
       return (
         <button
           key={index}
@@ -517,17 +592,19 @@ const ProductModal = ({
         >
           {/* Empty star */}
           <FaStar className="text-gray-300 absolute inset-0" />
-          
+
           {/* Half star (when applicable) */}
           {isHalfStar && (
             <div className="overflow-hidden w-1/2 absolute inset-0">
               <FaStar className="text-yellow-400" />
             </div>
           )}
-          
+
           {/* Full star (when applicable) */}
           {(isFullStar || isHovered) && (
-            <FaStar className={isHovered ? "text-yellow-300" : "text-yellow-400"} />
+            <FaStar
+              className={isHovered ? "text-yellow-300" : "text-yellow-400"}
+            />
           )}
         </button>
       );
@@ -539,7 +616,6 @@ const ProductModal = ({
       <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto border-2 border-gray-200">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-
             <h3 className="text-xl font-semibold">{title}</h3>
             <button
               className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -561,9 +637,11 @@ const ProductModal = ({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6 border-2 border-gray-200 p-6 rounded-lg">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 border-2 border-gray-200 p-6 rounded-lg"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
               {/* Category Name */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
@@ -629,7 +707,8 @@ const ProductModal = ({
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Click stars or enter a value between 0 and 5 (decimals allowed)
+                  Click stars or enter a value between 0 and 5 (decimals
+                  allowed)
                 </p>
               </div>
 
@@ -646,11 +725,28 @@ const ProductModal = ({
                 <div className="flex flex-col items-center justify-center w-full">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                      <svg
+                        className="w-8 h-8 mb-4 text-gray-500"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 20 16"
+                      >
+                        <path
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                        />
                       </svg>
-                      <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                      <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (MAX. 5MB)</p>
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span>{" "}
+                        or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        SVG, PNG, JPG or GIF (MAX. 5MB)
+                      </p>
                     </div>
                     <input
                       id="dropzone-file"
@@ -666,10 +762,19 @@ const ProductModal = ({
                 {/* Image Previews */}
                 {images.length > 0 && (
                   <div className="mt-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Uploaded Images:</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      Uploaded Images:
+                    </h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {images.map((image, index) => (
-                        <div key={index} className={`relative border rounded-lg p-2 ${image.isPrimary ? 'border-2 border-blue-500' : 'border-gray-200'}`}>
+                        <div
+                          key={index}
+                          className={`relative border rounded-lg p-2 ${
+                            image.isPrimary
+                              ? "border-2 border-blue-500"
+                              : "border-gray-200"
+                          }`}
+                        >
                           <img
                             src={image.imageData}
                             alt={`Preview ${index + 1}`}
@@ -694,7 +799,7 @@ const ProductModal = ({
                           <div className="absolute top-2 right-2 flex space-x-1">
                             <button
                               type="button"
-                              onClick={() => moveImage(index, 'up')}
+                              onClick={() => moveImage(index, "up")}
                               disabled={index === 0}
                               className="bg-white rounded p-1 shadow-sm disabled:opacity-50"
                               title="Move up"
@@ -703,7 +808,7 @@ const ProductModal = ({
                             </button>
                             <button
                               type="button"
-                              onClick={() => moveImage(index, 'down')}
+                              onClick={() => moveImage(index, "down")}
                               disabled={index === images.length - 1}
                               className="bg-white rounded p-1 shadow-sm disabled:opacity-50"
                               title="Move down"
@@ -805,28 +910,41 @@ const ProductModal = ({
                 )}
 
                 {sizes.map((size, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border border-gray-200 rounded-lg">
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 border border-gray-200 rounded-lg"
+                  >
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">Size</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Size
+                      </label>
                       <input
                         type="text"
                         value={size.size}
-                        onChange={(e) => handleSizeChange(index, "size", e.target.value)}
+                        onChange={(e) =>
+                          handleSizeChange(index, "size", e.target.value)
+                        }
                         placeholder="Enter size"
                         required
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
                       />
                       {errors[`size-${index}`] && (
-                        <p className="text-red-500 text-xs">{errors[`size-${index}`]}</p>
+                        <p className="text-red-500 text-xs">
+                          {errors[`size-${index}`]}
+                        </p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">Price (₹)</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Price (₹)
+                      </label>
                       <input
                         type="number"
                         value={size.price}
-                        onChange={(e) => handleSizeChange(index, "price", e.target.value)}
+                        onChange={(e) =>
+                          handleSizeChange(index, "price", e.target.value)
+                        }
                         placeholder="0.00"
                         min="0"
                         step="0.01"
@@ -834,16 +952,22 @@ const ProductModal = ({
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
                       />
                       {errors[`price-${index}`] && (
-                        <p className="text-red-500 text-xs">{errors[`price-${index}`]}</p>
+                        <p className="text-red-500 text-xs">
+                          {errors[`price-${index}`]}
+                        </p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">Dummy Price (₹)</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Dummy Price (₹)
+                      </label>
                       <input
                         type="number"
                         value={size.dummyPrice}
-                        onChange={(e) => handleSizeChange(index, "dummyPrice", e.target.value)}
+                        onChange={(e) =>
+                          handleSizeChange(index, "dummyPrice", e.target.value)
+                        }
                         placeholder="0.00"
                         min="0"
                         step="0.01"
@@ -851,23 +975,31 @@ const ProductModal = ({
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
                       />
                       {errors[`dummyPrice-${index}`] && (
-                        <p className="text-red-500 text-xs">{errors[`dummyPrice-${index}`]}</p>
+                        <p className="text-red-500 text-xs">
+                          {errors[`dummyPrice-${index}`]}
+                        </p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">Stock</label>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Stock
+                      </label>
                       <input
                         type="number"
                         value={size.stock}
-                        onChange={(e) => handleSizeChange(index, "stock", e.target.value)}
+                        onChange={(e) =>
+                          handleSizeChange(index, "stock", e.target.value)
+                        }
                         placeholder="0"
                         min="0"
                         required
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
                       />
                       {errors[`stock-${index}`] && (
-                        <p className="text-red-500 text-xs">{errors[`stock-${index}`]}</p>
+                        <p className="text-red-500 text-xs">
+                          {errors[`stock-${index}`]}
+                        </p>
                       )}
                     </div>
 
@@ -906,7 +1038,10 @@ const ProductModal = ({
                   />
                 </div>
                 <div className="flex flex-col">
-                  <label htmlFor="isActive" className="text-sm font-semibold text-gray-900">
+                  <label
+                    htmlFor="isActive"
+                    className="text-sm font-semibold text-gray-900"
+                  >
                     Active Product
                   </label>
                   <p className="text-xs text-gray-500">
@@ -932,9 +1067,25 @@ const ProductModal = ({
               >
                 {apiStatus.loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     {isEditing ? "Updating..." : "Creating..."}
                   </>

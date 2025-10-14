@@ -87,6 +87,7 @@ const ProductDetails = () => {
   const { addToWishlist, wishlist } = useWishlist();
   const { addToCart } = useCart();
 
+  
   const normalizeImage = (url) => {
     let fixedUrl = url?.trim() || "";
 
@@ -333,6 +334,7 @@ const ProductDetails = () => {
           }
         );
 
+
         const productData = res.data?.data?.product;
         if (!isMounted || !productData) return;
 
@@ -379,6 +381,7 @@ const ProductDetails = () => {
       }
     };
 
+
     loadProduct();
     fetchReviews(); // Fetch reviews when component mounts
 
@@ -386,6 +389,7 @@ const ProductDetails = () => {
       isMounted = false;
     };
   }, [id]);
+  
 
   // Add this function to your component
   const renderStars = (rating) => {
