@@ -546,11 +546,11 @@ const ProductDetails = () => {
       <div className="w-full max-w-[1400px] mx-auto px-5 md:px-12 py-10">
         {/* Breadcrumb */}
         <nav className="text-sm text-color-text-muted mb-6 flex items-center">
-          <span className="hover:text-color-primary cursor-pointer">Home</span>
-          <FiChevronRight className="mx-2 text-xs" />
+          <span className="hover:text-color-primary cursor-pointer" onClick={() => navigate("/")}>Home</span>
+          {/* <FiChevronRight className="mx-2 text-xs" />
           <span className="hover:text-color-primary cursor-pointer">
             Jewelry
-          </span>
+          </span> */}
           <FiChevronRight className="mx-2 text-xs" />
           <span className="text-color-primary">{product.name}</span>
         </nav>
