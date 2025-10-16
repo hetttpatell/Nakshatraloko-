@@ -85,14 +85,16 @@ const CouponBanner = () => {
     }).format(amount);
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-32 bg-gradient-to-br from-[#1a103d] via-[#2d1b69] to-[#3a2282]">
-        <div className="animate-pulse text-[#b89f7a] text-sm font-serif">Consulting the celestial charts...</div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="flex justify-center items-center h-32 bg-gradient-to-br from-[#1a103d] via-[#2d1b69] to-[#3a2282]">
+  //       <div className="animate-pulse text-[#b89f7a] text-sm font-serif">Consulting the celestial charts...</div>
+  //     </div>
+  //   );
+  // }
 
+  if (loading) return null;
+  
   if (coupons.length === 0) {
     return null; // Don't show banner if no active coupons
   }
