@@ -1,0 +1,345 @@
+git add .
+git commit -m "Header chaneg done"
+git push origin development
+
+
+installss 
+npm install @heroicons/react
+npm install phosphor-react
+
+
+
+
+
+this code is for conditional rendering of login button 
+
+<div className="flex items-center lg:order-2">
+        <Link
+          to="#"
+          className="text-white hover:bg-white hover:text-[var(--color-bg-nav)] focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2 focus:outline-none"
+        >
+          Log in
+        </Link>
+        <Link
+          to="#"
+          className="text-white bg-orange-700 hover:bg-orange-800 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2 focus:outline-none"
+        >
+          Get started
+        </Link>
+      </div>
+
+
+
+
+
+
+
+
+
+
+      // import React, { useState, useEffect } from "react";
+
+// // Example slide data (replace images/text as you wish)
+// const slides = [
+//   {
+//     bg: "bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600",
+//     img: "/testing.jpeg",
+//     headline: "Dive into Brilliance",
+//     description: "Discover the sparkle of handpicked gemstones crafted in 925 Silver.",
+//     button: { label: "Explore Collection", href: "#" }
+//   },
+//   {
+//     bg: "bg-gradient-to-br from-purple-900 via-indigo-800 to-indigo-600",
+//     img: "/testing.jpeg",
+//     headline: "Shine Under New Light",
+//     description: "Signature designs for modern souls – silver and gemstone rings.",
+//     button: { label: "Shop Now", href: "#" }
+//   },
+//   {
+//     bg: "bg-gradient-to-br from-teal-800 via-green-700 to-teal-600",
+//     img: "/testing.jpeg",
+//     headline: "Crafted With Care",
+//     description: "Experience unbeatable craftsmanship in every piece you wear.",
+//     button: { label: "View Gallery", href: "#" }
+//   },
+//   {
+//     bg: "bg-gradient-to-br from-gray-900 via-slate-700 to-gray-600",
+//     img: "/testing.jpeg",
+//     headline: "The New Era of Gems",
+//     description: "Bold, brilliant, and enchanting – explore our latest exclusive collection.",
+//     button: { label: "Know More", href: "#" }
+//   },
+// ];
+
+// export default function Slideshow() {
+//   const [idx, setIdx] = useState(0);
+//   const total = slides.length;
+
+//   // Auto-advance slide every 5 seconds
+//   useEffect(() => {
+//     const timer = setTimeout(() => setIdx((i) => (i + 1) % total), 4000);
+//     return () => clearTimeout(timer);
+//   }, [ idx,total]);
+
+//   const goTo = (i) => setIdx(i);
+//   const prev = () => setIdx((i) => (i - 1 + total) % total);
+//   const next = () => setIdx((i) => (i + 1) % total);
+
+//   return (
+//     <div className="relative w-full h-[620px] overflow-hidden  shadow-lg">
+//       {/* Slide Content */}
+//       {slides.map((slide, i) => (
+//         <div
+//           key={i}
+//           className={`absolute inset-0 px-12 transition-all duration-700
+//             ${i === idx ? "opacity-100 scale-100 z-10" : "opacity-0 scale-90 z-0"} ${slide.bg}`}
+//           style={{ 
+//             backgroundImage: slide.img ? `url(${slide.img})` : undefined, 
+//             backgroundSize: slide.img ? "cover" : undefined,
+//             backgroundPosition: slide.img ? "right center" : undefined
+//           }}
+//         >
+//           <div className="flex items-center h-full">
+//             <div className="max-w-lg">
+//               <h1 className="text-4xl font-bold text-yellow-200 drop-shadow mb-3 font-serif">{slide.headline}</h1>
+//               <p className="text-lg text-white mb-6">{slide.description}</p>
+//               <a
+//                 href={slide.button.href}
+//                 className="inline-block bg-yellow-400 text-gray-900 font-semibold rounded px-5 py-2 mr-3 hover:bg-yellow-500 transition"
+//               >
+//                 {slide.button.label}
+//               </a>
+//               <a
+//                 href="#"
+//                 className="inline-block bg-transparent border border-gray-400 text-white font-semibold rounded px-5 py-2 hover:bg-gray-700 transition"
+//               >
+//                 Know More
+//               </a>
+//             </div>
+//           </div>
+//         </div>
+//       ))}
+//       {/* Navigation Buttons */}
+//       <button
+//         className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 p-3 rounded-full text-yellow-200 hover:bg-black/80 transition"
+//         onClick={prev}
+//         aria-label="Previous Slide"
+//       >
+//         &#10094;
+//       </button>
+//       <button
+//         className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 p-3 rounded-full text-yellow-200 hover:bg-black/80 transition"
+//         onClick={next}
+//         aria-label="Next Slide"
+//       >
+//         &#10095;
+//       </button>
+//       {/* Dots/Pagination */}
+//       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3">
+//         {slides.map((_, i) => (
+//           <button
+//             key={i}
+//             className={`w-4 h-4 rounded-full border-2 
+//               ${i === idx ? "bg-yellow-300 border-yellow-400" : "bg-gray-400 border-transparent"}`}
+//             onClick={() => goTo(i)}
+//             aria-label={`Go to slide ${i + 1}`}
+//           />
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
+
+get back from git hub -
+git checkout f268667784c30e58a41978ef3414bd4618c9d71c -- src/Components/Home/HelpingForm.jsx
+
+working theme 
+
+:root {
+  --color-bg: #f5f5dc;
+  --color-aboutbg : #f1eadd;
+  --color-navy: #001f3f;
+  --color-text: #333333;
+}
+
+first attemp 
+
+:root {
+  /* main website background (light gray with slight blue tint) */
+  --color-bg: #f4f6f9; 
+
+  /* about section background (soft silver-gray for contrast) */
+  --color-aboutbg: #e6e9ef; 
+
+  /* secondary / brand color (deep professional navy) */
+  --color-navy: #0a2540;
+
+  /* text color (slate gray, softer than black for modern look) */
+  --color-text: #2e2e3a;
+
+  /* accent highlight (cool aqua-blue for hover/underline/button accents) */
+  --color-accent: #4fb3e8;
+}
+
+pista theem 
+:root {
+  /* main website background: rich smoke gray for distinct mood */
+  --color-bg: #e0e0e0;
+  /* about section background: soft lilac for subtle luxury */
+  --color-aboutbg: #d6cadd;
+  /* secondary color: olive green for headers/nav/footer */
+  --color-navy: #708238;
+  /* accent color: vibrant coral for contrast highlights/buttons */
+  --color-accent: #ff6f61;
+  /* highlight color: sunlight yellow for invitations/callouts */
+  --color-highlight: #ffef96;
+  /* text color: deep cocoa */
+  --color-text: #4d2c19;
+  /* border/line color: muted sand */
+  --color-border: #c4b7a6;
+}
+
+actually good purple
+
+:root {
+  /* main website background (soft pastel peach for warmth) */
+  --color-bg: #fff4e6;
+
+  /* about section background (muted blush for contrast but still light) */
+  --color-aboutbg: #ffe9d6;
+
+  /* secondary / brand color (deep plum-purple for uniqueness) */
+  --color-navy: #3b0a45;
+
+  /* text color (dark warm gray for readability) */
+  --color-text: #2c2c2c;
+
+  /* accent highlight (coral-pink for fresh and modern highlights) */
+  --color-accent: #ff6b6b;
+}
+
+
+
+<h3 className="font-montserrat py-4 text-center text-xs sm:text-sm lg:text-base max-w-3xl mx-auto px-4">
+          By signing up, you agree to receive call from our expert astrologers at the phone number provided. View our privacy policy and terms of service for more info.
+        </h3> 
+
+
+Backup index 
+
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&family=Playfair+Display:wght@400;600;700&display=swap");
+
+@keyframes ring {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-10deg); }
+  30% { transform: rotate(7deg); }
+  40% { transform: rotate(-5deg); }
+  50% { transform: rotate(3deg); }
+  60% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.ring-animation {
+  animation: ring 1.2s infinite;
+  transform-origin: center;
+}
+
+@theme {
+  --font-inter: "Inter", sans-serif;
+  --font-poppins: "Poppins", sans-serif;
+  --font-playfair: "Playfair Display", serif;
+  --font-montserrat: "Montserrat", sans-serif;
+  --font-cinzel: "Cinzel", serif;
+  --font-cormorant: "Cormorant Garamond", serif;
+  --font-lora: "Lora", serif;
+}
+
+.menu-font {
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+/* :root {
+  --color-productcontainerbg: #fcf8f4;
+  --color-productbg: #f6f1eb;
+  --color-bg: #f5f5dc;
+  --color-aboutbg: #e6d9c3;
+  --color-navy: #001f3f;
+  --color-text: #333333;
+} */
+
+/* :root {
+  --color-primary: #8b5cf6;
+  --color-primary-dark: #7c3aed;
+  --color-primary-light: #a78bfa;
+  --color-secondary: #f59e0b;
+  --color-background: #ffffff;
+  --color-background-alt: #f8fafc;
+  --color-surface: #f1f5f9;
+  --color-text: #334155;
+  --color-text-light: #64748b;
+  --color-border: #e2e8f0;
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+} */
+:root {
+  /* Primary Colors */
+  --color-primary: #b89f7a;
+  --color-primary-dark: #a58a65;
+  --color-primary-light: #f5f2eb;
+  
+  /* Background Colors */
+  --color-background: #faf8f5;
+  --color-background-alt: #f9f7f3;
+  --color-surface: #ffffff;
+  
+  /* Text Colors */
+  --color-text: #2c2c2c;
+  --color-text-light: #5a5a5a;
+  --color-text-muted: #7d7d7d;
+  
+  /* Border & Divider Colors */
+  --color-border: #e5e5e5;
+  
+  /* Accent Colors */
+  --color-accent-gold: #b89f7a;
+  --color-accent-amber: #f59e0b;
+  --color-accent-green: #10b981;
+  --color-accent-red: #ef4444;
+  
+  /* Rating Colors */
+  --color-rating: #f59e0b;
+  
+  /* Shadow Effects */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  
+  /* Border Radius */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  
+  /* Transitions */
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.2s ease-in-out;
+}
+ @keyframes slideIn {
+  0% { opacity: 0; transform: translateX(100%); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease forwards;
+}

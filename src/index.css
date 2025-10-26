@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&family=Playfair+Display:wght@400;600;700&display=swap");
+@import "tailwindcss";
+
+@keyframes ring {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-10deg); }
+  30% { transform: rotate(7deg); }
+  40% { transform: rotate(-5deg); }
+  50% { transform: rotate(3deg); }
+  60% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.ring-animation {
+  animation: ring 1.2s infinite;
+  transform-origin: center;
+}
+  html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+:root {
+  /* Primary Colors */
+  --color-primary: #b89f7a;
+  --color-primary-dark: #a58a65;
+  --color-primary-light: #f5f2eb;
+  
+  /* Background Colors */
+  --color-background: #faf8f5;
+  --color-background-alt: #f9f7f3;
+  --color-surface: #ffffff;
+  
+  /* Text Colors */
+  --color-text: #2c2c2c;
+  --color-text-light: #5a5a5a;
+  --color-text-muted: #7d7d7d;
+  
+  /* Border & Divider Colors */
+  --color-border: #e5e5e5;
+  
+  /* Accent Colors */
+  --color-accent-gold: #b89f7a;
+  --color-accent-amber: #f59e0b;
+  --color-accent-green: #10b981;
+  --color-accent-red: #DB4437;
+  
+  /* Rating Colors */
+  --color-rating: #f59e0b;
+}
+
+@theme {
+  --font-inter: "Inter", sans-serif;
+  --font-poppins: "Poppins", sans-serif;
+  --font-playfair: "Playfair Display", serif;
+  --font-montserrat: "Montserrat", sans-serif;
+  --font-cinzel: "Cinzel", serif;
+  --font-cormorant: "Cormorant Garamond", serif;
+  --font-lora: "Lora", serif;
+}
+
+.menu-font {
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+@keyframes slideIn {
+  0% { opacity: 0; transform: translateX(100%); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease forwards;
+}
+
+/* Additional utility classes for the color variables */
+.bg-color-background { background-color: var(--color-background); }
+.bg-color-background-alt { background-color: var(--color-background-alt); }
+.bg-color-surface { background-color: var(--color-surface); }
+.bg-color-primary { background-color: var(--color-primary); }
+.bg-color-primary-dark { background-color: var(--color-primary-dark); }
+.bg-color-primary-light { background-color: var(--color-primary-light); }
+
+.text-color-text { color: var(--color-text); }
+.text-color-text-light { color: var(--color-text-light); }
+.text-color-text-muted { color: var(--color-text-muted); }
+.text-color-primary { color: var(--color-primary); }
+.text-color-rating { color: var(--color-rating); }
+.text-color-surface { color: var(--color-surface); }
+.text-color-accent-green { color: var(--color-accent-green); }
+
+.border-color-border { border-color: var(--color-border); }
+.border-color-primary { border-color: var(--color-primary); }
+
+.hover\:bg-color-primary:hover { background-color: var(--color-primary); }
+.hover\:text-color-primary:hover { color: var(--color-primary); }
+.hover\:text-color-surface:hover { color: var(--color-surface); }
+.hover\:border-color-primary:hover { border-color: var(--color-primary); }
+
+.focus\:ring-color-primary:focus { --tw-ring-color: var(--color-primary); }
