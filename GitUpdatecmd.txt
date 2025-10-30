@@ -2,8 +2,6 @@ git add .
 git commit -m "Header chaneg done"
 git push origin development
 
-highlight
-
 installss 
 npm install @heroicons/react
 npm install phosphor-react
