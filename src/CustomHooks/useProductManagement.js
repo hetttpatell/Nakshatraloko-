@@ -2,6 +2,7 @@ import React, { useCallback, useState, useEffect } from "react";
 import axios from "axios";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import Toast from "../Components/Product/Toast";
+
 export const useProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +63,7 @@ export const useProductManagement = () => {
             isActive: item.IsActive,
             isFeatured: featuredIds.includes(item.ID),
             primaryImage: item.PrimaryImage,
-            IsSlidShow: item.IsSlidShow || false, // Add this line
+            IsSlidShow: item.IsSlidShow || false,
           }));
 
         setProducts(normalized);
@@ -71,7 +72,7 @@ export const useProductManagement = () => {
         throw new Error("Failed to fetch products or featured products");
       }
     } catch (error) {
-      // console.error("Failed to load products:", error);
+      console.error("Failed to load products:", error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -81,6 +82,29 @@ export const useProductManagement = () => {
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  // Add this function to handle product save
+  const handleSaveProduct = async (productData) => {
+    setIsSaving(true);
+    try {
+      // Refresh products after save
+      await loadProducts();
+      showToast("success", `Product ${editingProduct ? "updated" : "added"} successfully!`);
+      return { success: true };
+    } catch (error) {
+      console.error("Error refreshing products after save:", error);
+      showToast("error", "Product saved but failed to refresh list");
+      return { success: false };
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Add this function to handle adding new product
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setIsAddModalOpen(true);
+  };
 
   const handleDeleteProductWithAPI = async (productId) => {
     setIsSaving(true);
@@ -104,7 +128,7 @@ export const useProductManagement = () => {
         showToast("error", response.data.message || "Failed to delete product");
       }
     } catch (error) {
-      // console.error("Error deleting product:", error);
+      console.error("Error deleting product:", error);
       showToast("error", "Failed to delete product. Please try again.");
     } finally {
       setIsSaving(false);
@@ -117,7 +141,7 @@ export const useProductManagement = () => {
       const response = await axios.post(`${BACKEND_URL}getProductById/${productId}`);
       console.log({ response });
       if (response.data.success) {
-        const product = response.data.data.product; // Access product correctly
+        const product = response.data.data.product;
         const normalizedProduct = {
           id: product.id,
           categoryId: product.categoryId,
@@ -128,7 +152,7 @@ export const useProductManagement = () => {
           IsActive: product.isActive,
           sizes: product.sizes || [],
           images: product.images || [],
-          price: product.sizes?.[0]?.price || 0,             // take first size as default
+          price: product.sizes?.[0]?.price || 0,
           dummyPrice: product.sizes?.[0]?.dummyPrice || 0,
           discountPercentage: product.sizes?.[0]
             ? Math.round(((product.sizes[0].dummyPrice - product.sizes[0].price) / product.sizes[0].dummyPrice) * 100)
@@ -137,38 +161,32 @@ export const useProductManagement = () => {
           primaryImage: product.images?.find(img => img.isPrimary)?.imageData || null,
         };
 
-        // const normalizedProduct = {
-        //   id: product.id,
-        //   categoryId: product.categoryId,
-        //   Name: product.name,
-        //   Description: product.description,
-        //   Advantages: product.advantages,
-        //   HowToWear: product.howToWear,
-        //   IsActive: product.isActive,
-        //   sizes: product.sizes || [],
-        //   images: product.images || [],
-        //   price: product.price || 0,
-        //   dummyPrice: product.dummyPrice || 0,
-        //   discountPercentage: product.discountPercentage || 0,
-        //   stock: product.stock || 0,
-        //   primaryImage: product.primaryImage || null,
-        // };
         setEditingProduct(normalizedProduct);
         setIsEditModalOpen(true);
       } else {
         showToast("error", response.data.message || "Failed to fetch product details");
       }
     } catch (error) {
-      // console.error("Error fetching product details:", error);
+      console.error("Error fetching product details:", error);
       showToast("error", "Failed to fetch product details. Please try again.");
     } finally {
       setIsSaving(false);
     }
   };
 
+  // Add view product function
+  const viewProductDetails = (product) => {
+    setSelectedProduct(product);
+  };
 
-
-
+  // Add delete confirmation function
+  const openDeleteConfirm = (productId, productName) => {
+    setDeleteConfirmModal({
+      isOpen: true,
+      productId: productId,
+      productName: productName
+    });
+  };
 
   return {
     products,
@@ -192,8 +210,12 @@ export const useProductManagement = () => {
     setEditingProduct,
     setDeleteConfirmModal,
     handleDeleteProductWithAPI,
+    handleSaveProduct, // Add this
+    handleAddProduct, // Add this
     handleEditProduct,
+    viewProductDetails, // Add this
+    openDeleteConfirm, // Add this
     toastData,
     closeToast,
   };
-}; 
+};

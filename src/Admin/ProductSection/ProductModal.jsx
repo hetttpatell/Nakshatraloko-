@@ -86,8 +86,8 @@ const ProductModal = ({
         initialProduct.CategoryID !== undefined
           ? parseInt(initialProduct.CategoryID)
           : initialProduct.categoryId !== undefined
-          ? parseInt(initialProduct.categoryId)
-          : ""
+            ? parseInt(initialProduct.categoryId)
+            : ""
       );
       setDescription(
         initialProduct.Description || initialProduct.description || ""
@@ -100,8 +100,8 @@ const ProductModal = ({
         initialProduct.IsActive !== undefined
           ? initialProduct.IsActive
           : initialProduct.isActive !== undefined
-          ? initialProduct.isActive
-          : true
+            ? initialProduct.isActive
+            : true
       );
 
       // ---------------- Rating field ----------------
@@ -109,10 +109,10 @@ const ProductModal = ({
         initialProduct.Rating !== undefined
           ? parseFloat(initialProduct.Rating)
           : initialProduct.rating !== undefined
-          ? parseFloat(initialProduct.rating)
-          : initialProduct.productRatings !== undefined
-          ? parseFloat(initialProduct.productRatings)
-          : 0;
+            ? parseFloat(initialProduct.rating)
+            : initialProduct.productRatings !== undefined
+              ? parseFloat(initialProduct.productRatings)
+              : 0;
 
       // Ensure rating is between 0 and 5
       setRating(Math.min(Math.max(initialRating, 0), 5));
@@ -382,117 +382,115 @@ const ProductModal = ({
     async (e) => {
       e.preventDefault();
 
+      // Prevent multiple submissions
       if (submittingRef.current) return;
       submittingRef.current = true;
+
       setErrors({});
       setApiStatus({ loading: true, message: "" });
 
-      const newErrors = {};
-
-      // --- Validations ---
-      if (!categoryId) {
-        newErrors.categoryId = "Please select a category";
-      }
-      if (!name.trim()) {
-        newErrors.name = "Please enter a product name";
-      }
-      if (images.filter((img) => img.isExisting || img.file).length === 0) {
-        newErrors.images = "Please upload at least one image";
-      }
-
-      // Validate each size
-      sizes.forEach((size, index) => {
-        if (!size.size) newErrors[`size-${index}`] = "Size is required";
-        if (!size.price || parseFloat(size.price) <= 0)
-          newErrors[`price-${index}`] = "Valid price is required";
-        if (!size.dummyPrice || parseFloat(size.dummyPrice) <= 0)
-          newErrors[`dummyPrice-${index}`] = "Valid dummy price is required";
-        if (!size.stock || parseInt(size.stock) < 0)
-          newErrors[`stock-${index}`] = "Valid stock quantity is required";
-      });
-
-      // Category validation - compare as numbers
-      const numericCategoryId = parseInt(categoryId, 10);
-      const selectedCategory = categoryData.find(
-        (cat) => cat.ID === numericCategoryId
-      );
-
-      if (!selectedCategory && categoryId) {
-        newErrors.categoryId = "Invalid category selected";
-      }
-
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        setApiStatus({ loading: false, message: "" });
-        submittingRef.current = false;
-        return;
-      }
-
-      // console.log("All validations passed, building payload");
-
-      // --- Build FormData payload ---
-      const formData = new FormData();
-
-      // Add basic fields
-      formData.append("id", isEditing ? initialProduct?.id || 0 : 0);
-      formData.append("categoryId", numericCategoryId);
-      formData.append("name", name.trim());
-      formData.append("description", description?.trim() || "");
-      formData.append("advantages", advantages?.trim() || "");
-      formData.append("howToWear", howToWear?.trim() || "");
-      formData.append("isActive", Boolean(isActive));
-      formData.append("rating", parseFloat(rating) || 0);
-      formData.append("productRatings", parseFloat(rating) || 0); // Add rating to productRatings field
-      formData.append("createdBy", 1);
-
-      // Add sizes as JSON string
-      const sizesData = sizes.map((size) => {
-        const parsedSize = parseFloat(size.size);
-        return {
-          size: !isNaN(parsedSize) ? parsedSize : size.size,
-          price: parseFloat(size.price) || 0,
-          dummyPrice: parseFloat(size.dummyPrice) || 0,
-          stock: parseInt(size.stock, 10) || 0,
-        };
-      });
-      formData.append("sizes", JSON.stringify(sizesData));
-
-      // Add images metadata as JSON string
-      const imagesMeta = images.map((img, index) => ({
-        id: img.id || null,
-        altText: img.altText?.trim() || "",
-        isPrimary: Boolean(img.isPrimary),
-        isActive: Boolean(img.isActive),
-        order: index,
-        isExisting: Boolean(img.isExisting),
-        originalUrl: img.originalUrl || img.imageData,
-      }));
-      formData.append("imageFiles", JSON.stringify(imagesMeta));
-
-      // Handle existing images properly
-      const existingImages = images
-        .filter((img) => img.isExisting)
-        .map((img, idx) => ({
-          id: img.id,
-          image: img.originalUrl,
-          altText: img.altText || "",
-          isPrimary: img.isPrimary,
-          isActive: true,
-        }));
-      formData.append("existingImageUrls", JSON.stringify(existingImages));
-
-      // Append only new image files with proper field name
-      images.forEach((img) => {
-        if (img.file && !img.isExisting) {
-          formData.append("images", img.file);
-        }
-      });
-
-      // console.log('Sending FormData with product data');
-
       try {
-        setApiStatus({ loading: true, message: "" });
-        // console.log("Making API call to saveProduct with FormData");
+        // --- Validations ---
+        const newErrors = {};
+
+        if (!categoryId) {
+          newErrors.categoryId = "Please select a category";
+        }
+        if (!name.trim()) {
+          newErrors.name = "Please enter a product name";
+        }
+        if (images.filter((img) => img.isExisting || img.file).length === 0) {
+          newErrors.images = "Please upload at least one image";
+        }
+
+        // Validate each size
+        sizes.forEach((size, index) => {
+          if (!size.size) newErrors[`size-${index}`] = "Size is required";
+          if (!size.price || parseFloat(size.price) <= 0)
+            newErrors[`price-${index}`] = "Valid price is required";
+          if (!size.dummyPrice || parseFloat(size.dummyPrice) <= 0)
+            newErrors[`dummyPrice-${index}`] = "Valid dummy price is required";
+          if (!size.stock || parseInt(size.stock) < 0)
+            newErrors[`stock-${index}`] = "Valid stock quantity is required";
+        });
+
+        // Category validation
+        const numericCategoryId = parseInt(categoryId, 10);
+        const selectedCategory = categoryData.find(
+          (cat) => cat.ID === numericCategoryId
+        );
+
+        if (!selectedCategory && categoryId) {
+          newErrors.categoryId = "Invalid category selected";
+        }
+
+        // If validation errors, stop here
+        if (Object.keys(newErrors).length > 0) {
+          setErrors(newErrors);
+          setApiStatus({ loading: false, message: "" });
+          return;
+        }
+
+        // --- Build FormData payload ---
+        const formData = new FormData();
+
+        // Add basic fields
+        formData.append("id", isEditing ? initialProduct?.id || 0 : 0);
+        formData.append("categoryId", numericCategoryId);
+        formData.append("name", name.trim());
+        formData.append("description", description?.trim() || "");
+        formData.append("advantages", advantages?.trim() || "");
+        formData.append("howToWear", howToWear?.trim() || "");
+        formData.append("isActive", Boolean(isActive));
+        formData.append("rating", parseFloat(rating) || 0);
+        formData.append("productRatings", parseFloat(rating) || 0);
+        formData.append("createdBy", 1);
+
+        // Add sizes as JSON string
+        const sizesData = sizes.map((size) => {
+          const parsedSize = parseFloat(size.size);
+          return {
+            size: !isNaN(parsedSize) ? parsedSize : size.size,
+            price: parseFloat(size.price) || 0,
+            dummyPrice: parseFloat(size.dummyPrice) || 0,
+            stock: parseInt(size.stock, 10) || 0,
+          };
+        });
+        formData.append("sizes", JSON.stringify(sizesData));
+
+        // Add images metadata
+        const imagesMeta = images.map((img, index) => ({
+          id: img.id || null,
+          altText: img.altText?.trim() || "",
+          isPrimary: Boolean(img.isPrimary),
+          isActive: Boolean(img.isActive),
+          order: index,
+          isExisting: Boolean(img.isExisting),
+          originalUrl: img.originalUrl || img.imageData,
+        }));
+        formData.append("imageFiles", JSON.stringify(imagesMeta));
+
+        // Handle existing images
+        const existingImages = images
+          .filter((img) => img.isExisting)
+          .map((img) => ({
+            id: img.id,
+            image: img.originalUrl,
+            altText: img.altText || "",
+            isPrimary: img.isPrimary,
+            isActive: true,
+          }));
+        formData.append("existingImageUrls", JSON.stringify(existingImages));
+
+        // Append new image files
+        images.forEach((img) => {
+          if (img.file && !img.isExisting) {
+            formData.append("images", img.file);
+          }
+        });
+
+        // --- API Call ---
+        const token = localStorage.getItem("authToken") || localStorage.getItem("token");
 
         const response = await axios.post(
           `${BACKEND_URL}saveProduct`,
@@ -500,48 +498,55 @@ const ProductModal = ({
           {
             headers: {
               "Content-Type": "multipart/form-data",
-              Authorization: `${
-                localStorage.getItem("authToken") ||
-                localStorage.getItem("token")
-              }`,
+              Authorization: token,
             },
+            timeout: 30000, // 30 second timeout
           }
         );
 
-        // console.log("API response:", response.data);
-
+        // --- Handle Response ---
         if (response.data.success) {
           setApiStatus({ loading: false, message: "success" });
-          onSave(response.data);
+
+          // Show success message briefly before closing
+          setTimeout(() => {
+            // Pass the response data to parent component
+            onSave({
+              success: true,
+              data: response.data,
+              message: `Product ${isEditing ? 'updated' : 'created'} successfully!`
+            });
+          }, 1000);
+
         } else {
-          setErrors({
-            submit: response.data.message || "Failed to save product",
-          });
-          setApiStatus({ loading: false, message: "error" });
+          throw new Error(response.data.message || "Failed to save product");
         }
+
       } catch (error) {
-        // console.error("❌ Save product failed:", error);
-        let errorMessage = "Failed to save product";
+        console.error("Save product failed:", error);
+
+        let errorMessage = "Failed to save product. Please try again.";
 
         if (error.response) {
-          // console.error("Error data:", error.response.data);
-          // console.error("Error status:", error.response.status);
-          errorMessage = error.response.data.message || errorMessage;
+          // Server responded with error status
+          errorMessage = error.response.data?.message || errorMessage;
         } else if (error.request) {
-          // console.error("Error request:", error.request);
-          errorMessage =
-            "No response received from server. Please check your connection.";
+          // Request made but no response received
+          errorMessage = "No response from server. Please check your connection.";
+        } else if (error.code === 'ECONNABORTED') {
+          // Request timeout
+          errorMessage = "Request timeout. Please try again.";
         } else {
-          // console.error("Error message:", error.message);
-          errorMessage = error.message;
+          // Other errors
+          errorMessage = error.message || errorMessage;
         }
 
         setErrors({
           submit: errorMessage,
         });
         setApiStatus({ loading: false, message: "error" });
+
       } finally {
-        setApiStatus({ loading: false, message: "" });
         submittingRef.current = false;
       }
     },
@@ -769,11 +774,10 @@ const ProductModal = ({
                       {images.map((image, index) => (
                         <div
                           key={index}
-                          className={`relative border rounded-lg p-2 ${
-                            image.isPrimary
+                          className={`relative border rounded-lg p-2 ${image.isPrimary
                               ? "border-2 border-blue-500"
                               : "border-gray-200"
-                          }`}
+                            }`}
                         >
                           <img
                             src={image.imageData}
