@@ -6,6 +6,7 @@ import { useWishlist } from "../Context/WishlistContext";
 import LoginSignup from "../Components/Login/Login";
 import logo from "/Logo.png";
 import axios from "axios";
+import { useProtectedAction } from "../CustomHooks/useProductAction"
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 // ---------- MENU DATA ---------- 
@@ -245,16 +246,40 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
   );
 };
 
-const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "", onClick }) => (
+const UserMenuIcon = ({
+  to,
+  Icon,
+  badgeCount,
+  closeMenu,
+  className = "",
+  onClick,
+  requireAuth, // Add this prop
+  navigate // Add this prop
+}) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
-      `relative p-3 rounded-xl transition-all duration-300 ease-out flex items-center justify-center group/icon ${isActive
+      `relative p-3 rounded-xl transition-all duration-300 ease-out flex items-center justify-center group/icon cursor-pointer ${isActive
         ? "bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 text-[var(--color-primary)] shadow-lg"
         : "text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md"
       } ${className}`
     }
-    onClick={() => {
+    onClick={(e) => {
+      // Check authentication for protected pages
+      if ((to === "/cart" || to === "/wishlist") && !localStorage.getItem("authToken")) {
+        e.preventDefault();
+
+        // Get the appropriate requireAuth function based on the page
+        const authFunction = to === "/cart" ? requireAuth?.protectedCartAction : requireAuth?.protectedWishlistAction;
+
+        if (authFunction) {
+          authFunction(() => navigate(to), {
+            actionType: to === "/cart" ? "cart" : "wishlist"
+          });
+        }
+        return;
+      }
+
       if (onClick) onClick();
       closeMenu();
     }}
@@ -263,7 +288,6 @@ const UserMenuIcon = ({ to, Icon, badgeCount, closeMenu, className = "", onClick
     {badgeCount > 0 && <Badge count={badgeCount} />}
   </NavLink>
 );
-
 // ---------- MAIN HEADER ----------
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -287,7 +311,7 @@ export default function Header() {
 
   const { cart, fetchCart } = useCart();
   const { wishlist, setWishlist, fetchWishlist } = useWishlist();
-
+  const { protectedCartAction, protectedWishlistAction } = useProtectedAction();
   const location = useLocation();
 
   // Enhanced cart count calculation with proper fallback
@@ -306,16 +330,29 @@ export default function Header() {
     location.pathname.startsWith(path)
   );
 
- // Run only once on mount
-useEffect(() => {
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    fetchWishlist()
-    // .catch(err => console.error("Error fetching wishlist:", err));
-  } else {
-    setWishlist([]);
-  }
-}, []); // Empty dependency array ensures this runs only once
+
+  const handleProtectedNavigation = (path, actionType) => {
+    if (!localStorage.getItem("authToken")) {
+      protectedCartAction(
+        () => navigate(path),
+        { actionType: actionType }
+      );
+    } else {
+      navigate(path);
+    }
+  };
+
+
+  // Run only once on mount
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      fetchWishlist()
+      // .catch(err => console.error("Error fetching wishlist:", err));
+    } else {
+      setWishlist([]);
+    }
+  }, []); // Empty dependency array ensures this runs only once
 
 
 
@@ -411,7 +448,7 @@ useEffect(() => {
           );
         }
       })
-      // .catch((err) => console.log(err));
+    // .catch((err) => console.log(err));
   }, []);
 
   // Enhanced login state management
@@ -712,11 +749,15 @@ useEffect(() => {
                         : 0
                   }
                   closeMenu={closeMenu}
-                  nClick={
+                  onClick={
                     item.badgeType === "wishlist"
-                      ? fetchWishlist // refresh wishlist when clicking icon
+                      ? fetchWishlist
                       : undefined
-                  } />
+                  }
+                  requireAuth={item.to === "/cart" ? protectedCartAction :
+                    item.to === "/wishlist" ? protectedWishlistAction :
+                      undefined}
+                />
               ))}
 
               {/* Admin Panel icon - only show if logged in AND role is admin */}

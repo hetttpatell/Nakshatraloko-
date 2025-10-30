@@ -19,6 +19,8 @@ import Toast from "./Toast";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
+import { useProtectedAction } from "../../CustomHooks/useProductAction"
+
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const IMG_URL = import.meta.env.VITE_IMG_URL;
@@ -86,8 +88,9 @@ const ProductDetails = () => {
   const [applicableCoupons, setApplicableCoupons] = useState([]);
   const { addToWishlist, wishlist } = useWishlist();
   const { addToCart } = useCart();
+  const { protectedCartAction, protectedWishlistAction, isAuthenticated } = useProtectedAction();
 
-  
+
   const normalizeImage = (url) => {
     let fixedUrl = url?.trim() || "";
 
@@ -156,6 +159,47 @@ const ProductDetails = () => {
       fetchReviews();
     }
   };
+
+  const handleAddToCart = () => {
+    protectedCartAction(
+      () => {
+        addToCart({ productid: product.id, quantity: quantity });
+        showToast(`${product.name} added to cart successfully!`, "success");
+      },
+      {
+        showToast: showToast,
+        successMessage: `${product.name} added to cart successfully!`
+      }
+    );
+  };
+
+  // Enhanced wishlist handler with professional UX
+  const handleWishlistToggle = async () => {
+    protectedWishlistAction(
+      async () => {
+        try {
+          const res = await toggleWishlist(product.id);
+          if (res.success) {
+            const action = product.isInWishlist ? "removed from" : "added to";
+            showToast(`${product.name} ${action} your wishlist!`, "success");
+
+            // Update local state if needed
+            if (res.data?.wishlistUpdated) {
+              // You might want to refresh the wishlist context here
+            }
+          } else {
+            showToast(res.message || "Failed to update wishlist", "error");
+          }
+        } catch (error) {
+          showToast("Failed to update wishlist. Please try again.", "error");
+        }
+      },
+      {
+        showToast: showToast
+      }
+    );
+  };
+
 
   // Submit review
   const submitReview = async () => {
@@ -389,7 +433,7 @@ const ProductDetails = () => {
       isMounted = false;
     };
   }, [id]);
-  
+
 
   // Add this function to your component
   const renderStars = (rating) => {
@@ -565,10 +609,9 @@ const ProductDetails = () => {
                   <div
                     key={index}
                     className={`relative w-20 h-24 sm:w-24 sm:h-28 rounded-sm cursor-pointer border transition-all duration-300 ease-in-out
-                      ${
-                        mainImage === img.src
-                          ? "ring-2 ring-color-primary ring-offset-2 scale-105 border-color-primary"
-                          : "border-color-border hover:border-color-primary opacity-80 hover:opacity-100"
+                      ${mainImage === img.src
+                        ? "ring-2 ring-color-primary ring-offset-2 scale-105 border-color-primary"
+                        : "border-color-border hover:border-color-primary opacity-80 hover:opacity-100"
                       }`}
                     onClick={() => {
                       setMainImage(img.src);
@@ -586,9 +629,8 @@ const ProductDetails = () => {
 
               {/* Main image */}
               <div
-                className={`relative w-full max-w-lg aspect-[3/4] bg-color-surface rounded-lg shadow-lg mx-auto order-1 lg:order-2 overflow-hidden group ${
-                  isImageZoomed ? "cursor-zoom-out" : "cursor-zoom-in"
-                }`}
+                className={`relative w-full max-w-lg aspect-[3/4] bg-color-surface rounded-lg shadow-lg mx-auto order-1 lg:order-2 overflow-hidden group ${isImageZoomed ? "cursor-zoom-out" : "cursor-zoom-in"
+                  }`}
                 onClick={() => setIsImageZoomed(!isImageZoomed)}
                 onMouseMove={handleImageZoom}
                 onMouseLeave={resetZoom}
@@ -646,11 +688,10 @@ const ProductDetails = () => {
                 {product.size.map((item) => (
                   <button
                     key={item}
-                    className={`px-5 py-2.5 rounded-sm text-sm font-medium transition-all duration-200 ${
-                      selectedSize === item
-                        ? "bg-color-primary text-color-surface border border-color-primary shadow-md"
-                        : "bg-color-surface text-color-text border border-color-border hover:border-color-primary hover:shadow-md"
-                    }`}
+                    className={`px-5 py-2.5 rounded-sm text-sm font-medium transition-all duration-200 ${selectedSize === item
+                      ? "bg-color-primary text-color-surface border border-color-primary shadow-md"
+                      : "bg-color-surface text-color-text border border-color-border hover:border-color-primary hover:shadow-md"
+                      }`}
                     onClick={() => setSelectedSize(item)}
                   >
                     {item}
@@ -717,42 +758,49 @@ const ProductDetails = () => {
             {/* Buttons */}
             <div className="flex gap-4 mb-8">
               <Button
-                onClick={() => {
-                  addToCart({ productid: product.id });
-                  showToast(`${product.name} added to Bag`, "success");
-                }}
-                className="bg-color-primary text-color-surface px-10 py-3.5 font-medium text-sm"
+                onClick={handleAddToCart}
+                className="bg-color-primary text-color-surface px-10 py-3.5 font-medium text-sm hover:bg-color-primary-dark transition-all duration-300 ease-out transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group"
               >
-                ADD TO BAG
+                <svg
+                  className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 10H6L5 9z" />
+                </svg>
+                <span className="relative">
+                  ADD TO BAG
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-color-surface group-hover:w-full transition-all duration-300 ease-out"></span>
+                </span>
               </Button>
 
               <Button
-                onClick={async () => {
-                  const res = await toggleWishlist(product.id);
-                  if (res.success) {
-                    showToast(res.message, "success");
-                    setTimeout(() => {
-                      navigate("/wishlist");
-                    }, 2000);
-                  } else {
-                    showToast(res.message, "error");
-                  }
-                }}
-                className={`px-6 py-3.5 font-medium text-sm transition-all duration-200 ${
-                  isWishlisted
-                    ? "bg-color-primary text-color-surface hover:bg-opacity-90"
-                    : "bg-color-surface text-color-text border border-color-border hover:border-color-primary"
-                }`}
+                onClick={handleWishlistToggle}
+                className={`px-8 py-3.5 font-medium text-sm transition-all duration-300 ease-out transform hover:scale-105 flex items-center justify-center gap-3 group ${isWishlisted
+                  ? "bg-gradient-to-r from-color-primary to-color-primary-dark text-color-surface shadow-lg hover:shadow-xl"
+                  : "bg-color-surface text-color-text border-2 border-color-border hover:border-color-primary hover:shadow-md"
+                  }`}
               >
                 {isWishlisted ? (
-                  <AiFillHeart className="inline mr-2 text-lg" />
+                  <>
+                    <AiFillHeart className="text-lg animate-pulse group-hover:scale-110 transition-transform duration-300" />
+                    <span className="relative">
+                      WISHLISTED
+                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-color-surface group-hover:w-full transition-all duration-300 ease-out"></span>
+                    </span>
+                  </>
                 ) : (
-                  <AiOutlineHeart className="inline mr-2 text-lg" />
+                  <>
+                    <AiOutlineHeart className="text-lg group-hover:scale-110 group-hover:text-color-primary transition-all duration-300" />
+                    <span className="relative">
+                      ADD TO WISHLIST
+                      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-color-primary group-hover:w-full transition-all duration-300 ease-out"></span>
+                    </span>
+                  </>
                 )}
-                {isWishlisted ? "WISHLISTED" : "WISHLIST"}
               </Button>
             </div>
-
             {/* Delivery Section */}
             {/* <div className="bg-color-surface border border-color-border rounded-sm p-5 flex flex-col gap-4 text-sm mb-6">
               <div className="flex gap-3 items-center">
@@ -893,22 +941,20 @@ const ProductDetails = () => {
         <div className="border-b border-color-border mb-8 mt-12">
           <div className="flex space-x-8">
             <button
-              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                activeTab === "description"
-                  ? "border-color-primary text-color-primary"
-                  : "border-transparent text-color-text-muted hover:text-color-text"
-              }`}
+              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === "description"
+                ? "border-color-primary text-color-primary"
+                : "border-transparent text-color-text-muted hover:text-color-text"
+                }`}
               onClick={() => handleTabChange("description")}
             >
               DESCRIPTION
             </button>
 
             <button
-              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                activeTab === "reviews"
-                  ? "border-color-primary text-color-primary"
-                  : "border-transparent text-color-text-muted hover:text-color-text"
-              }`}
+              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === "reviews"
+                ? "border-color-primary text-color-primary"
+                : "border-transparent text-color-text-muted hover:text-color-text"
+                }`}
               onClick={() => handleTabChange("reviews")}
             >
               REVIEWS ({reviews.length})
@@ -1067,7 +1113,7 @@ const ProductDetails = () => {
                         }
                       >
                         {star <=
-                        (reviewForm.hoverRating || reviewForm.rating) ? (
+                          (reviewForm.hoverRating || reviewForm.rating) ? (
                           <AiFillStar className="text-color-rating" />
                         ) : (
                           <AiOutlineStar className="text-color-text-muted" />
@@ -1076,8 +1122,7 @@ const ProductDetails = () => {
                     ))}
                     <span className="ml-3 text-sm text-color-text-muted">
                       {reviewForm.rating > 0 &&
-                        `${reviewForm.rating} star${
-                          reviewForm.rating > 1 ? "s" : ""
+                        `${reviewForm.rating} star${reviewForm.rating > 1 ? "s" : ""
                         }`}
                     </span>
                   </div>
@@ -1309,9 +1354,8 @@ const ProductDetails = () => {
         <Toast
           message={customToast.message}
           type={customToast.type}
-          onClose={() =>
-            setCustomToast((prev) => ({ ...prev, visible: false }))
-          }
+          onClose={() => setCustomToast((prev) => ({ ...prev, visible: false }))}
+          duration={customToast.type === "success" ? 3000 : 4000}
         />
       )}
     </div>
