@@ -6,11 +6,9 @@ import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import SearchAndFilterBar from "./SearchAndFilterBar";
 import { useProductManagement } from "../../CustomHooks/useProductManagement";
 import { filterProducts } from "../ProductSection/productFilters";
-import api from '../../Utils/api';
-import axios from "axios";
 import { toast } from "react-toastify";
 import Toast from "../../Components/Product/Toast";
-import { FaSync } from "react-icons/fa";
+import { FaSync, FaPlus } from "react-icons/fa";
 
 // Constants for options
 const BRAND_OPTIONS = ["STYLIUM", "PEARLIX", "DIAMONDX", "GOLDEN"];
@@ -34,7 +32,6 @@ const MATERIAL_OPTIONS = [
   "Diamond",
   "Platinum",
 ];
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ProductAdmin = ({ isMobile }) => {
   const {
@@ -59,86 +56,45 @@ const ProductAdmin = ({ isMobile }) => {
     handleDeleteProductWithAPI,
     handleSaveProduct,
     handleAddProduct,
-    openDeleteConfirm,
     handleEditProduct,
     viewProductDetails,
+    openDeleteConfirm,
     toastData,
     closeToast,
   } = useProductManagement();
 
   const [isSaving, setIsSaving] = useState(false);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-
-  // Fetch featured products from backend
-  useEffect(() => {
-    const fetchFeaturedProducts = async () => {
-      try {
-        const response = await axios.post(`${BACKEND_URL}getFeaturedProducts`);
-        if (response.data.success) {
-          const featuredIds = response.data.data.map((p) => p.ID);
-          setFeaturedProducts(featuredIds);
-        }
-      } catch (err) {
-        // console.error("Error fetching featured products:", err);
-      }
-    };
-    fetchFeaturedProducts();
-  }, []);
-
-  // Function to handle adding product via API
-  const handleAddProductWithAPI = async (productData) => {
-    setIsSaving(true);
-    try {
-      const payload = {
-        Name: productData.name,
-        Description: productData.description,
-        Price: Number(productData.price),
-        DummyPrice: Number(productData.dummyPrice),
-        Stock: Number(productData.stock),
-        CategoryID: productData.categoryId,
-        PrimaryImage: productData.primaryImage || null,
-        Advantages: productData.advantages || "",
-        HowToWear: productData.howToWear || "",
-        IsActive: true,
-      };
-
-      const response = await api.post("/admin/products", payload);
-      if (response.data.success) {
-        toast.success("Product added successfully!");
-        await refreshProducts();
-      } else {
-        toast.error(response.data.message || "Failed to save product");
-      }
-    } catch (error) {
-      // console.error("❌ Request failed:", error.response?.data || error.message);
-      toast.error("Something went wrong while saving product");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Function to handle editing product via API
-  const handleEditProductWithAPI = async (productData) => {
-    setIsSaving(true);
-    try {
-      // Implement your edit API call here
-      // console.log("Editing product:", productData);
-      toast.success("Product updated successfully!");
-      await refreshProducts();
-      setIsEditModalOpen(false);
-    } catch (error) {
-      // console.error("❌ Edit failed:", error);
-      toast.error("Something went wrong while updating product");
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   // Memoize filtered products to improve performance
   const filteredProducts = useMemo(
     () => filterProducts(products, searchTerm, brandFilter, statusFilter),
     [products, searchTerm, brandFilter, statusFilter]
   );
+
+  // Enhanced save handler
+  const handleSaveProductEnhanced = async (productData) => {
+    setIsSaving(true);
+    try {
+      // The actual save happens in ProductModal component
+      // After successful save, refresh the products list
+      const result = await handleSaveProduct(productData);
+      
+      if (result.success) {
+        // Close the modal
+        if (isEditModalOpen) {
+          setIsEditModalOpen(false);
+          setEditingProduct(null);
+        } else if (isAddModalOpen) {
+          setIsAddModalOpen(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error in save handler:", error);
+      toast.error("Failed to process product save");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (error) {
     return (
@@ -158,6 +114,12 @@ const ProductAdmin = ({ isMobile }) => {
 
   return (
     <div className="product-admin p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Product Management</h1>
+        <p className="text-gray-600">Manage your product inventory and listings</p>
+      </div>
+
       {/* Search and Filters Bar */}
       <SearchAndFilterBar
         searchTerm={searchTerm}
@@ -172,14 +134,15 @@ const ProductAdmin = ({ isMobile }) => {
       {/* Actions Bar */}
       <div className="flex items-center gap-4 mb-6">
         <button
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow-md"
-          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md font-medium"
+          onClick={handleAddProduct}
         >
+          <FaPlus size={14} />
           Add New Product
         </button>
 
         <button
-          className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors shadow-md"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors shadow-md font-medium"
           onClick={refreshProducts}
         >
           <FaSync className="text-lg" />
@@ -187,20 +150,23 @@ const ProductAdmin = ({ isMobile }) => {
         </button>
       </div>
 
+      {/* Products Count */}
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">
+          Showing {filteredProducts.length} of {products.length} products
+        </p>
+      </div>
+
       {/* Products Table */}
-      <ProductTable
-        products={filteredProducts}
-        featuredProducts={featuredProducts}
-        onView={viewProductDetails}
-        onEdit={handleEditProduct}
-        onDelete={(productId, productName) => {
-          setDeleteConfirmModal({
-            isOpen: true,
-            productId: productId,
-            productName: productName
-          });
-        }}
-      />
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+        <ProductTable
+          products={filteredProducts}
+          featuredProducts={[]} // You can remove this if not used
+          onView={viewProductDetails}
+          onEdit={handleEditProduct}
+          onDelete={openDeleteConfirm}
+        />
+      </div>
 
       {/* Add Product Modal */}
       {isAddModalOpen && (
@@ -208,28 +174,24 @@ const ProductAdmin = ({ isMobile }) => {
           title="Add New Product"
           initialProduct={{}}
           onClose={() => setIsAddModalOpen(false)}
-          onSave={(productData) => {
-            handleAddProductWithAPI(productData);
-            setIsAddModalOpen(false);
-          }}
-          brandOptions={BRAND_OPTIONS}
+          onSave={handleSaveProductEnhanced}
           sizeOptions={SIZE_OPTIONS}
-          materialOptions={MATERIAL_OPTIONS}
           isEditing={false}
           isLoading={isSaving}
         />
       )}
 
-      {/* Edit Product Modal - FIXED: Added onSave prop */}
+      {/* Edit Product Modal */}
       {isEditModalOpen && (
         <ProductModal
           title="Edit Product"
           initialProduct={editingProduct}
-          onClose={() => setIsEditModalOpen(false)}
-          onSave={handleEditProductWithAPI} // This was missing!
-          brandOptions={BRAND_OPTIONS}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingProduct(null);
+          }}
+          onSave={handleSaveProductEnhanced}
           sizeOptions={SIZE_OPTIONS}
-          materialOptions={MATERIAL_OPTIONS}
           isEditing={true}
           isLoading={isSaving}
         />
@@ -248,6 +210,7 @@ const ProductAdmin = ({ isMobile }) => {
         />
       )}
 
+      {/* Toast Notifications */}
       {toastData && (
         <Toast
           type={toastData.type}
