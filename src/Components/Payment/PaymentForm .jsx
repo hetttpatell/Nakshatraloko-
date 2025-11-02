@@ -9,6 +9,7 @@ import Toast from "../Product/Toast";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const IMG_URL = import.meta.env.VITE_IMG_URL;
+
 // Background circles component (same as Collections.jsx)
 const BackgroundCircle = ({
   top,
@@ -95,21 +96,25 @@ const PaymentPage = () => {
   const [apiLoading, setApiLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [toastData, setToastData] = useState(null);
+
   const showToast = (message, type = "success", duration = 4000) => {
     setToastData({ message, type, duration });
   };
 
   const navigate = useNavigate();
-  const { id } = useParams(); // Get order ID from URL params if available
+  const { id } = useParams();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   // Check authentication status
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem("authToken");
       if (!token) {
-        // No token found, redirect to home
         navigate("/");
-
         return false;
       }
       setIsAuthenticated(true);
@@ -121,19 +126,15 @@ const PaymentPage = () => {
 
   const normalizeImage = (url) => {
     let fixedUrl = url?.trim() || "";
-
     if (!fixedUrl) return "";
 
-    // If full URL
     if (fixedUrl.startsWith("http")) {
       fixedUrl = fixedUrl.replace(/([^:]\/)\/+/g, "$1");
-      // Replace base URL to API path
       fixedUrl = fixedUrl.replace(
         /^http:\/\/localhost:8001\/uploads/,
         `${IMG_URL}/uploads`
       );
     } else {
-      // Relative path: prepend /uploads if missing
       if (!fixedUrl.startsWith("/uploads/")) {
         fixedUrl = `/uploads/${fixedUrl.replace(/^\/+/, "")}`;
       }
@@ -147,7 +148,6 @@ const PaymentPage = () => {
   const fetchCartData = async () => {
     try {
       const token = localStorage.getItem("authToken");
-
       if (!token) {
         throw new Error("No authentication token found");
       }
@@ -159,16 +159,12 @@ const PaymentPage = () => {
           headers: { Authorization: `${token}` },
         }
       );
-      // console.log("API Response:", response.data); // Add this line
-      // Check if response has data directly or nested in data property
-      let cartData = response.data;
 
-      // If response has success property and data nested
+      let cartData = response.data;
       if (response.data && response.data.success && response.data.data) {
         cartData = response.data.data;
       }
 
-      // Transform cart data to match expected format
       const transformedCart = cartData.map((item) => {
         return {
           id: item.ProductID || item.id,
@@ -196,19 +192,14 @@ const PaymentPage = () => {
 
       setCartItems(transformedCart);
 
-
-      // Calculate subtotal
       const subtotal = transformedCart.reduce(
         (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
         0
       );
       setSubtotalAmount(subtotal);
-      setTotalAmount(subtotal); // Initially total equals subtotal
+      setTotalAmount(subtotal);
     } catch (error) {
-      // console.error("Error fetching cart:", error);
       setError("Failed to load cart. Please try again.");
-
-      // Fallback to localStorage
       const savedCart = JSON.parse(localStorage.getItem("cart")) || [];
       setCartItems(savedCart);
 
@@ -232,12 +223,8 @@ const PaymentPage = () => {
     setCouponError("");
 
     try {
-      const token = localStorage.getItem("authToken");
-
-      // Mock coupon validation - replace with actual API call
       const response = await new Promise((resolve) => {
         setTimeout(() => {
-          // Mock coupon data
           const mockCoupons = {
             SAVE10: { discount: 10, type: "percentage", minAmount: 500 },
             FLAT50: { discount: 50, type: "fixed", minAmount: 200 },
@@ -260,8 +247,6 @@ const PaymentPage = () => {
 
       if (response.success) {
         const couponData = response.data;
-
-        // Check minimum amount
         if (subtotalAmount < couponData.minAmount) {
           setCouponError(
             `Minimum order amount of ₹${couponData.minAmount} required`
@@ -270,7 +255,6 @@ const PaymentPage = () => {
           return;
         }
 
-        // Calculate discount
         let discountAmount = 0;
         if (couponData.type === "percentage") {
           discountAmount = (subtotalAmount * couponData.discount) / 100;
@@ -287,7 +271,6 @@ const PaymentPage = () => {
         showToast("Invalid coupon code", "error");
       }
     } catch (error) {
-      // console.error("Error applying coupon:", error);
       setCouponError("Failed to apply coupon. Please try again.");
     }
 
@@ -304,7 +287,6 @@ const PaymentPage = () => {
 
   // ✅ Fetch order data from API if ID is provided, otherwise fetch cart
   useEffect(() => {
-    // Don't fetch data if user is not authenticated
     if (!isAuthenticated) return;
 
     const fetchData = async () => {
@@ -312,9 +294,6 @@ const PaymentPage = () => {
         setApiLoading(true);
 
         if (id) {
-          // Fetch order by ID
-          // console.log("Fetching order with ID:", id);
-
           const response = await axios.post(
             `${BACKEND_URL}getOrderById/${id}`,
             {},
@@ -329,17 +308,13 @@ const PaymentPage = () => {
             throw new Error("No data received from server");
           }
 
-          // Handle both response structures
           let orderData = response.data;
           if (response.data && response.data.success && response.data.data) {
             orderData = response.data.data;
           }
 
-          // console.log("Order data received:", orderData);
-
           setOrder(orderData);
 
-          // Check for items in different possible locations
           let items = [];
           if (orderData.items && Array.isArray(orderData.items)) {
             items = orderData.items;
@@ -364,11 +339,9 @@ const PaymentPage = () => {
             throw new Error("No items found in order data");
           }
         } else {
-          // No order ID, fetch cart data
           await fetchCartData();
         }
       } catch (error) {
-        // console.error("Error fetching data:", error);
         setError("Failed to load order details. Please try again.");
       } finally {
         setApiLoading(false);
@@ -378,9 +351,341 @@ const PaymentPage = () => {
     fetchData();
   }, [id, isAuthenticated]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const proceedToThankYou = (orderData = null) => {
+    const orderId =
+      orderData?.orderId ||
+      order?.orderId ||
+      "ORD" + Math.floor(Math.random() * 1000000);
+
+    localStorage.setItem(
+      "lastOrder",
+      JSON.stringify({
+        cart: cartItems,
+        orderId,
+        orderDetails: orderData || order,
+        appliedCoupon,
+        subtotal: subtotalAmount,
+        discount,
+        total: totalAmount,
+      })
+    );
+
+    navigate("/thankyou", {
+      state: {
+        cart: cartItems,
+        orderId,
+        orderDetails: orderData || order,
+        appliedCoupon,
+        subtotal: subtotalAmount,
+        discount,
+        total: totalAmount,
+      },
+    });
+
+    if (!order) {
+      localStorage.removeItem("cart");
+    }
+  };
+
+  const decodeJWT = (token) => {
+    try {
+      // JWT token has format: header.payload.signature
+      const payload = token.split(".")[1];
+      const decodedPayload = JSON.parse(atob(payload));
+      return decodedPayload;
+    } catch (error) {
+      console.error("Error decoding JWT:", error);
+      return null;
+    }
+  };
+
+  // Add this function right after your decodeJWT function
+  const loadRazorpayScript = () => {
+    return new Promise((resolve, reject) => {
+      if (window.Razorpay) {
+        console.log("Razorpay already loaded");
+        resolve(true);
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => {
+        console.log("Razorpay script loaded successfully");
+        resolve(true);
+      };
+      script.onerror = () => {
+        console.error("Failed to load Razorpay script");
+        reject(new Error("Failed to load Razorpay script"));
+      };
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayment = async () => {
+    setLoading(true);
+    setError("");
+
+    // Basic form validation
+    if (
+      !formData.fullName ||
+      !formData.email ||
+      !formData.address ||
+      !formData.city ||
+      !formData.zip ||
+      !formData.country
+    ) {
+      setError("Please fill in all required shipping details.");
+      setLoading(false);
+      return;
+    }
+
+    if (formData.paymentMethod === "card") {
+      if (
+        !/^\d{16}$/.test(formData.cardNumber) ||
+        !/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.cardExpiry) ||
+        !/^\d{3}$/.test(formData.cardCVC)
+      ) {
+        setError("Please enter valid card details.");
+        setLoading(false);
+        return;
+      }
+
+      // Simulate card processing
+      setTimeout(() => {
+        setLoading(false);
+        proceedToThankYou();
+      }, 1000);
+    } else if (formData.paymentMethod === "upi") {
+      if (!/^[\w.-]+@[a-zA-Z]+$/.test(formData.upiId)) {
+        setError("Please enter a valid UPI ID.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // ✅ FIRST: Load Razorpay script if not already loaded
+        if (typeof window.Razorpay === "undefined") {
+          console.log("Razorpay not loaded, loading script...");
+          await loadRazorpayScript();
+        }
+
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          setError("Authentication token not found. Please login again.");
+          setLoading(false);
+          return;
+        }
+
+        // Decode the token to get user ID
+        const decodedToken = decodeJWT(token);
+        const userId =
+          decodedToken?.id || decodedToken?.userId || decodedToken?.sub;
+
+        if (!userId) {
+          setError("User information not found in token. Please login again.");
+          setLoading(false);
+          return;
+        }
+
+        // Step 1: Create Razorpay Order
+        const { data } = await axios.post(
+          `${BACKEND_URL}create-razorpay-order`,
+          {
+            amount: totalAmount * 100, // convert to paise for Razorpay
+          },
+          {
+            headers: {
+              Authorization: `${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!data.success) {
+          throw new Error(data.message || "Failed to create payment order");
+        }
+
+        // Prepare order details for verification
+        // In your handlePayment function, update the orderDetails:
+        const orderDetails = {
+          userId: userId,
+          shippingAddress: {
+            fullName: formData.fullName,
+            email: formData.email,
+            address: formData.address,
+            city: formData.city,
+            zip: formData.zip,
+            country: formData.country,
+          },
+          paymentMethod: "upi",
+          orderItems: cartItems.map((item) => ({
+            ProductID: item.id, // ✅ Use ProductID (uppercase) to match PostgreSQL expectation
+            productId: item.id, // ✅ Also include lowercase for compatibility
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+          })),
+          subtotal: subtotalAmount,
+          discount: discount,
+          total: totalAmount,
+          couponId: appliedCoupon ? appliedCoupon.code : null,
+        };
+
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+          amount: data.amount,
+          currency: data.currency,
+          order_id: data.orderId,
+          name: "Your Company Name",
+          description: "Purchase Description",
+          handler: async function (response) {
+            try {
+              // Step 2: Verify Payment on your backend
+              const verifyResponse = await axios.post(
+                `${BACKEND_URL}verify-payment`,
+                {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  orderDetails: orderDetails,
+                },
+                {
+                  headers: {
+                    Authorization: `${token}`,
+                    "Content-Type": "application/json",
+                  },
+                }
+              );
+
+              if (verifyResponse.data.success) {
+                showToast("Payment Successful!", "success");
+                // Step 3: Navigate to thank you page with the saved order data
+                proceedToThankYou(verifyResponse.data);
+              } else {
+                showToast("Payment verification failed", "error");
+                setError(
+                  "Payment verification failed. Please contact support."
+                );
+              }
+            } catch (verifyError) {
+              console.error("Payment verification error:", verifyError);
+              showToast("Payment verification failed", "error");
+              setError("Payment verification failed. Please contact support.");
+            }
+          },
+          prefill: {
+            name: formData.fullName,
+            email: formData.email,
+          },
+          theme: {
+            color: "#3399cc",
+          },
+          modal: {
+            ondismiss: function () {
+              setLoading(false);
+              showToast("Payment cancelled", "info");
+            },
+          },
+        };
+
+        console.log("Opening Razorpay with options:", options);
+
+        // ✅ DOUBLE CHECK: Ensure Razorpay is available before creating instance
+        if (typeof window.Razorpay === "undefined") {
+          throw new Error(
+            "Payment gateway is not available. Please refresh the page and try again."
+          );
+        }
+
+        const razorpay = new window.Razorpay(options);
+        razorpay.open();
+      } catch (error) {
+        console.error("Payment initiation error:", error);
+        showToast("Payment initiation failed", "error");
+        setError(
+          error.message ||
+            error.response?.data?.message ||
+            "Payment initiation failed"
+        );
+        setLoading(false);
+      }
+    } else if (formData.paymentMethod === "cod") {
+      // For COD, we need to save the order directly
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          setError("Authentication token not found. Please login again.");
+          setLoading(false);
+          return;
+        }
+
+        // Decode the token to get user ID for COD as well
+        const decodedToken = decodeJWT(token);
+        const userId =
+          decodedToken?.id || decodedToken?.userId || decodedToken?.sub;
+
+        if (!userId) {
+          setError("User information not found. Please login again.");
+          setLoading(false);
+          return;
+        }
+
+        // Prepare order data for COD
+        const orderData = {
+          shippingAddress: {
+            fullName: formData.fullName,
+            email: formData.email,
+            address: formData.address,
+            city: formData.city,
+            zip: formData.zip,
+            country: formData.country,
+          },
+          paymentMethod: "cod",
+          orderItems: cartItems.map((item) => ({
+            productId: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+          })),
+          orderStatus: "Confirmed",
+          paymentStatus: "Pending",
+          subtotal: subtotalAmount,
+          discount: discount,
+          total: totalAmount, // Add COD charges
+          couponId: appliedCoupon ? appliedCoupon.code : null,
+        };
+
+        // Save COD order directly
+        const response = await axios.post(
+          `${BACKEND_URL}save-order`,
+          orderData,
+          {
+            headers: {
+              Authorization: `${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.data.success) {
+          showToast("Order placed successfully!", "success");
+          proceedToThankYou(response.data);
+        } else {
+          throw new Error(response.data.message || "Failed to place order");
+        }
+      } catch (error) {
+        console.error("COD order error:", error);
+        showToast("Failed to place order", "error");
+        setError(error.response?.data?.message || "Failed to place order");
+        setLoading(false);
+      }
+    } else {
+      setError("Please select a valid payment method.");
+      setLoading(false);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -394,76 +699,7 @@ const PaymentPage = () => {
       return;
     }
 
-    setError("");
-    setLoading(true);
-
-    const orderId =
-      order?.orderId || "ORD" + Math.floor(Math.random() * 1000000);
-
-    const proceedToThankYou = () => {
-      // Save order to localStorage if needed
-      localStorage.setItem(
-        "lastOrder",
-        JSON.stringify({
-          cart: cartItems,
-          orderId,
-          orderDetails: order,
-          appliedCoupon,
-          subtotal: subtotalAmount,
-          discount,
-          total: totalAmount,
-        })
-      );
-
-      // Navigate to ThankYouPage and pass cart & orderId via state
-      navigate("/thankyou", {
-        state: {
-          cart: cartItems,
-          orderId,
-          orderDetails: order,
-          appliedCoupon,
-          subtotal: subtotalAmount,
-          discount,
-          total: totalAmount,
-        },
-      });
-
-      // Clear cart after order if it was from localStorage
-      if (!order) {
-        localStorage.removeItem("cart");
-      }
-    };
-
-    if (formData.paymentMethod === "card") {
-      if (
-        !/^\d{16}$/.test(formData.cardNumber) ||
-        !/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.cardExpiry) ||
-        !/^\d{3}$/.test(formData.cardCVC)
-      ) {
-        setError("Please enter valid card details.");
-        setLoading(false);
-        return;
-      }
-      setTimeout(() => {
-        setLoading(false);
-        proceedToThankYou();
-      }, 1000);
-    } else if (formData.paymentMethod === "upi") {
-      if (!/^[\w.-]+@[a-zA-Z]+$/.test(formData.upiId)) {
-        setError("Please enter a valid UPI ID.");
-        setLoading(false);
-        return;
-      }
-      setTimeout(() => {
-        setLoading(false);
-        proceedToThankYou();
-      }, 500);
-    } else if (formData.paymentMethod === "cod") {
-      setTimeout(() => {
-        setLoading(false);
-        proceedToThankYou();
-      }, 700);
-    }
+    handlePayment();
   };
 
   // Don't render the component if user is not authenticated

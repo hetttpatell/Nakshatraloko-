@@ -501,8 +501,7 @@ const ProductModal = ({
             headers: {
               "Content-Type": "multipart/form-data",
               Authorization: `${
-                localStorage.getItem("authToken") ||
-                localStorage.getItem("token")
+                localStorage.getItem("authToken") 
               }`,
             },
           }

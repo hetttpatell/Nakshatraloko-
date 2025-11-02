@@ -230,13 +230,13 @@ const Admin = () => {
           {activePage === "Dashboard" && (
             <>
               {/* Overview Widgets */}
-              {/* <StatsOverview isMobile={isMobile} /> */}
+              <StatsOverview isMobile={isMobile} />
 
               {/* Charts */}
-              {/* <ChartsSection isMobile={isMobile} /> */}
+              <ChartsSection isMobile={isMobile} />
 
               {/* Recent Orders Table */}
-              {/* <RecentOrders isMobile={isMobile} /> */}
+              <RecentOrders isMobile={isMobile} />
             </>
           )}
 

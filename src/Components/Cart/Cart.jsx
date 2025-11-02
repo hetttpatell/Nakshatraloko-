@@ -157,7 +157,7 @@ export default function Cart() {
   const total = subtotal + (subtotal > 0 ? shipping : 0);
 
   // Handle quantity change
-  const handleQuantityChange = (item, newQuantity) => {
+  const handleQuantityChange = async (item, newQuantity) => {
     if (newQuantity <= 0) {
       handleRemoveItem(item);
       return;
@@ -171,18 +171,20 @@ export default function Cart() {
         )
       );
 
-      // 2️⃣ Debounce backend update
-      if (quantityUpdateTimers.current[item.id]) {
-        clearTimeout(quantityUpdateTimers.current[item.id]);
-      }
-
-      quantityUpdateTimers.current[item.id] = setTimeout(async () => {
+      // 2️⃣ Update backend immediately without debounce for better UX
+      try {
         await updateQuantity(item.id, newQuantity);
-        await getCart(); // fetch fresh cart including stock
-        delete quantityUpdateTimers.current[item.id];
-      }, 300);
-    } else {
-      // console.warn(`Cannot add more than ${item.stock} items`);
+        // Optional: Refresh cart to get latest stock info
+        await getCart();
+      } catch (error) {
+        // If backend fails, revert local state
+        setTransformedCart((prev) =>
+          prev.map((p) =>
+            p.id === item.id ? { ...p, quantity: item.quantity } : p
+          )
+        );
+        // console.error("Failed to update quantity:", error);
+      }
     }
   };
 
