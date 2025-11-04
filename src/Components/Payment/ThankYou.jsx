@@ -438,7 +438,7 @@ const ThankYouPage = ({
                 </div>
               ))}
             </div>
-          </motion.div> */}
+          </motion.div> */} 
 
           {/* Support & Invoice */}
           <motion.div

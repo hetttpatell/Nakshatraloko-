@@ -1,9 +1,10 @@
 // PaymentForm.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCreditCard, FaMoneyBillWave, FaMobileAlt } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { Sparkles, Zap, ArrowRight, Percent, Check, X } from "lucide-react";
+import { useCart } from "../../Context/CartContext";
 import axios from "axios";
 import Toast from "../Product/Toast";
 
@@ -96,6 +97,9 @@ const PaymentPage = () => {
   const [apiLoading, setApiLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [toastData, setToastData] = useState(null);
+
+  const { getCart } =
+    useCart();
 
   const showToast = (message, type = "success", duration = 4000) => {
     setToastData({ message, type, duration });
@@ -539,7 +543,8 @@ const PaymentPage = () => {
           currency: data.currency,
           order_id: data.orderId,
           name: "Nakshatraloka",
-          description: "Secure payment for your Nakshatraloka order — curated fashion, lifestyle, and spiritual products delivered with care.",
+          description:
+            "Secure payment for your Nakshatraloka order — curated fashion, lifestyle, and spiritual products delivered with care.",
           handler: async function (response) {
             try {
               // Step 2: Verify Payment on your backend
@@ -561,7 +566,29 @@ const PaymentPage = () => {
 
               if (verifyResponse.data.success) {
                 showToast("Payment Successful!", "success");
-                // Step 3: Navigate to thank you page with the saved order data
+
+                try {
+                  // ✅ Remove all purchased items from cart
+                  for (const item of cartItems) {
+                    await axios.post(
+                      `${BACKEND_URL}saveCart`,
+                      { productId: item.id },
+                      {
+                        headers: {
+                          Authorization: `${token}`,
+                          "Content-Type": "application/json",
+                        },
+                      }
+                    );
+                  }
+
+                  // ✅ Refresh the cart context to update count and UI instantly
+                  await getCart(); // 🔥 This line ensures UI updates without page reload
+                } catch (cartError) {
+                  console.error("Error while clearing cart:", cartError);
+                }
+
+                // ✅ Step 3: Navigate to thank you page with saved order data
                 proceedToThankYou(verifyResponse.data);
               } else {
                 showToast("Payment verification failed", "error");
