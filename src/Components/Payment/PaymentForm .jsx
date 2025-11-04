@@ -538,8 +538,8 @@ const PaymentPage = () => {
           amount: data.amount,
           currency: data.currency,
           order_id: data.orderId,
-          name: "Your Company Name",
-          description: "Purchase Description",
+          name: "Nakshatraloka",
+          description: "Secure payment for your Nakshatraloka order — curated fashion, lifestyle, and spiritual products delivered with care.",
           handler: async function (response) {
             try {
               // Step 2: Verify Payment on your backend

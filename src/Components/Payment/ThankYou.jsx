@@ -1,24 +1,54 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { FaCheckCircle, FaHeadset, FaFileInvoice, FaFacebook, FaTwitter, FaInstagram, FaShippingFast, FaShieldAlt, FaStore, FaBoxOpen } from "react-icons/fa";
+import {
+  FaCheckCircle,
+  FaHeadset,
+  FaFileInvoice,
+  FaFacebook,
+  FaTwitter,
+  FaInstagram,
+  FaShippingFast,
+  FaShieldAlt,
+  FaStore,
+  FaBoxOpen,
+} from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
-import { Sparkles, Zap, ArrowRight, Percent, Check, X, Clock, MapPin, Phone, Mail } from "lucide-react";
+import {
+  Sparkles,
+  Zap,
+  ArrowRight,
+  Percent,
+  Check,
+  X,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
+} from "lucide-react";
 
 // Background circles component (same as PaymentForm.jsx)
-const BackgroundCircle = ({ top, left, size, color, delay, duration, yMovement }) => (
+const BackgroundCircle = ({
+  top,
+  left,
+  size,
+  color,
+  delay,
+  duration,
+  yMovement,
+}) => (
   <motion.div
     className={`absolute ${size} rounded-full ${color}`}
     style={{ top: `${top}%`, left: `${left}%` }}
     animate={{
       y: [0, yMovement, 0],
       scale: [1, 1.1, 1],
-      rotate: [0, 5, 0]
+      rotate: [0, 5, 0],
     }}
     transition={{
       duration: duration,
       repeat: Infinity,
       ease: "easeInOut",
-      delay: delay
+      delay: delay,
     }}
   />
 );
@@ -46,7 +76,9 @@ const OrderItem = React.memo(({ item }) => {
       )}
       <div className="flex flex-col flex-1">
         <div className="flex justify-between items-center">
-          <h4 className="font-semibold text-[var(--color-text)] text-sm md:text-base">{name}</h4>
+          <h4 className="font-semibold text-[var(--color-text)] text-sm md:text-base">
+            {name}
+          </h4>
           <span className="font-bold text-[var(--color-text)] text-sm md:text-base">
             ₹{(price * quantity).toFixed(2)}
           </span>
@@ -54,7 +86,9 @@ const OrderItem = React.memo(({ item }) => {
         <p className="text-[var(--color-text-light)] text-xs mt-1">
           Quantity: <span className="font-medium">x{quantity}</span>
         </p>
-        <p className="text-[var(--color-text-light)] text-xs">Unit Price: ₹{price}</p>
+        <p className="text-[var(--color-text-light)] text-xs">
+          Unit Price: ₹{price}
+        </p>
       </div>
     </motion.li>
   );
@@ -83,24 +117,40 @@ const FeatureCard = ({ icon: Icon, title, description }) => (
       <Icon size={18} />
     </div>
     <div>
-      <h4 className="font-semibold text-sm text-[var(--color-text)]">{title}</h4>
-      <p className="text-xs text-[var(--color-text-light)] mt-1">{description}</p>
+      <h4 className="font-semibold text-sm text-[var(--color-text)]">
+        {title}
+      </h4>
+      <p className="text-xs text-[var(--color-text-light)] mt-1">
+        {description}
+      </p>
     </div>
   </motion.div>
 );
 
-const ThankYouPage = ({ estimatedDelivery = "Will be delivered to you shortly" }) => {
+const ThankYouPage = ({
+  estimatedDelivery = "Will be delivered to you shortly",
+}) => {
   const location = useLocation();
-  const { orderId = "ORD123456", cart = [], subtotal = 0, discount = 0, total = 0, appliedCoupon = null } = location.state || {};
+  const {
+    orderId = "ORD123456",
+    cart = [],
+    subtotal = 0,
+    discount = 0,
+    total = 0,
+    appliedCoupon = null,
+  } = location.state || {};
 
   // Memoized total calculation for performance
   const calculatedTotal = useMemo(
-    () => total || cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
+    () =>
+      total || cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
     [cart, total]
   );
 
   const calculatedSubtotal = useMemo(
-    () => subtotal || cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
+    () =>
+      subtotal ||
+      cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
     [cart, subtotal]
   );
 
@@ -118,16 +168,96 @@ const ThankYouPage = ({ estimatedDelivery = "Will be delivered to you shortly" }
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-[var(--color-primary-light)]/30 to-[var(--color-primary-light)]/20"></div>
 
       {/* Multiple background circles - same as PaymentForm.jsx */}
-      <BackgroundCircle top={10} left={5} size="w-16 h-16" color="bg-[var(--color-primary)]/10" delay={0} duration={8} yMovement={15} />
-      <BackgroundCircle top={80} left={90} size="w-20 h-20" color="bg-[var(--color-primary)]/10" delay={1} duration={7} yMovement={-12} />
-      <BackgroundCircle top={30} left={85} size="w-42 h-12" color="bg-[var(--color-primary)]/10" delay={2} duration={9} yMovement={10} />
-      <BackgroundCircle top={70} left={10} size="w-24 h-24" color="bg-[var(--color-primary)]/10" delay={0.5} duration={10} yMovement={-15} />
-      <BackgroundCircle top={20} left={50} size="w-14 h-14" color="bg-[var(--color-primary)]/10" delay={1.5} duration={8} yMovement={8} />
-      <BackgroundCircle top={60} left={70} size="w-18 h-18" color="bg-[var(--color-primary)]/10" delay={2.5} duration={7} yMovement={-10} />
-      <BackgroundCircle top={40} left={30} size="w-10 h-10" color="bg-[var(--color-primary)]/10" delay={0.8} duration={9} yMovement={12} />
-      <BackgroundCircle top={90} left={40} size="w-22 h-22" color="bg-[var(--color-primary)]/10" delay={1.2} duration={1} yMovement={-8} />
-      <BackgroundCircle top={50} left={30} size="w-24 h-20" color="bg-[var(--color-primary)]/10" delay={1} duration={18} yMovement={-8} />
-      <BackgroundCircle top={55} left={20} size="w-12 h-32" color="bg-[var(--color-primary)]/10" delay={1.2} duration={11} yMovement={-11} />
+      <BackgroundCircle
+        top={10}
+        left={5}
+        size="w-16 h-16"
+        color="bg-[var(--color-primary)]/10"
+        delay={0}
+        duration={8}
+        yMovement={15}
+      />
+      <BackgroundCircle
+        top={80}
+        left={90}
+        size="w-20 h-20"
+        color="bg-[var(--color-primary)]/10"
+        delay={1}
+        duration={7}
+        yMovement={-12}
+      />
+      <BackgroundCircle
+        top={30}
+        left={85}
+        size="w-42 h-12"
+        color="bg-[var(--color-primary)]/10"
+        delay={2}
+        duration={9}
+        yMovement={10}
+      />
+      <BackgroundCircle
+        top={70}
+        left={10}
+        size="w-24 h-24"
+        color="bg-[var(--color-primary)]/10"
+        delay={0.5}
+        duration={10}
+        yMovement={-15}
+      />
+      <BackgroundCircle
+        top={20}
+        left={50}
+        size="w-14 h-14"
+        color="bg-[var(--color-primary)]/10"
+        delay={1.5}
+        duration={8}
+        yMovement={8}
+      />
+      <BackgroundCircle
+        top={60}
+        left={70}
+        size="w-18 h-18"
+        color="bg-[var(--color-primary)]/10"
+        delay={2.5}
+        duration={7}
+        yMovement={-10}
+      />
+      <BackgroundCircle
+        top={40}
+        left={30}
+        size="w-10 h-10"
+        color="bg-[var(--color-primary)]/10"
+        delay={0.8}
+        duration={9}
+        yMovement={12}
+      />
+      <BackgroundCircle
+        top={90}
+        left={40}
+        size="w-22 h-22"
+        color="bg-[var(--color-primary)]/10"
+        delay={1.2}
+        duration={1}
+        yMovement={-8}
+      />
+      <BackgroundCircle
+        top={50}
+        left={30}
+        size="w-24 h-20"
+        color="bg-[var(--color-primary)]/10"
+        delay={1}
+        duration={18}
+        yMovement={-8}
+      />
+      <BackgroundCircle
+        top={55}
+        left={20}
+        size="w-12 h-32"
+        color="bg-[var(--color-primary)]/10"
+        delay={1.2}
+        duration={11}
+        yMovement={-11}
+      />
 
       <motion.div
         initial={{ opacity: 0, y: 40 }}
@@ -152,7 +282,10 @@ const ThankYouPage = ({ estimatedDelivery = "Will be delivered to you shortly" }
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <Zap size={16} className="fill-[var(--color-primary)] text-[var(--color-primary)]" />
+            <Zap
+              size={16}
+              className="fill-[var(--color-primary)] text-[var(--color-primary)]"
+            />
             <span className="text-sm font-medium">Order Confirmed</span>
           </motion.div>
 
@@ -162,7 +295,10 @@ const ThankYouPage = ({ estimatedDelivery = "Will be delivered to you shortly" }
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Thank You for Your <span className="text-[var(--color-primary)] relative">Purchase!</span>
+            Thank You for Your{" "}
+            <span className="text-[var(--color-primary)] relative">
+              Purchase!
+            </span>
           </motion.h1>
 
           <motion.p
@@ -171,7 +307,8 @@ const ThankYouPage = ({ estimatedDelivery = "Will be delivered to you shortly" }
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            We're excited to process your order. A confirmation email with details has been sent.
+            We're excited to process your order. A confirmation email with
+            details has been sent.
           </motion.p>
 
           {/* Order Details */}
@@ -181,39 +318,52 @@ const ThankYouPage = ({ estimatedDelivery = "Will be delivered to you shortly" }
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <h2 className="text-lg font-semibold text-[var(--color-text)] mb-3">Order Confirmation</h2>
+            <h2 className="text-lg font-semibold text-[var(--color-text)] mb-3">
+              Order Confirmation
+            </h2>
             <p className="text-[var(--color-text)] mb-2">
               <span className="font-medium">Order Number:</span> {orderId}
             </p>
             <p className="text-[var(--color-text)] mb-4">
-              <span className="font-medium">Estimated Delivery:</span> {estimatedDelivery}
+              <span className="font-medium">Estimated Delivery:</span>{" "}
+              {estimatedDelivery}
             </p>
 
             {/* Ordered Products */}
             <div className="border-t border-[var(--color-border)] pt-4">
-              <h3 className="text-md font-semibold text-[var(--color-text)] mb-3">Ordered Products</h3>
+              <h3 className="text-md font-semibold text-[var(--color-text)] mb-3">
+                Ordered Products
+              </h3>
               {cart.length > 0 ? (
                 <ul className="space-y-3 sm:space-y-4 max-h-64 sm:max-h-80 overflow-y-auto">
-                  {cart.map(item => (
+                  {cart.map((item) => (
                     <OrderItem key={item.id} item={item} />
                   ))}
                 </ul>
               ) : (
-                <p className="text-[var(--color-text-light)] text-sm text-center w-full">No products found.</p>
+                <p className="text-[var(--color-text-light)] text-sm text-center w-full">
+                  No products found.
+                </p>
               )}
 
               {/* Order Summary */}
               <div className="border-t border-[var(--color-border)] pt-4 mt-4">
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between items-center">
-                    <p className="text-sm text-[var(--color-text-light)]">Subtotal:</p>
-                    <p className="text-sm font-medium text-[var(--color-text)]">₹{calculatedSubtotal.toFixed(2)}</p>
+                    <p className="text-sm text-[var(--color-text-light)]">
+                      Subtotal:
+                    </p>
+                    <p className="text-sm font-medium text-[var(--color-text)]">
+                      ₹{calculatedSubtotal.toFixed(2)}
+                    </p>
                   </div>
 
                   {discount > 0 && (
                     <div className="flex justify-between items-center">
                       <p className="text-sm text-green-600">Discount:</p>
-                      <p className="text-sm font-medium text-green-600">-₹{discount.toFixed(2)}</p>
+                      <p className="text-sm font-medium text-green-600">
+                        -₹{discount.toFixed(2)}
+                      </p>
                     </div>
                   )}
 
@@ -226,8 +376,12 @@ const ThankYouPage = ({ estimatedDelivery = "Will be delivered to you shortly" }
                 </div>
 
                 <div className="flex justify-between items-center border-t border-[var(--color-border)] pt-2">
-                  <p className="text-lg font-medium text-[var(--color-text)]">Total:</p>
-                  <p className="text-xl font-bold text-[var(--color-primary-dark)]">₹{calculatedTotal.toFixed(2)}</p>
+                  <p className="text-lg font-medium text-[var(--color-text)]">
+                    Total:
+                  </p>
+                  <p className="text-xl font-bold text-[var(--color-primary-dark)]">
+                    ₹{calculatedTotal.toFixed(2)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -298,16 +452,24 @@ const ThankYouPage = ({ estimatedDelivery = "Will be delivered to you shortly" }
               whileHover={{ y: -2 }}
             >
               <FaHeadset className="text-[var(--color-primary)] text-2xl mb-2" />
-              <span className="text-sm font-medium text-[var(--color-text)]">Get Support</span>
-              <p className="text-xs text-[var(--color-text-light)] mt-1 text-center">24/7 customer service</p>
+              <span className="text-sm font-medium text-[var(--color-text)]">
+                Get Support
+              </span>
+              <p className="text-xs text-[var(--color-text-light)] mt-1 text-center">
+                24/7 customer service
+              </p>
             </motion.div>
             <motion.div
               className="flex flex-col items-center p-4 rounded-lg bg-[var(--color-primary-light)]/10 hover:bg-[var(--color-primary-light)]/20 transition-colors cursor-pointer"
               whileHover={{ y: -2 }}
             >
               <FaFileInvoice className="text-[var(--color-primary)] text-2xl mb-2" />
-              <span className="text-sm font-medium text-[var(--color-text)]">Download Invoice</span>
-              <p className="text-xs text-[var(--color-text-light)] mt-1 text-center">PDF receipt</p>
+              <span className="text-sm font-medium text-[var(--color-text)]">
+                Download Invoice
+              </span>
+              <p className="text-xs text-[var(--color-text-light)] mt-1 text-center">
+                PDF receipt
+              </p>
             </motion.div>
           </motion.div>
 
@@ -318,7 +480,9 @@ const ThankYouPage = ({ estimatedDelivery = "Will be delivered to you shortly" }
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            <h3 className="text-lg font-semibold text-[var(--color-text)] mb-3">What's Next?</h3>
+            <h3 className="text-lg font-semibold text-[var(--color-text)] mb-3">
+              What's Next?
+            </h3>
             <div className="space-y-3">
               <FeatureCard
                 icon={FaShieldAlt}
@@ -345,7 +509,9 @@ const ThankYouPage = ({ estimatedDelivery = "Will be delivered to you shortly" }
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.7 }}
           >
-            <p className="text-lg font-semibold text-[var(--color-text)] mb-3 text-center">Stay connected</p>
+            <p className="text-lg font-semibold text-[var(--color-text)] mb-3 text-center">
+              Stay connected
+            </p>
             <div className="flex justify-center gap-6 mb-4">
               {[FaFacebook, FaTwitter, FaInstagram].map((Icon, idx) => (
                 <SocialButton key={idx} Icon={Icon} href="#" />
@@ -374,16 +540,22 @@ const ThankYouPage = ({ estimatedDelivery = "Will be delivered to you shortly" }
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
-            <h3 className="text-md font-semibold text-[var(--color-text)] mb-2">Need Help?</h3>
+            <h3 className="text-md font-semibold text-[var(--color-text)] mb-2">
+              Need Help?
+            </h3>
             <div className="flex flex-col sm:flex-row justify-center gap-4 text-sm text-[var(--color-text-light)]">
               <div className="flex items-center justify-center gap-1">
                 <Phone size={14} />
-                <span>+91 8866378552</span>
+                <span>+91 9601394272</span>
               </div>
               <div className="flex items-center justify-center gap-1">
                 <Mail size={14} />
-                <a href="mailto:support@yourbrand.com" className="text-[var(--color-primary)] hover:underline">
-                  nakshatraloka.customercare@gmail.com                </a>
+                <a
+                  href="mailto:customercare@nakshatraloka.com"
+                  className="text-[var(--color-primary)] hover:underline"
+                >
+                  customercare@nakshatraloka.com
+                </a>
               </div>
             </div>
           </motion.div>

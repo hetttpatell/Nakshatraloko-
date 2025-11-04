@@ -180,7 +180,7 @@ function ExpertCall({ className = "" }) {
     );
 
     // ✅ WhatsApp
-    const clientWhatsapp = "918866378552";
+    const clientWhatsapp = "919601394272";
     const message = `New Consultation Request:
 Name: ${username}
 Phone: ${usernumber}
@@ -251,7 +251,7 @@ Preferred Consultation Time: ${consultationTime}`;
   //         localStorage.setItem('consultancySubmissions', JSON.stringify(updatedSubmissions));
 
   //         // Send to WhatsApp
-  //         const clientWhatsapp = "918866378552";
+  //         const clientWhatsapp = "919601394272";
   //         const message = `New Consultation Request:
   // Name: ${username}
   // Phone: ${usernumber}
