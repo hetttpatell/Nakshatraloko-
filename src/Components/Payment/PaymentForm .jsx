@@ -271,12 +271,12 @@ const PaymentPage = () => {
         // showToast(message || "Coupon applied successfully!", "success");
       } else {
         setCouponError(result.message || "Invalid or expired coupon");
-        showToast(result.message || "Invalid or expired coupon", "error");
+        // showToast(result.message || "Invalid or expired coupon", "error");
       }
     } catch (error) {
       console.error("Coupon validation error:", error);
       setCouponError("Failed to validate coupon. Please try again.");
-      showToast("Server error while validating coupon", "error");
+      // showToast("Server error while validating coupon", "error");
     }
 
     setCouponLoading(false);
