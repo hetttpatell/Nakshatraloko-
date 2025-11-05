@@ -98,8 +98,7 @@ const PaymentPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [toastData, setToastData] = useState(null);
 
-  const { getCart } =
-    useCart();
+  const { getCart } = useCart();
 
   const showToast = (message, type = "success", duration = 4000) => {
     setToastData({ message, type, duration });
@@ -217,6 +216,7 @@ const PaymentPage = () => {
   };
 
   // ✅ Apply coupon function
+  // ✅ Apply coupon function (connected to backend)
   const applyCoupon = async () => {
     if (!couponCode.trim()) {
       setCouponError("Please enter a coupon code");
@@ -226,56 +226,57 @@ const PaymentPage = () => {
     setCouponLoading(true);
     setCouponError("");
 
-    try {
-      const response = await new Promise((resolve) => {
-        setTimeout(() => {
-          const mockCoupons = {
-            SAVE10: { discount: 10, type: "percentage", minAmount: 500 },
-            FLAT50: { discount: 50, type: "fixed", minAmount: 200 },
-            WELCOME20: { discount: 20, type: "percentage", minAmount: 1000 },
-          };
+    const token = localStorage.getItem("authToken");
+    console.log({ token });
 
-          if (mockCoupons[couponCode.toUpperCase()]) {
-            resolve({
-              success: true,
-              data: mockCoupons[couponCode.toUpperCase()],
-            });
-          } else {
-            resolve({
-              success: false,
-              message: "Invalid coupon code",
-            });
-          }
-        }, 1000);
+    const decodedToken = decodeJWT(token);
+    const userId =
+      decodedToken?.id || decodedToken?.userId || decodedToken?.sub;
+
+    try {
+      const response = await fetch(`${BACKEND_URL}ValidateCoupon`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${token}`, // if using auth
+        },
+        body: JSON.stringify({
+          userId: userId,
+          couponCode: couponCode.trim(),
+          products: cartItems.map((item) => ({
+            productId: item.id || item.ProductID || item.productId, // ✅ fixed
+            quantity: item.quantity,
+          })),
+          subtotal: subtotalAmount,
+        }),
       });
 
-      if (response.success) {
-        const couponData = response.data;
-        if (subtotalAmount < couponData.minAmount) {
-          setCouponError(
-            `Minimum order amount of ₹${couponData.minAmount} required`
-          );
-          setCouponLoading(false);
-          return;
-        }
+      const result = await response.json();
+      console.log({ result });
 
-        let discountAmount = 0;
-        if (couponData.type === "percentage") {
-          discountAmount = (subtotalAmount * couponData.discount) / 100;
-        } else {
-          discountAmount = couponData.discount;
-        }
+      if (result.success) {
+        const { discountValue, couponID } = result.data;
+
+        const discountAmount = Number(discountValue) || 0;
 
         setDiscount(discountAmount);
         setTotalAmount(subtotalAmount - discountAmount);
-        setAppliedCoupon({ code: couponCode.toUpperCase(), ...couponData });
+        setAppliedCoupon({
+          id: couponID,
+          code: couponCode.trim().toUpperCase(),
+          discountAmount,
+        });
+
         setCouponCode("");
-        showToast(`Coupon ${couponCode.toUpperCase()} applied!`, "success");
+        // showToast(message || "Coupon applied successfully!", "success");
       } else {
-        showToast("Invalid coupon code", "error");
+        setCouponError(result.message || "Invalid or expired coupon");
+        showToast(result.message || "Invalid or expired coupon", "error");
       }
     } catch (error) {
-      setCouponError("Failed to apply coupon. Please try again.");
+      console.error("Coupon validation error:", error);
+      setCouponError("Failed to validate coupon. Please try again.");
+      showToast("Server error while validating coupon", "error");
     }
 
     setCouponLoading(false);
