@@ -11,6 +11,7 @@ import {
   FaShieldAlt,
   FaStore,
   FaBoxOpen,
+  FaFacebookF,
 } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -52,6 +53,41 @@ const BackgroundCircle = ({
     }}
   />
 );
+
+// ✅ Single SocialButton definition
+const SocialButton = ({ Icon, href, label }) => (
+  <motion.a
+    whileHover={{ scale: 1.2 }}
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label={label}
+    className="w-10 h-10 flex items-center justify-center rounded-full 
+               bg-[var(--color-primary-light)] text-[var(--color-primary)] 
+               hover:bg-[var(--color-primary)] hover:text-white 
+               transition-colors shadow-md"
+  >
+    <Icon size={20} />
+  </motion.a>
+);
+
+const socialLinks = [
+  {
+    icon: FaInstagram,
+    label: "Instagram",
+    link: "https://www.instagram.com/nakshatraloka_/?next=%2F&hl=en",
+  },
+  {
+    icon: FaFacebookF,
+    label: "Facebook",
+    link: "https://www.facebook.com/profile.php?id=61579053167053",
+  },
+  // {
+  //   icon: FaTwitter,
+  //   label: "Twitter",
+  //   link: "#", // You can replace this with your real Twitter link later
+  // },
+];
 
 // Reusable component for order item
 const OrderItem = React.memo(({ item }) => {
@@ -95,16 +131,16 @@ const OrderItem = React.memo(({ item }) => {
 });
 
 // Social Icon Button
-const SocialButton = ({ Icon, href }) => (
-  <motion.a
-    whileHover={{ scale: 1.2 }}
-    className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white transition-colors shadow-md"
-    href={href}
-    aria-label={`Follow us on ${Icon.displayName || "social"}`}
-  >
-    <Icon />
-  </motion.a>
-);
+// const SocialButton = ({ Icon, href }) => (
+//   <motion.a
+//     whileHover={{ scale: 1.2 }}
+//     className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white transition-colors shadow-md"
+//     href={href}
+//     aria-label={`Follow us on ${Icon.displayName || "social"}`}
+//   >
+//     <Icon />
+//   </motion.a>
+// );
 
 // Feature Card Component
 const FeatureCard = ({ icon: Icon, title, description }) => (
@@ -438,7 +474,7 @@ const ThankYouPage = ({
                 </div>
               ))}
             </div>
-          </motion.div> */} 
+          </motion.div> */}
 
           {/* Support & Invoice */}
           <motion.div
@@ -513,8 +549,8 @@ const ThankYouPage = ({
               Stay connected
             </p>
             <div className="flex justify-center gap-6 mb-4">
-              {[FaFacebook, FaTwitter, FaInstagram].map((Icon, idx) => (
-                <SocialButton key={idx} Icon={Icon} href="#" />
+              {socialLinks.map(({ icon: Icon, link }, idx) => (
+                <SocialButton key={idx} Icon={Icon} href={link} />
               ))}
             </div>
             {/* <form className="flex w-full max-w-md mx-auto">
