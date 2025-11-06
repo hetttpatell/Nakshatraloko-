@@ -11,6 +11,7 @@ import {
   FaSync,
   FaStar,
 } from "react-icons/fa";
+import jwtDecode from "../../CustomHooks/jwtUtils";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const IMG_URL = import.meta.env.VITE_IMG_URL;
@@ -86,8 +87,8 @@ const ProductModal = ({
         initialProduct.CategoryID !== undefined
           ? parseInt(initialProduct.CategoryID)
           : initialProduct.categoryId !== undefined
-            ? parseInt(initialProduct.categoryId)
-            : ""
+          ? parseInt(initialProduct.categoryId)
+          : ""
       );
       setDescription(
         initialProduct.Description || initialProduct.description || ""
@@ -100,8 +101,8 @@ const ProductModal = ({
         initialProduct.IsActive !== undefined
           ? initialProduct.IsActive
           : initialProduct.isActive !== undefined
-            ? initialProduct.isActive
-            : true
+          ? initialProduct.isActive
+          : true
       );
 
       // ---------------- Rating field ----------------
@@ -109,10 +110,10 @@ const ProductModal = ({
         initialProduct.Rating !== undefined
           ? parseFloat(initialProduct.Rating)
           : initialProduct.rating !== undefined
-            ? parseFloat(initialProduct.rating)
-            : initialProduct.productRatings !== undefined
-              ? parseFloat(initialProduct.productRatings)
-              : 0;
+          ? parseFloat(initialProduct.rating)
+          : initialProduct.productRatings !== undefined
+          ? parseFloat(initialProduct.productRatings)
+          : 0;
 
       // Ensure rating is between 0 and 5
       setRating(Math.min(Math.max(initialRating, 0), 5));
@@ -389,6 +390,16 @@ const ProductModal = ({
       setErrors({});
       setApiStatus({ loading: true, message: "" });
 
+      // Get user ID from token
+      const token = localStorage.getItem("authToken");
+      let userId = 1; // default fallback
+
+      if (token) {
+        const decoded = jwtDecode(token);
+        // Try different possible field names for user ID
+        userId = decoded?.id || decoded?.userId || 1;
+      }
+
       try {
         // --- Validations ---
         const newErrors = {};
@@ -444,7 +455,12 @@ const ProductModal = ({
         formData.append("isActive", Boolean(isActive));
         formData.append("rating", parseFloat(rating) || 0);
         formData.append("productRatings", parseFloat(rating) || 0);
-        formData.append("createdBy", 1);
+        formData.append("createdBy", userId); // Use actual user ID from token
+
+        // Add updatedBy for editing
+        if (isEditing) {
+          formData.append("updatedBy", userId); // Use actual user ID from token
+        }
 
         // Add sizes as JSON string
         const sizesData = sizes.map((size) => {
@@ -490,8 +506,7 @@ const ProductModal = ({
         });
 
         // --- API Call ---
-        const token = localStorage.getItem("authToken") || localStorage.getItem("token");
-
+        
         const response = await axios.post(
           `${BACKEND_URL}saveProduct`,
           formData,
@@ -499,8 +514,7 @@ const ProductModal = ({
             headers: {
               "Content-Type": "multipart/form-data",
               Authorization: `${
-                localStorage.getItem("authToken") ||
-                localStorage.getItem("token")
+                localStorage.getItem("authToken")
               }`,
             },
             timeout: 30000, // 30 second timeout
@@ -517,14 +531,14 @@ const ProductModal = ({
             onSave({
               success: true,
               data: response.data,
-              message: `Product ${isEditing ? 'updated' : 'created'} successfully!`
+              message: `Product ${
+                isEditing ? "updated" : "created"
+              } successfully!`,
             });
           }, 1000);
-
         } else {
           throw new Error(response.data.message || "Failed to save product");
         }
-
       } catch (error) {
         console.error("Save product failed:", error);
 
@@ -535,8 +549,9 @@ const ProductModal = ({
           errorMessage = error.response.data?.message || errorMessage;
         } else if (error.request) {
           // Request made but no response received
-          errorMessage = "No response from server. Please check your connection.";
-        } else if (error.code === 'ECONNABORTED') {
+          errorMessage =
+            "No response from server. Please check your connection.";
+        } else if (error.code === "ECONNABORTED") {
           // Request timeout
           errorMessage = "Request timeout. Please try again.";
         } else {
@@ -548,7 +563,6 @@ const ProductModal = ({
           submit: errorMessage,
         });
         setApiStatus({ loading: false, message: "error" });
-
       } finally {
         submittingRef.current = false;
       }
@@ -777,10 +791,11 @@ const ProductModal = ({
                       {images.map((image, index) => (
                         <div
                           key={index}
-                          className={`relative border rounded-lg p-2 ${image.isPrimary
+                          className={`relative border rounded-lg p-2 ${
+                            image.isPrimary
                               ? "border-2 border-blue-500"
                               : "border-gray-200"
-                            }`}
+                          }`}
                         >
                           <img
                             src={image.imageData}

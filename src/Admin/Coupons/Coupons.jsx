@@ -18,6 +18,7 @@ import {
   FaCheck,
 } from "react-icons/fa";
 import Toast from "../../Components/Product/Toast";
+import decodeJWT from "../../CustomHooks/jwtUtils";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -239,6 +240,15 @@ const Coupons = () => {
   }, []);
 
   const handleSaveCoupon = async (couponData) => {
+    const token = localStorage.getItem("authToken");
+
+    // Decode the token to get user ID
+    let userId = 1; // fallback
+    if (token) {
+      const decodedToken = decodeJWT(token);
+      userId = decodedToken?.id || decodedToken?.userId || 1;
+    }
+
     try {
       // Validate coupon code
       const code = couponData.code?.trim();
@@ -271,8 +281,8 @@ const Coupons = () => {
           : null,
         coupenType: couponData.coupenType || "GENERAL",
         usageLimit: parseInt(couponData.usageLimit) || 0,
-        createdBy: 1,
-        updatedBy: 1,
+        createdBy: userId, // Use actual user ID from token
+        updatedBy: userId, // Use actual user ID from token
         minOrderAmount: parseFloat(couponData.minOrderAmount) || 0,
         maxDiscountAmount: couponData.maxDiscountAmount
           ? parseFloat(couponData.maxDiscountAmount)
@@ -1371,7 +1381,7 @@ const Coupons = () => {
                 </th>
                 <th scope="col" className="px-6 py-4 font-medium text-gray-900">
                   Usage
-                </th>{" "}
+                </th>
                 {/* This column shows usage limit */}
                 <th scope="col" className="px-6 py-4 font-medium text-gray-900">
                   Status
