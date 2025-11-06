@@ -525,8 +525,8 @@ const PaymentPage = () => {
           },
           paymentMethod: "upi",
           orderItems: cartItems.map((item) => ({
-            ProductID: item.id, // ✅ Use ProductID (uppercase) to match PostgreSQL expectation
-            productId: item.id, // ✅ Also include lowercase for compatibility
+            ProductID: item.id,
+            productId: item.id,
             name: item.name,
             price: item.price,
             quantity: item.quantity,
@@ -535,7 +535,8 @@ const PaymentPage = () => {
           subtotal: subtotalAmount,
           discount: discount,
           total: totalAmount,
-          couponId: appliedCoupon ? appliedCoupon.code : null,
+          couponId: appliedCoupon?.ID || null,
+          couponCode: appliedCoupon?.Code || appliedCoupon?.code || null,
         };
 
         const options = {
@@ -683,7 +684,7 @@ const PaymentPage = () => {
           subtotal: subtotalAmount,
           discount: discount,
           total: totalAmount, // Add COD charges
-          couponId: appliedCoupon ? appliedCoupon.code : null,
+          couponId: appliedCoupon ? appliedCoupon.ID : null,
         };
 
         // Save COD order directly
