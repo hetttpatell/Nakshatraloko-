@@ -15,7 +15,7 @@ import {
   FaHashtag,
   FaSync,
   FaChevronDown,
-  FaCheck
+  FaCheck,
 } from "react-icons/fa";
 import Toast from "../../Components/Product/Toast";
 
@@ -31,7 +31,11 @@ const Coupons = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [toast, setToast] = useState({ message: "", type: "success", visible: false });
+  const [toast, setToast] = useState({
+    message: "",
+    type: "success",
+    visible: false,
+  });
   const [couponForm, setCouponForm] = useState({
     code: "",
     description: "",
@@ -39,12 +43,12 @@ const Coupons = () => {
     discountValue: 10,
     minOrderAmount: 0,
     maxDiscountAmount: null,
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split("T")[0],
     endDate: "",
     usageLimit: 100,
     isActive: true,
     coupenType: "GENERAL",
-    productIds: []
+    productIds: [],
   });
   const [products, setProducts] = useState([]);
   const [showProductDropdown, setShowProductDropdown] = useState(false);
@@ -57,15 +61,15 @@ const Coupons = () => {
   // Fetch coupons from API
   const fetchCoupons = async () => {
     try {
-      const token = localStorage.getItem("authToken")
+      const token = localStorage.getItem("authToken");
       setLoading(true);
       const response = await axios.post(
         `${BACKEND_URL}getAllCoupons`,
         {},
         {
           headers: {
-            Authorization: `${token}`
-          }
+            Authorization: `${token}`,
+          },
         }
       );
 
@@ -77,21 +81,23 @@ const Coupons = () => {
         throw new Error("Invalid response format from server");
       }
 
-      const fetchedCoupons = response.data.data.map(coupon => ({
+      const fetchedCoupons = response.data.data.map((coupon) => ({
         id: coupon.ID,
         code: coupon.Code || "",
         description: coupon.Description,
         discountType: coupon.DiscountType,
         discountValue: parseFloat(coupon.DiscountValue),
         minOrderAmount: parseFloat(coupon.Min_Order_Amount),
-        maxDiscountAmount: coupon.Max_Discount_Amount ? parseFloat(coupon.Max_Discount_Amount) : null,
+        maxDiscountAmount: coupon.Max_Discount_Amount
+          ? parseFloat(coupon.Max_Discount_Amount)
+          : null,
         startDate: coupon.StartDate,
         endDate: coupon.EndDate,
         usageLimit: coupon.Usage_Limit,
-        usedCount: coupon.totalcount ? parseInt(coupon.totalcount) : 0,
+        usedCount: parseInt(coupon.UsedCount) || 0,
         isActive: coupon.IsActive,
         coupenType: coupon.CoupenType,
-        productIds: coupon.productids || []
+        productIds: coupon.productids || [],
       }));
 
       setCoupons(fetchedCoupons);
@@ -108,26 +114,34 @@ const Coupons = () => {
   // Fetch products for dropdown
   const fetchProducts = async () => {
     try {
-      const token = localStorage.getItem("authToken")
-      const response = await axios.post(`${BACKEND_URL}GetProductForCoupon`, {},
+      const token = localStorage.getItem("authToken");
+      const response = await axios.post(
+        `${BACKEND_URL}GetProductForCoupon`,
+        {},
         {
           headers: {
-            Authorization: `${token}`
-          }
-        });
+            Authorization: `${token}`,
+          },
+        }
+      );
       if (response.data.success) {
         // Normalize product data to ensure consistent structure
-        const normalizedProducts = (response.data.data || []).map(product => ({
-          id: product.ID || product.id || product.ProductId, // use correct backend field
-          name: product.name || product.Name || "Unknown Product"
-        }));
-
+        const normalizedProducts = (response.data.data || []).map(
+          (product) => ({
+            id: product.ID || product.id || product.ProductId, // use correct backend field
+            name: product.name || product.Name || "Unknown Product",
+          })
+        );
 
         setProducts(normalizedProducts);
       }
     } catch (err) {
       // console.error("Error fetching products:", err);
-      setToast({ message: "Failed to load products", type: "error", visible: true });
+      setToast({
+        message: "Failed to load products",
+        type: "error",
+        visible: true,
+      });
     }
   };
 
@@ -136,43 +150,42 @@ const Coupons = () => {
     const { name, value, type, checked } = e.target;
     setCouponForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   // Toggle product selection for add form
   // Toggle product selection for add form
   const toggleProductSelection = (productId) => {
-  setCouponForm(prev => {
-    const currentIds = prev.productIds || [];
-    const isSelected = currentIds.includes(productId);
+    setCouponForm((prev) => {
+      const currentIds = prev.productIds || [];
+      const isSelected = currentIds.includes(productId);
 
-    const newIds = isSelected
-      ? currentIds.filter(id => id !== productId)
-      : [...currentIds, productId];
+      const newIds = isSelected
+        ? currentIds.filter((id) => id !== productId)
+        : [...currentIds, productId];
 
-    // console.log("Selected product IDs:", newIds); // ✅ logs only on toggle
+      // console.log("Selected product IDs:", newIds); // ✅ logs only on toggle
 
-    return { ...prev, productIds: newIds };
-  });
-};
-
+      return { ...prev, productIds: newIds };
+    });
+  };
 
   // Toggle product selection for edit form
   const toggleEditProductSelection = (productId) => {
-    setEditingCoupon(prev => {
+    setEditingCoupon((prev) => {
       const currentIds = prev.productIds || [];
       const isSelected = currentIds.includes(productId);
 
       if (isSelected) {
         return {
           ...prev,
-          productIds: currentIds.filter(id => id !== productId)
+          productIds: currentIds.filter((id) => id !== productId),
         };
       } else {
         return {
           ...prev,
-          productIds: [...currentIds, productId]
+          productIds: [...currentIds, productId],
         };
       }
     });
@@ -180,43 +193,43 @@ const Coupons = () => {
 
   // Select all products for add form
   const selectAllProducts = () => {
-    const allProductIds = products.map(product => product.id);
-    setCouponForm(prev => ({
+    const allProductIds = products.map((product) => product.id);
+    setCouponForm((prev) => ({
       ...prev,
-      productIds: allProductIds
+      productIds: allProductIds,
     }));
   };
 
   // Deselect all products for add form
   const deselectAllProducts = () => {
-    setCouponForm(prev => ({
+    setCouponForm((prev) => ({
       ...prev,
-      productIds: []
+      productIds: [],
     }));
   };
 
   // Select all products for edit form
   const selectAllEditProducts = () => {
-    const allProductIds = products.map(product => product.id);
-    setEditingCoupon(prev => ({
+    const allProductIds = products.map((product) => product.id);
+    setEditingCoupon((prev) => ({
       ...prev,
-      productIds: allProductIds
+      productIds: allProductIds,
     }));
   };
 
   // Deselect all products for edit form
   const deselectAllEditProducts = () => {
-    setEditingCoupon(prev => ({
+    setEditingCoupon((prev) => ({
       ...prev,
-      productIds: []
+      productIds: [],
     }));
   };
 
   // Get selected product names for display
   const getSelectedProductNames = (productIds) => {
     return products
-      .filter(product => productIds.includes(product.id))
-      .map(product => product.name);
+      .filter((product) => productIds.includes(product.id))
+      .map((product) => product.name);
   };
 
   useEffect(() => {
@@ -233,7 +246,7 @@ const Coupons = () => {
         setToast({
           message: "Coupon code is required",
           type: "error",
-          visible: true
+          visible: true,
         });
         return false;
       }
@@ -250,17 +263,22 @@ const Coupons = () => {
         description: couponData.description?.trim() || "",
         discountType: couponData.discountType,
         discountValue: parseFloat(couponData.discountValue) || 0,
-        startDate: couponData.startDate ? new Date(couponData.startDate).toISOString() : null,
-        endDate: couponData.endDate ? new Date(couponData.endDate).toISOString() : null,
+        startDate: couponData.startDate
+          ? new Date(couponData.startDate).toISOString()
+          : null,
+        endDate: couponData.endDate
+          ? new Date(couponData.endDate).toISOString()
+          : null,
         coupenType: couponData.coupenType || "GENERAL",
         usageLimit: parseInt(couponData.usageLimit) || 0,
         createdBy: 1,
         updatedBy: 1,
         minOrderAmount: parseFloat(couponData.minOrderAmount) || 0,
-        maxDiscountAmount: couponData.maxDiscountAmount ?
-          parseFloat(couponData.maxDiscountAmount) : null,
+        maxDiscountAmount: couponData.maxDiscountAmount
+          ? parseFloat(couponData.maxDiscountAmount)
+          : null,
         isActive: couponData.isActive ?? true,
-        productIDs // Use the extracted product IDs
+        productIDs, // Use the extracted product IDs
       };
 
       // console.log("Sending coupon to backend:", backendCoupon);
@@ -272,8 +290,8 @@ const Coupons = () => {
         backendCoupon,
         {
           headers: {
-            Authorization: token ? `${token}` : ""
-          }
+            Authorization: token ? `${token}` : "",
+          },
         }
       );
 
@@ -281,7 +299,7 @@ const Coupons = () => {
         setToast({
           message: "Coupon saved successfully!",
           type: "success",
-          visible: true
+          visible: true,
         });
         fetchCoupons();
         return true;
@@ -289,11 +307,10 @@ const Coupons = () => {
         setToast({
           message: response.data.message || "Failed to save coupon.",
           type: "error",
-          visible: true
+          visible: true,
         });
         return false;
       }
-
     } catch (err) {
       // console.error("Error saving coupon:", err);
 
@@ -303,7 +320,8 @@ const Coupons = () => {
         // console.error("Error response data:", err.response.data);
         // console.error("Error response status:", err.response.status);
 
-        errorMessage = err.response.data?.message ||
+        errorMessage =
+          err.response.data?.message ||
           err.response.data?.error ||
           errorMessage;
       } else if (err.request) {
@@ -314,7 +332,7 @@ const Coupons = () => {
       setToast({
         message: errorMessage,
         type: "error",
-        visible: true
+        visible: true,
       });
 
       return false;
@@ -325,7 +343,12 @@ const Coupons = () => {
     e.preventDefault();
     try {
       // Validate required fields
-      if (!couponForm.code || !couponForm.description || !couponForm.discountValue || !couponForm.endDate) {
+      if (
+        !couponForm.code ||
+        !couponForm.description ||
+        !couponForm.discountValue ||
+        !couponForm.endDate
+      ) {
         setError("Please fill all required fields");
         return;
       }
@@ -341,11 +364,13 @@ const Coupons = () => {
         ...couponForm,
         discountValue: parseFloat(couponForm.discountValue),
         minOrderAmount: parseFloat(couponForm.minOrderAmount),
-        maxDiscountAmount: couponForm.maxDiscountAmount ? parseFloat(couponForm.maxDiscountAmount) : null,
+        maxDiscountAmount: couponForm.maxDiscountAmount
+          ? parseFloat(couponForm.maxDiscountAmount)
+          : null,
         startDate: new Date(couponForm.startDate).toISOString(),
         endDate: new Date(couponForm.endDate).toISOString(),
         usageLimit: parseInt(couponForm.usageLimit),
-        productIds: couponForm.productIds || []
+        productIds: couponForm.productIds || [],
       };
 
       const success = await handleSaveCoupon(payload);
@@ -364,7 +389,7 @@ const Coupons = () => {
           usageLimit: 100,
           isActive: true,
           coupenType: "GENERAL",
-          productIds: []
+          productIds: [],
         });
       }
     } catch (err) {
@@ -374,11 +399,13 @@ const Coupons = () => {
   };
 
   // Filter coupons based on search and filters
-  const filteredCoupons = coupons.filter(coupon => {
+  const filteredCoupons = coupons.filter((coupon) => {
     // Search filter
-    if (searchTerm &&
+    if (
+      searchTerm &&
       !coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !coupon.description.toLowerCase().includes(searchTerm.toLowerCase())) {
+      !coupon.description.toLowerCase().includes(searchTerm.toLowerCase())
+    ) {
       return false;
     }
 
@@ -386,8 +413,10 @@ const Coupons = () => {
     if (statusFilter !== "all") {
       if (statusFilter === "active" && !coupon.isActive) return false;
       if (statusFilter === "inactive" && coupon.isActive) return false;
-      if (statusFilter === "expired" && new Date(coupon.endDate) > new Date()) return false;
-      if (statusFilter === "usedUp" && coupon.usedCount < coupon.usageLimit) return false;
+      if (statusFilter === "expired" && new Date(coupon.endDate) > new Date())
+        return false;
+      if (statusFilter === "usedUp" && coupon.usedCount < coupon.usageLimit)
+        return false;
     }
 
     // Type filter
@@ -399,8 +428,8 @@ const Coupons = () => {
   });
 
   const generateCouponCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let code = "";
     for (let i = 0; i < 8; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
@@ -408,7 +437,12 @@ const Coupons = () => {
   };
 
   const handleEditCoupon = async () => {
-    if (!editingCoupon.code || !editingCoupon.description || !editingCoupon.discountValue || !editingCoupon.endDate) {
+    if (
+      !editingCoupon.code ||
+      !editingCoupon.description ||
+      !editingCoupon.discountValue ||
+      !editingCoupon.endDate
+    ) {
       setError("Please fill all required fields");
       return;
     }
@@ -424,7 +458,7 @@ const Coupons = () => {
       const couponToUpdate = {
         ...editingCoupon,
         maxDiscountAmount: editingCoupon.maxDiscountAmount || null,
-        productIds: editingCoupon.productIds || []
+        productIds: editingCoupon.productIds || [],
       };
 
       const success = await handleSaveCoupon(couponToUpdate);
@@ -453,30 +487,46 @@ const Coupons = () => {
       );
 
       if (response.status === 200 && response.data.success) {
-        setToast({ message: "Coupon deleted successfully!", type: "error", visible: true });
+        setToast({
+          message: "Coupon deleted successfully!",
+          type: "error",
+          visible: true,
+        });
         fetchCoupons();
         setDeleteConfirm(null);
       } else {
-        setToast({ message: response.data.message || "Failed to delete coupon.", type: "error", visible: true });
+        setToast({
+          message: response.data.message || "Failed to delete coupon.",
+          type: "error",
+          visible: true,
+        });
       }
     } catch (err) {
       // console.error("Error deleting coupon:", err.response?.data || err);
-      setToast({ message: err.response?.data?.error || "Failed to delete coupon. Please try again.", type: "error", visible: true });
+      setToast({
+        message:
+          err.response?.data?.error ||
+          "Failed to delete coupon. Please try again.",
+        type: "error",
+        visible: true,
+      });
     }
   };
 
   const toggleCouponStatus = async (id) => {
     try {
-      const coupon = coupons.find(c => c.id === id);
+      const coupon = coupons.find((c) => c.id === id);
       const updatedCoupon = { ...coupon, isActive: !coupon.isActive };
 
       const success = await handleSaveCoupon(updatedCoupon);
 
       if (success) {
         // Update local state
-        setCoupons(coupons.map(c =>
-          c.id === id ? { ...c, isActive: !c.isActive } : c
-        ));
+        setCoupons(
+          coupons.map((c) =>
+            c.id === id ? { ...c, isActive: !c.isActive } : c
+          )
+        );
       }
     } catch (err) {
       // console.error("Error toggling coupon status:", err);
@@ -489,7 +539,7 @@ const Coupons = () => {
       id: 0, // Let backend generate new ID
       code: coupon.code + "_COPY",
       usedCount: 0,
-      startDate: new Date().toISOString().split('T')[0]
+      startDate: new Date().toISOString().split("T")[0],
     };
 
     setCouponForm({ ...duplicatedCoupon, productIds: [] });
@@ -506,13 +556,17 @@ const Coupons = () => {
   };
 
   // Filter products based on search term for add form
-  const filteredProducts = products.filter(product =>
-    product && product.name.toLowerCase().includes(productSearchTerm.toLowerCase())
+  const filteredProducts = products.filter(
+    (product) =>
+      product &&
+      product.name.toLowerCase().includes(productSearchTerm.toLowerCase())
   );
 
   // Filter products based on search term for edit form
-  const filteredEditProducts = products.filter(product =>
-    product && product.name.toLowerCase().includes(editProductSearchTerm.toLowerCase())
+  const filteredEditProducts = products.filter(
+    (product) =>
+      product &&
+      product.name.toLowerCase().includes(editProductSearchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -551,7 +605,10 @@ const Coupons = () => {
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
           <p>{error}</p>
-          <button onClick={() => setError(null)} className="mt-2 text-red-800 font-medium">
+          <button
+            onClick={() => setError(null)}
+            className="mt-2 text-red-800 font-medium"
+          >
             Dismiss
           </button>
         </div>
@@ -609,7 +666,9 @@ const Coupons = () => {
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Coupon Code *
+                </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -631,7 +690,9 @@ const Coupons = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description *
+                </label>
                 <input
                   type="text"
                   name="description"
@@ -643,7 +704,9 @@ const Coupons = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Discount Type *
+                </label>
                 <select
                   name="discountType"
                   value={couponForm.discountType}
@@ -672,13 +735,17 @@ const Coupons = () => {
                     onChange={handleInputChange}
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
-                    step={couponForm.discountType === "PERCENTAGE" ? "1" : "0.01"}
+                    step={
+                      couponForm.discountType === "PERCENTAGE" ? "1" : "0.01"
+                    }
                     required
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Amount (₹)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Minimum Order Amount (₹)
+                </label>
                 <div className="relative">
                   <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
@@ -694,7 +761,9 @@ const Coupons = () => {
               </div>
               {couponForm.discountType === "PERCENTAGE" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Maximum Discount Amount (₹)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Maximum Discount Amount (₹)
+                  </label>
                   <div className="relative">
                     <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
@@ -710,7 +779,9 @@ const Coupons = () => {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date *
+                </label>
                 <div className="relative">
                   <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
@@ -719,13 +790,15 @@ const Coupons = () => {
                     value={couponForm.startDate}
                     onChange={handleInputChange}
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min={new Date().toISOString().split('T')[0]}
+                    min={new Date().toISOString().split("T")[0]}
                     required
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Date *
+                </label>
                 <div className="relative">
                   <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
@@ -740,7 +813,9 @@ const Coupons = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Usage Limit *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Usage Limit *
+                </label>
                 <input
                   type="number"
                   name="usageLimit"
@@ -752,16 +827,18 @@ const Coupons = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Coupon Type
+                </label>
                 <select
                   name="coupenType"
                   value={couponForm.coupenType}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {couponTypes.map(type => (
+                  {couponTypes.map((type) => (
                     <option key={type} value={type}>
-                      {type.replace('_', ' ')}
+                      {type.replace("_", " ")}
                     </option>
                   ))}
                 </select>
@@ -770,7 +847,9 @@ const Coupons = () => {
               {/* Product Selection Dropdown for Add Form */}
               {/* Product Selection (Checkbox List) */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Products</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Products
+                </label>
 
                 {/* Search Input */}
                 <input
@@ -784,35 +863,39 @@ const Coupons = () => {
                 {/* Product List with Checkboxes */}
                 <div className="max-h-40 overflow-y-auto border rounded-md p-2">
                   <div className="max-h-40 overflow-y-auto border rounded-md p-2">
-                   {filteredProducts.map((product) => (
-  <label key={product.id} className="flex items-center gap-2 mb-2">
-    <input
-      type="checkbox"
-      checked={couponForm.productIds.includes(product.id)}
-      onChange={() => toggleProductSelection(product.id)}
-      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-    />
-    <span>{product.name}</span>
-  </label>
-))}
-
-
+                    {filteredProducts.map((product) => (
+                      <label
+                        key={product.id}
+                        className="flex items-center gap-2 mb-2"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={couponForm.productIds.includes(product.id)}
+                          onChange={() => toggleProductSelection(product.id)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span>{product.name}</span>
+                      </label>
+                    ))}
                   </div>
-
                 </div>
 
                 {/* Show Selected */}
                 {couponForm.productIds.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {getSelectedProductNames(couponForm.productIds).map((name, idx) => (
-                      <span key={idx} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                        {name}
-                      </span>
-                    ))}
+                    {getSelectedProductNames(couponForm.productIds).map(
+                      (name, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                        >
+                          {name}
+                        </span>
+                      )
+                    )}
                   </div>
                 )}
               </div>
-
 
               <div className="flex items-center">
                 <input
@@ -823,7 +906,10 @@ const Coupons = () => {
                   onChange={handleInputChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label htmlFor="isActive" className="ml-2 block text-sm text-gray-899">
+                <label
+                  htmlFor="isActive"
+                  className="ml-2 block text-sm text-gray-899"
+                >
                   Active
                 </label>
               </div>
@@ -859,39 +945,62 @@ const Coupons = () => {
               <FaTimes size={20} />
             </button>
           </div>
-          <form onSubmit={(e) => { e.preventDefault(); handleEditCoupon(); }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleEditCoupon();
+            }}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Coupon Code *
+                </label>
                 <input
                   type="text"
                   name="code"
                   value={editingCoupon.code || ""}
-                  onChange={(e) => setEditingCoupon({
-                    ...editingCoupon,
-                    code: e.target.value.toUpperCase().trim()
-                  })}
+                  onChange={(e) =>
+                    setEditingCoupon({
+                      ...editingCoupon,
+                      code: e.target.value.toUpperCase().trim(),
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description *
+                </label>
                 <input
                   type="text"
                   name="description"
                   value={editingCoupon.description}
-                  onChange={(e) => setEditingCoupon({ ...editingCoupon, description: e.target.value })}
+                  onChange={(e) =>
+                    setEditingCoupon({
+                      ...editingCoupon,
+                      description: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Discount Type *
+                </label>
                 <select
                   name="discountType"
                   value={editingCoupon.discountType}
-                  onChange={(e) => setEditingCoupon({ ...editingCoupon, discountType: e.target.value })}
+                  onChange={(e) =>
+                    setEditingCoupon({
+                      ...editingCoupon,
+                      discountType: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="PERCENTAGE">Percentage (%)</option>
@@ -901,7 +1010,9 @@ const Coupons = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Discount Value *
-                  {editingCoupon.discountType === "PERCENTAGE" ? " (%)" : " (₹)"}
+                  {editingCoupon.discountType === "PERCENTAGE"
+                    ? " (%)"
+                    : " (₹)"}
                 </label>
                 <div className="relative">
                   {editingCoupon.discountType === "PERCENTAGE" ? (
@@ -913,23 +1024,37 @@ const Coupons = () => {
                     type="number"
                     name="discountValue"
                     value={editingCoupon.discountValue}
-                    onChange={(e) => setEditingCoupon({ ...editingCoupon, discountValue: e.target.value })}
+                    onChange={(e) =>
+                      setEditingCoupon({
+                        ...editingCoupon,
+                        discountValue: e.target.value,
+                      })
+                    }
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
-                    step={editingCoupon.discountType === "PERCENTAGE" ? "1" : "0.01"}
+                    step={
+                      editingCoupon.discountType === "PERCENTAGE" ? "1" : "0.01"
+                    }
                     required
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Amount (₹)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Minimum Order Amount (₹)
+                </label>
                 <div className="relative">
                   <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="number"
                     name="minOrderAmount"
                     value={editingCoupon.minOrderAmount}
-                    onChange={(e) => setEditingCoupon({ ...editingCoupon, minOrderAmount: e.target.value })}
+                    onChange={(e) =>
+                      setEditingCoupon({
+                        ...editingCoupon,
+                        minOrderAmount: e.target.value,
+                      })
+                    }
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
                     step="0.01"
@@ -938,14 +1063,21 @@ const Coupons = () => {
               </div>
               {editingCoupon.discountType === "PERCENTAGE" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Maximum Discount Amount (₹)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Maximum Discount Amount (₹)
+                  </label>
                   <div className="relative">
                     <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
                       type="number"
                       name="maxDiscountAmount"
                       value={editingCoupon.maxDiscountAmount || ""}
-                      onChange={(e) => setEditingCoupon({ ...editingCoupon, maxDiscountAmount: e.target.value })}
+                      onChange={(e) =>
+                        setEditingCoupon({
+                          ...editingCoupon,
+                          maxDiscountAmount: e.target.value,
+                        })
+                      }
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       min="0"
                       step="0.01"
@@ -954,57 +1086,97 @@ const Coupons = () => {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date *
+                </label>
                 <div className="relative">
                   <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="date"
                     name="startDate"
-                    value={new Date(editingCoupon.startDate).toISOString().split('T')[0]}
-                    onChange={(e) => setEditingCoupon({ ...editingCoupon, startDate: e.target.value })}
+                    value={
+                      new Date(editingCoupon.startDate)
+                        .toISOString()
+                        .split("T")[0]
+                    }
+                    onChange={(e) =>
+                      setEditingCoupon({
+                        ...editingCoupon,
+                        startDate: e.target.value,
+                      })
+                    }
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Date *
+                </label>
                 <div className="relative">
                   <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="date"
                     name="endDate"
-                    value={new Date(editingCoupon.endDate).toISOString().split('T')[0]}
-                    onChange={(e) => setEditingCoupon({ ...editingCoupon, endDate: e.target.value })}
+                    value={
+                      new Date(editingCoupon.endDate)
+                        .toISOString()
+                        .split("T")[0]
+                    }
+                    onChange={(e) =>
+                      setEditingCoupon({
+                        ...editingCoupon,
+                        endDate: e.target.value,
+                      })
+                    }
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min={new Date(editingCoupon.startDate).toISOString().split('T')[0]}
+                    min={
+                      new Date(editingCoupon.startDate)
+                        .toISOString()
+                        .split("T")[0]
+                    }
                     required
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Usage Limit *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Usage Limit *
+                </label>
                 <input
                   type="number"
                   name="usageLimit"
                   value={editingCoupon.usageLimit}
-                  onChange={(e) => setEditingCoupon({ ...editingCoupon, usageLimit: e.target.value })}
+                  onChange={(e) =>
+                    setEditingCoupon({
+                      ...editingCoupon,
+                      usageLimit: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="1"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Coupon Type
+                </label>
                 <select
                   name="coupenType"
                   value={editingCoupon.coupenType}
-                  onChange={(e) => setEditingCoupon({ ...editingCoupon, coupenType: e.target.value })}
+                  onChange={(e) =>
+                    setEditingCoupon({
+                      ...editingCoupon,
+                      coupenType: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {couponTypes.map(type => (
+                  {couponTypes.map((type) => (
                     <option key={type} value={type}>
-                      {type.replace('_', ' ')}
+                      {type.replace("_", " ")}
                     </option>
                   ))}
                 </select>
@@ -1012,18 +1184,27 @@ const Coupons = () => {
 
               {/* Product Selection Dropdown for Edit Form */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Products</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Products
+                </label>
                 <div className="relative">
                   <div
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer flex justify-between items-center bg-white"
-                    onClick={() => setShowEditProductDropdown(!showEditProductDropdown)}
+                    onClick={() =>
+                      setShowEditProductDropdown(!showEditProductDropdown)
+                    }
                   >
                     <span className="text-gray-700">
-                      {editingCoupon.productIds && editingCoupon.productIds.length > 0
+                      {editingCoupon.productIds &&
+                      editingCoupon.productIds.length > 0
                         ? `${editingCoupon.productIds.length} product(s) selected`
                         : "Select products (optional)"}
                     </span>
-                    <FaChevronDown className={`transition-transform ${showEditProductDropdown ? 'rotate-180' : ''}`} />
+                    <FaChevronDown
+                      className={`transition-transform ${
+                        showEditProductDropdown ? "rotate-180" : ""
+                      }`}
+                    />
                   </div>
 
                   {showEditProductDropdown && (
@@ -1034,7 +1215,9 @@ const Coupons = () => {
                           placeholder="Search products by name..."
                           className="flex-1 px-3 py-1 border border-gray-300 rounded"
                           value={editProductSearchTerm}
-                          onChange={(e) => setEditProductSearchTerm(e.target.value)}
+                          onChange={(e) =>
+                            setEditProductSearchTerm(e.target.value)
+                          }
                           onClick={(e) => e.stopPropagation()}
                         />
                         <div className="ml-2 flex gap-1">
@@ -1062,7 +1245,7 @@ const Coupons = () => {
                       </div>
                       <div className="py-1">
                         {filteredEditProducts.length > 0 ? (
-                          filteredEditProducts.map(product => (
+                          filteredEditProducts.map((product) => (
                             <div
                               key={product.id}
                               className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
@@ -1072,14 +1255,19 @@ const Coupons = () => {
                               }}
                             >
                               <div
-                                className={`w-5 h-5 border rounded mr-3 flex items-center justify-center ${editingCoupon.productIds && editingCoupon.productIds.includes(product.id)
-                                  ? "bg-blue-600 border-blue-600"
-                                  : "border-gray-300"
-                                  }`}
+                                className={`w-5 h-5 border rounded mr-3 flex items-center justify-center ${
+                                  editingCoupon.productIds &&
+                                  editingCoupon.productIds.includes(product.id)
+                                    ? "bg-blue-600 border-blue-600"
+                                    : "border-gray-300"
+                                }`}
                               >
-                                {editingCoupon.productIds && editingCoupon.productIds.includes(product.id) && (
-                                  <FaCheck className="text-white text-xs" />
-                                )}
+                                {editingCoupon.productIds &&
+                                  editingCoupon.productIds.includes(
+                                    product.id
+                                  ) && (
+                                    <FaCheck className="text-white text-xs" />
+                                  )}
                               </div>
                               <span className="flex-1 text-sm">
                                 {product.name}
@@ -1087,7 +1275,9 @@ const Coupons = () => {
                             </div>
                           ))
                         ) : (
-                          <div className="px-4 py-2 text-gray-500">No products found</div>
+                          <div className="px-4 py-2 text-gray-500">
+                            No products found
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1095,21 +1285,26 @@ const Coupons = () => {
                 </div>
 
                 {/* Display selected product names for edit form */}
-                {editingCoupon.productIds && editingCoupon.productIds.length > 0 && (
-                  <div className="mt-3">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Selected Products:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {getSelectedProductNames(editingCoupon.productIds).map((productName, index) => (
-                        <span
-                          key={index}
-                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
-                        >
-                          {productName}
-                        </span>
-                      ))}
+                {editingCoupon.productIds &&
+                  editingCoupon.productIds.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-sm font-medium text-gray-700 mb-2">
+                        Selected Products:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {getSelectedProductNames(editingCoupon.productIds).map(
+                          (productName, index) => (
+                            <span
+                              key={index}
+                              className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
+                            >
+                              {productName}
+                            </span>
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
 
               <div className="flex items-center">
@@ -1118,10 +1313,18 @@ const Coupons = () => {
                   name="isActive"
                   id="editIsActive"
                   checked={editingCoupon.isActive}
-                  onChange={(e) => setEditingCoupon({ ...editingCoupon, isActive: e.target.checked })}
+                  onChange={(e) =>
+                    setEditingCoupon({
+                      ...editingCoupon,
+                      isActive: e.target.checked,
+                    })
+                  }
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label htmlFor="editIsActive" className="ml-2 block text-sm text-gray-899">
+                <label
+                  htmlFor="editIsActive"
+                  className="ml-2 block text-sm text-gray-899"
+                >
                   Active
                 </label>
               </div>
@@ -1151,24 +1354,47 @@ const Coupons = () => {
           <table className="w-full border-collapse bg-white text-left text-sm text-gray-500">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-4 font-medium text-gray-900">Code</th>
-                <th scope="col" className="px-6 py-4 font-medium text-gray-900">Description</th>
-                <th scope="col" className="px-6 py-4 font-medium text-gray-900">Discount</th>
-                <th scope="col" className="px-6 py-4 font-medium text-gray-900">Min. Order</th>
-                <th scope="col" className="px-6 py-4 font-medium text-gray-900">Valid Until</th>
-                <th scope="col" className="px-6 py-4 font-medium text-gray-900">Usage</th>
-                <th scope="col" className="px-6 py-4 font-medium text-gray-900">Status</th>
-                <th scope="col" className="px-6 py-4 font-medium text-gray-900">Actions</th>
+                <th scope="col" className="px-6 py-4 font-medium text-gray-900">
+                  Code
+                </th>
+                <th scope="col" className="px-6 py-4 font-medium text-gray-900">
+                  Description
+                </th>
+                <th scope="col" className="px-6 py-4 font-medium text-gray-900">
+                  Discount
+                </th>
+                <th scope="col" className="px-6 py-4 font-medium text-gray-900">
+                  Min. Order
+                </th>
+                <th scope="col" className="px-6 py-4 font-medium text-gray-900">
+                  Valid Until
+                </th>
+                <th scope="col" className="px-6 py-4 font-medium text-gray-900">
+                  Usage
+                </th>{" "}
+                {/* This column shows usage limit */}
+                <th scope="col" className="px-6 py-4 font-medium text-gray-900">
+                  Status
+                </th>
+                <th scope="col" className="px-6 py-4 font-medium text-gray-900">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 border-t border-gray-100">
               {filteredCoupons.map((coupon) => (
                 <tr key={coupon.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">{coupon.code}</div>
-                    <div className="text-xs text-gray-500">{coupon.coupenType}</div>
+                    <div className="font-medium text-gray-900">
+                      {coupon.code}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {coupon.coupenType}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 max-w-xs truncate">{coupon.description}</td>
+                  <td className="px-6 py-4 max-w-xs truncate">
+                    {coupon.description}
+                  </td>
                   <td className="px-6 py-4">
                     {coupon.discountType === "PERCENTAGE" ? (
                       <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
@@ -1185,42 +1411,56 @@ const Coupons = () => {
                     <div className="text-sm">
                       {new Date(coupon.endDate).toLocaleDateString()}
                     </div>
-                    <div className={`text-xs ${isCouponExpired(coupon.endDate) ? 'text-red-600' : 'text-gray-500'}`}>
-                      {isCouponExpired(coupon.endDate) ? 'Expired' : 'Active'}
+                    <div
+                      className={`text-xs ${
+                        isCouponExpired(coupon.endDate)
+                          ? "text-red-600"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {isCouponExpired(coupon.endDate) ? "Expired" : "Active"}
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
                       <div
                         className="bg-blue-600 h-2.5 rounded-full"
-                        style={{ width: `${Math.min(calculateUsagePercentage(coupon), 100)}%` }}
+                        style={{
+                          width: `${Math.min(
+                            calculateUsagePercentage(coupon),
+                            100
+                          )}%`,
+                        }}
                       ></div>
                     </div>
                     <div className="text-xs text-gray-600 mt-1">
-                      {coupon.usedCount} / {coupon.usageLimit}
+                      {coupon.usedCount} / {coupon.usageLimit}{" "}
+                      {/* This shows the usage limit */}
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${coupon.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                        }`}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        coupon.isActive
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
                     >
-                      {coupon.isActive ? 'Active' : 'Inactive'}
+                      {coupon.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
                       <button
                         onClick={() => toggleCouponStatus(coupon.id)}
-                        className={`p-2 rounded ${coupon.isActive
-                          ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
-                          : 'bg-green-100 text-green-600 hover:bg-green-200'
-                          }`}
-                        title={coupon.isActive ? 'Deactivate' : 'Activate'}
+                        className={`p-2 rounded ${
+                          coupon.isActive
+                            ? "bg-yellow-100 text-yellow-600 hover:bg-yellow-200"
+                            : "bg-green-100 text-green-600 hover:bg-green-200"
+                        }`}
+                        title={coupon.isActive ? "Deactivate" : "Activate"}
                       >
-                        {coupon.isActive ? 'Deactivate' : 'Activate'}
+                        {coupon.isActive ? "Deactivate" : "Activate"}
                       </button>
                       <button
                         onClick={() => setEditingCoupon(coupon)}
@@ -1253,11 +1493,23 @@ const Coupons = () => {
       ) : (
         <div className="text-center py-12">
           <div className="text-gray-400 mb-4">
-            <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            <svg
+              className="mx-auto h-12 w-12"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">No coupons found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">
+            No coupons found
+          </h3>
           <p className="text-gray-500 mb-4">
             {searchTerm || statusFilter !== "all" || typeFilter !== "all"
               ? "Try adjusting your search or filter to find what you're looking for."
@@ -1279,7 +1531,10 @@ const Coupons = () => {
         <div className="fixed inset-0 backdrop-blur-2xl bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-            <p className="text-gray-600 mb-6">Are you sure you want to delete this coupon? This action cannot be undone.</p>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this coupon? This action cannot be
+              undone.
+            </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
