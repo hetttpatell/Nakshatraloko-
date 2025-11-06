@@ -9,6 +9,7 @@ import {
   Sparkles,
   Zap,
   LogIn,
+  Loader2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,19 +23,15 @@ const IMG_URL = import.meta.env.VITE_IMG_URL;
 const normalizeImage = (url) => {
   let fixedUrl = url?.trim() || "";
 
-  if (!fixedUrl) return "/s1.jpeg"; // fallback image
+  if (!fixedUrl) return "/s1.jpeg";
 
   if (fixedUrl.startsWith("http")) {
-    // Clean duplicate slashes
     fixedUrl = fixedUrl.replace(/([^:]\/)\/+/g, "$1");
-
-    // Replace base uploads path with API path
     fixedUrl = fixedUrl.replace(
       /^http:\/\/localhost:8001\/uploads/,
       `${IMG_URL}/uploads`
     );
   } else {
-    // Relative path: prepend /uploads if missing
     if (!fixedUrl.startsWith("/uploads/")) {
       fixedUrl = `/uploads/${fixedUrl.replace(/^\/+/, "")}`;
     }
@@ -44,9 +41,172 @@ const normalizeImage = (url) => {
   return fixedUrl;
 };
 
+// Custom hook for smooth quantity management
+const useSmoothQuantity = (initialQuantity = 1) => {
+  const [displayQuantity, setDisplayQuantity] = useState(initialQuantity);
+  const [actualQuantity, setActualQuantity] = useState(initialQuantity);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const animationRef = useRef(null);
+
+  useEffect(() => {
+    setDisplayQuantity(initialQuantity);
+    setActualQuantity(initialQuantity);
+  }, [initialQuantity]);
+
+  const smoothUpdate = (newQuantity, onUpdateComplete) => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+
+    const startQuantity = displayQuantity;
+    const duration = 300; // ms
+    const startTime = performance.now();
+
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function for smooth animation
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      
+      const currentDisplay = Math.round(
+        startQuantity + (newQuantity - startQuantity) * easeOutQuart
+      );
+      
+      setDisplayQuantity(currentDisplay);
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        setDisplayQuantity(newQuantity);
+        setActualQuantity(newQuantity);
+        setIsUpdating(false);
+        onUpdateComplete?.();
+      }
+    };
+
+    setIsUpdating(true);
+    animationRef.current = requestAnimationFrame(animate);
+  };
+
+  return {
+    displayQuantity,
+    actualQuantity,
+    isUpdating,
+    smoothUpdate,
+  };
+};
+
+// Optimized Quantity Controller Component
+const QuantityController = ({ 
+  product, 
+  onQuantityChange, 
+  className = "" 
+}) => {
+  const { displayQuantity, isUpdating, smoothUpdate } = useSmoothQuantity(product.quantity);
+  const updateTimeoutRef = useRef(null);
+
+  const handleQuantityChange = async (newQuantity) => {
+    if (newQuantity === displayQuantity || newQuantity < 1 || newQuantity > product.stock) return;
+
+    // Immediate visual feedback
+    smoothUpdate(newQuantity, () => {
+      // Debounced API call after animation completes
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+
+      updateTimeoutRef.current = setTimeout(() => {
+        onQuantityChange(product, newQuantity);
+      }, 100);
+    });
+  };
+
+  const increment = () => handleQuantityChange(displayQuantity + 1);
+  const decrement = () => handleQuantityChange(displayQuantity - 1);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div className={`flex items-center gap-2 bg-gray-100 rounded-full p-1 relative ${className}`}>
+      {/* Update Indicator */}
+      {isUpdating && (
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"
+        />
+      )}
+
+      <motion.button
+        whileTap={{ scale: 0.85 }}
+        whileHover={{ scale: 1.05 }}
+        onClick={decrement}
+        disabled={displayQuantity <= 1 || isUpdating}
+        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+        type="button"
+      >
+        <Minus size={14} />
+      </motion.button>
+
+      <div className="relative">
+        <motion.span
+          key={displayQuantity}
+          initial={{ scale: 1.2, y: -5 }}
+          animate={{ scale: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 500, damping: 15 }}
+          className="w-8 text-center font-medium text-sm relative z-10"
+        >
+          {displayQuantity}
+        </motion.span>
+        
+        {/* Animated background highlight */}
+        {isUpdating && (
+          <motion.div
+            className="absolute inset-0 bg-blue-100 rounded-full"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 1.2, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          />
+        )}
+      </div>
+
+      <motion.button
+        whileTap={{ scale: 0.85 }}
+        whileHover={{ scale: 1.05 }}
+        onClick={increment}
+        disabled={displayQuantity >= product.stock || isUpdating}
+        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+        type="button"
+      >
+        <Plus size={14} />
+      </motion.button>
+
+      {/* Loading overlay */}
+      {isUpdating && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="absolute inset-0 bg-white/50 rounded-full backdrop-blur-sm flex items-center justify-center"
+        >
+          <Loader2 size={12} className="animate-spin text-blue-500" />
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
 export default function Cart() {
-  const { cart, addToCart, removeFromCart, updateQuantity, getCart } =
-    useCart();
+  const { cart, removeFromCart, updateQuantity, getCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [transformedCart, setTransformedCart] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -55,14 +215,12 @@ export default function Cart() {
     type: "success",
     visible: false,
   });
-
+  const [updatingItems, setUpdatingItems] = useState(new Set());
   const navigate = useNavigate();
 
   const showToast = (message, type = "success") => {
     setCustomToast({ message, type, visible: true });
   };
-
-  const quantityUpdateTimers = useRef({});
 
   // Check if user is logged in
   useEffect(() => {
@@ -77,7 +235,6 @@ export default function Cart() {
       return;
     }
 
-    // Check if user is logged in
     if (!isLoggedIn) {
       toast.info("Please log in to proceed to checkout");
       return;
@@ -88,7 +245,6 @@ export default function Cart() {
 
   // Handle login redirect
   const handleLoginRedirect = () => {
-    // Save current URL to redirect back after login
     sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
     navigate("/");
   };
@@ -100,7 +256,7 @@ export default function Cart() {
       try {
         await getCart();
       } catch (error) {
-        // console.error('Failed to fetch cart:', error);
+        console.error('Failed to fetch cart:', error);
       } finally {
         setLoading(false);
       }
@@ -109,16 +265,15 @@ export default function Cart() {
     fetchCartData();
   }, []);
 
+  // Transform cart data
   useEffect(() => {
     setTransformedCart(
       cart.map((item) => {
         let imagePath = item.PrimaryImage;
 
-        // If already absolute URL, keep it
         if (imagePath?.startsWith("http")) {
           imagePath = imagePath;
         } else {
-          // If relative, prepend server path
           imagePath = `${IMG_URL}uploads${imagePath}`;
         }
 
@@ -146,45 +301,47 @@ export default function Cart() {
     );
   }, [cart]);
 
-  // ✅ updates whenever `cart` changes
+  // Calculations with memoization
+  const { subtotal, shipping, total } = React.useMemo(() => {
+    const subtotal = transformedCart.reduce(
+      (sum, item) => (item.inStock ? sum + item.price * item.quantity : sum),
+      0
+    );
+    const shipping = subtotal > 5000 ? 0 : 0;
+    const total = subtotal + (subtotal > 0 ? shipping : 0);
+    
+    return { subtotal, shipping, total };
+  }, [transformedCart]);
 
-  // Calculations
-  const subtotal = transformedCart.reduce(
-    (sum, item) => (item.inStock ? sum + item.price * item.quantity : sum),
-    0
-  );
-  const shipping = subtotal > 5000 ? 0 : 0;
-  const total = subtotal + (subtotal > 0 ? shipping : 0);
-
-  // Handle quantity change
-  const handleQuantityChange = async (item, newQuantity) => {
+  // Optimized quantity change handler
+  const handleQuantityChange = async (product, newQuantity) => {
     if (newQuantity <= 0) {
-      handleRemoveItem(item);
+      handleRemoveItem(product);
       return;
     }
 
-    if (newQuantity <= item.stock) {
-      // 1️⃣ Update local state immediately
-      setTransformedCart((prev) =>
-        prev.map((p) =>
-          p.id === item.id ? { ...p, quantity: newQuantity } : p
-        )
-      );
+    if (newQuantity > product.stock) {
+      showToast(`Only ${product.stock} items available`, "error");
+      return;
+    }
 
-      // 2️⃣ Update backend immediately without debounce for better UX
-      try {
-        await updateQuantity(item.id, newQuantity);
-        // Optional: Refresh cart to get latest stock info
-        await getCart();
-      } catch (error) {
-        // If backend fails, revert local state
-        setTransformedCart((prev) =>
-          prev.map((p) =>
-            p.id === item.id ? { ...p, quantity: item.quantity } : p
-          )
-        );
-        // console.error("Failed to update quantity:", error);
-      }
+    // Add to updating items
+    setUpdatingItems(prev => new Set(prev).add(product.id));
+
+    try {
+      await updateQuantity(product.id, newQuantity);
+      // Silent sync in background
+      getCart().catch(() => {});
+    } catch (error) {
+      // Show error but don't revert UI - let the smooth controller handle it
+      showToast("Failed to update quantity", "error");
+    } finally {
+      // Remove from updating items
+      setUpdatingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(product.id);
+        return newSet;
+      });
     }
   };
 
@@ -192,7 +349,6 @@ export default function Cart() {
   const handleRemoveItem = async (product) => {
     try {
       const token = localStorage.getItem("authToken");
-
       const res = await axios.post(
         `${BACKEND_URL}saveCart`,
         { productId: product.id },
@@ -200,27 +356,18 @@ export default function Cart() {
       );
 
       if (res.data.success) {
-        // console.log(`${product.name} removed successfully from server`);
         await getCart();
-
-        // ✅ Show success toast
         showToast(`${product.name} removed from cart`, "error");
       } else {
-        // console.warn(res.data.message);
-
-        // ❌ Show error toast
         showToast(res.data.message || "Failed to remove item", "error");
       }
     } catch (err) {
-      // console.error("Failed to remove product:", err);
-
-      // ❌ Show error toast
       showToast("Something went wrong while removing item", "error");
     }
   };
 
-  // Background circles component
-  const BackgroundCircle = ({
+  // Enhanced Background Circle with better performance
+  const BackgroundCircle = React.memo(({
     top,
     left,
     size,
@@ -244,7 +391,7 @@ export default function Cart() {
         delay: delay,
       }}
     />
-  );
+  ));
 
   // Loading state
   if (loading) {
@@ -291,14 +438,13 @@ export default function Cart() {
       />
 
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Title */}
+        {/* Title Section */}
         <motion.div
           className="text-center mb-14"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Badge */}
           <motion.div
             className="inline-flex items-center gap-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-4 py-2 rounded-full mb-5"
             initial={{ opacity: 0, y: 10 }}
@@ -312,31 +458,15 @@ export default function Cart() {
             <span className="text-sm font-medium">Shopping Bag</span>
           </motion.div>
 
-          {/* Title */}
           <h2 className="text-4xl font-bold text-[var(--color-text)] mb-2">
             My Shopping Bag
           </h2>
 
-          {/* Subtitle */}
           <p className="text-[var(--color-text-light)] mb-6">
             Review your items and proceed to checkout
           </p>
 
-          {/* Checkout button - Updated to show login button if not authenticated */}
-          {isLoggedIn ? (
-            // <button
-            //   onClick={handleCheckout}
-            //   disabled={subtotal === 0}
-            //   className={`w-full max-w-xs mx-auto py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 ${subtotal === 0
-            //     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            //     : "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
-            //     }`}
-            // >
-            //   <Sparkles size={16} />
-            //   Proceed to Checkout
-            // </button>
-            <></>
-          ) : (
+          {!isLoggedIn && (
             <button
               onClick={handleLoginRedirect}
               className="w-full max-w-xs mx-auto py-3 rounded-full tracking-wide font-medium uppercase transition text-center flex items-center justify-center gap-2 bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] shadow-md hover:shadow-lg"
@@ -347,7 +477,7 @@ export default function Cart() {
           )}
         </motion.div>
 
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {transformedCart.length > 0 ? (
             <motion.div
               className="grid grid-cols-1 lg:grid-cols-3 gap-10"
@@ -357,158 +487,129 @@ export default function Cart() {
             >
               {/* Cart Items */}
               <div className="lg:col-span-2 space-y-6">
-                {transformedCart.map((product) => (
-                  <motion.div
-                    key={`${product.cartId}-${product.id}`}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -100 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-lg transition-all"
-                  >
-                    {/* Product Image */}
+                <AnimatePresence>
+                  {transformedCart.map((product) => (
                     <motion.div
-                      className="relative overflow-hidden rounded-xl"
-                      whileHover={{ scale: 1.05 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 10,
-                      }}
+                      key={`${product.cartId}-${product.id}`}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -100, scale: 0.9 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                      className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-md hover:shadow-lg transition-all"
                     >
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-32 h-32 object-cover"
-                        onError={(e) => {
-                          // console.log('Image failed to load:', product.image);
-                          e.target.src = "/s1.jpeg"; // Fallback image
+                      {/* Product Image */}
+                      <motion.div
+                        className="relative overflow-hidden rounded-xl flex-shrink-0"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 10,
                         }}
-                      />
-                      {!product.inStock && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                          <span className="text-white text-sm font-medium">
-                            Out of Stock
-                          </span>
-                        </div>
-                      )}
-                      {product.discountPercentage > 0 && (
-                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                          {product.discountPercentage}% OFF
-                        </div>
-                      )}
-                    </motion.div>
-
-                    {/* Product Info */}
-                    <div className="flex-1 text-center sm:text-left space-y-2">
-                      <h3 className="text-lg font-semibold text-[var(--color-text)] line-clamp-2">
-                        {product.name}
-                      </h3>
-                      <p className="text-xs text-[var(--color-text-light)] uppercase tracking-wide">
-                        {product.category}
-                      </p>
-
-                      {product.rating > 0 && (
-                        <div className="flex items-center gap-1 text-sm">
-                          <div className="flex text-[var(--color-rating)]">
-                            {"★".repeat(Math.floor(product.rating))}
-                            {"☆".repeat(5 - Math.floor(product.rating))}
-                          </div>
-                          <span className="text-[var(--color-text-light)]">
-                            ({product.reviews} reviews)
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-2">
-                        {product.inStock ? (
-                          <p className="bg-[var(--color-primary-light)] text-color-primary border-color-primary px-4 py-2 rounded-2xl text-center w-fit mx-auto sm:mx-0">
-                            In Stock
-                          </p>
-                        ) : (
-                          <p className="text-red-600 text-sm font-medium bg-red-100 px-2 py-1 rounded-full">
-                            Out of Stock
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <div className="text-[var(--color-text)] font-bold text-lg">
-                          ₹{(product.price * product.quantity).toFixed(2)}
-                        </div>
-                        {product.originalPrice > product.price && (
-                          <div className="text-sm text-gray-500 line-through">
-                            ₹
-                            {(product.originalPrice * product.quantity).toFixed(
-                              2
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-xs text-[var(--color-text-light)]">
-                        (₹{product.price.toFixed(2)} × {product.quantity})
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-col items-center sm:items-end gap-4">
-                      {/* Quantity Controls */}
-                      {product.inStock && (
-                        <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
-                          <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
-                            <motion.button
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() =>
-                                handleQuantityChange(
-                                  product,
-                                  product.quantity - 1
-                                )
-                              }
-                              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
-                              disabled={product.quantity <= 1}
-                              type="button"
-                            >
-                              <Minus size={14} />
-                            </motion.button>
-
-                            <span className="w-8 text-center font-medium">
-                              {product.quantity}
-                            </span>
-
-                            <motion.button
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() =>
-                                handleQuantityChange(
-                                  product,
-                                  product.quantity + 1
-                                )
-                              }
-                              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
-                              disabled={product.quantity >= product.stock}
-                              type="button"
-                            >
-                              <Plus size={14} />
-                            </motion.button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Remove button - Fixed the onClick handler */}
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleRemoveItem(product)}
-                        className="flex items-center gap-1 text-sm text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] transition-colors"
                       >
-                        <Trash2 size={14} />
-                        Remove
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                ))}
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-32 h-32 object-cover"
+                          onError={(e) => {
+                            e.target.src = "/s1.jpeg";
+                          }}
+                        />
+                        {!product.inStock && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <span className="text-white text-sm font-medium">
+                              Out of Stock
+                            </span>
+                          </div>
+                        )}
+                        {product.discountPercentage > 0 && (
+                          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                            {product.discountPercentage}% OFF
+                          </div>
+                        )}
+                      </motion.div>
+
+                      {/* Product Info */}
+                      <div className="flex-1 text-center sm:text-left space-y-2 min-w-0">
+                        <h3 className="text-lg font-semibold text-[var(--color-text)] line-clamp-2">
+                          {product.name}
+                        </h3>
+                        <p className="text-xs text-[var(--color-text-light)] uppercase tracking-wide">
+                          {product.category}
+                        </p>
+
+                        {product.rating > 0 && (
+                          <div className="flex items-center gap-1 text-sm">
+                            <div className="flex text-[var(--color-rating)]">
+                              {"★".repeat(Math.floor(product.rating))}
+                              {"☆".repeat(5 - Math.floor(product.rating))}
+                            </div>
+                            <span className="text-[var(--color-text-light)]">
+                              ({product.reviews} reviews)
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2">
+                          {product.inStock ? (
+                            <p className="bg-[var(--color-primary-light)] text-color-primary border-color-primary px-4 py-2 rounded-2xl text-center w-fit mx-auto sm:mx-0">
+                              In Stock
+                            </p>
+                          ) : (
+                            <p className="text-red-600 text-sm font-medium bg-red-100 px-2 py-1 rounded-full">
+                              Out of Stock
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <motion.div 
+                            className="text-[var(--color-text)] font-bold text-lg"
+                            key={product.price * product.quantity}
+                            initial={{ scale: 1.1 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            ₹{(product.price * product.quantity).toFixed(2)}
+                          </motion.div>
+                          {product.originalPrice > product.price && (
+                            <div className="text-sm text-gray-500 line-through">
+                              ₹
+                              {(product.originalPrice * product.quantity).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-col items-center sm:items-end gap-4">
+                        {/* Enhanced Quantity Controller */}
+                        {product.inStock && (
+                          <QuantityController
+                            product={product}
+                            onQuantityChange={handleQuantityChange}
+                          />
+                        )}
+
+                        {/* Remove button */}
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          whileHover={{ scale: 1.05 }}
+                          onClick={() => handleRemoveItem(product)}
+                          disabled={updatingItems.has(product.id)}
+                          className="flex items-center gap-1 text-sm text-[var(--color-text-light)] hover:text-[var(--color-accent-red)] transition-colors disabled:opacity-50"
+                        >
+                          <Trash2 size={14} />
+                          Remove
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
 
-              {/* Summary */}
+              {/* Order Summary */}
               <motion.div
                 className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md p-6 h-fit lg:sticky lg:top-24"
                 initial={{ opacity: 0, x: 20 }}
@@ -527,14 +628,8 @@ export default function Cart() {
                     <span className="text-[var(--color-text-light)]">
                       Shipping
                     </span>
-                    <span
-                      className={
-                        shipping === 0
-                          ? "text-green-600 font-medium"
-                          : "text-[var(--color-text-light)]"
-                      }
-                    >
-                      {shipping === 0 ? "Free" : `₹${shipping}`}
+                    <span className="text-green-600 font-medium">
+                      Free
                     </span>
                   </div>
                   <div className="border-t border-[var(--color-border)] pt-4 mt-4">
@@ -553,7 +648,6 @@ export default function Cart() {
                     Continue Shopping
                   </Link>
 
-                  {/* Updated checkout button in summary section */}
                   {isLoggedIn ? (
                     <button
                       onClick={handleCheckout}
@@ -616,7 +710,7 @@ export default function Cart() {
             </motion.div>
           )}
         </AnimatePresence>
-
+{/* HIii */}
         {/* Recommendations */}
         {transformedCart.length > 0 && (
           <motion.div
@@ -629,6 +723,8 @@ export default function Cart() {
           </motion.div>
         )}
       </div>
+      
+      {/* Toast */}
       {customToast.visible && (
         <Toast
           message={customToast.message}
