@@ -13,6 +13,12 @@ import {
   FaFilter,
   FaUpload,
   FaSync,
+  FaEllipsisV,
+  FaImage,
+  FaBox,
+  FaStar,
+  FaChevronDown,
+  FaChevronUp,
 } from "react-icons/fa";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -47,8 +53,20 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [imagePreview, setImagePreview] = useState("");
   const [imageFile, setImageFile] = useState(null);
+  const [expandedRow, setExpandedRow] = useState(null);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const { refreshProducts } = useProductManagement();
+
+  // Handle responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Helper functions
   const getImageUrl = (imagePath) => {
@@ -86,14 +104,14 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     try {
       const token = localStorage.getItem("authToken");
       const formData = new FormData();
-      
+
       // Append all category data
       Object.keys(categoryData).forEach(key => {
         if (key !== 'image' && key !== 'active_product_count') {
           formData.append(key, categoryData[key]);
         }
       });
-      
+
       if (imageFile) formData.append("images", imageFile);
 
       const response = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
@@ -182,7 +200,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     try {
       setIsAddingCategory(true);
       const result = await saveCategoryAPI(newCategory, imageFile);
-      
+
       if (result.success) {
         setCategories([
           ...categories,
@@ -220,7 +238,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       };
 
       const result = await saveCategoryAPI(updatedCategory);
-      
+
       if (result.success) {
         setCategories((prev) =>
           prev.map((cat) =>
@@ -240,7 +258,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
     try {
       const result = await saveCategoryAPI(editingCategory, imageFile);
-      
+
       if (result.success) {
         setCategories(categories.map((cat) =>
           cat.id === editingCategory.id ? editingCategory : cat
@@ -329,47 +347,14 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     }
   };
 
-  // Filter products for the selected category
-  const filteredProducts = selectedCategory
-    ? products
-        .filter((product) => {
-          if (
-            product.categoryId === selectedCategory.id ||
-            (product.category &&
-              product.category.toString() === selectedCategory.id.toString())
-          ) {
-            return true;
-          }
-
-          return (
-            product.name
-              .toLowerCase()
-              .includes(selectedCategory.name.toLowerCase()) ||
-            (product.description &&
-              product.description
-                .toLowerCase()
-                .includes(selectedCategory.name.toLowerCase()))
-          );
-        })
-        .filter((product) => {
-          if (
-            searchTerm &&
-            !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-            !product.description
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase())
-          ) {
-            return false;
-          }
-
-          if (statusFilter !== "all") {
-            const inStockFilter = statusFilter === "inStock";
-            if (product.inStock !== inStockFilter) return false;
-          }
-
-          return true;
-        })
-    : [];
+  // Mobile-friendly toggle for row expansion
+  const toggleRowExpand = (id) => {
+    if (expandedRow === id) {
+      setExpandedRow(null);
+    } else {
+      setExpandedRow(id);
+    }
+  };
 
   // Render loading state
   if (isLoading) {
@@ -400,203 +385,248 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     );
   }
 
-  // Render product list for selected category
-  const renderProductList = () => {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-          >
-            <FaArrowLeft /> Back to Categories
-          </button>
-          <h2 className="text-2xl font-bold text-gray-800">
-            Products in {selectedCategory.name}
-          </h2>
-        </div>
-
-        {/* Search and Filter */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+  // Mobile Card Component for Categories
+  const CategoryCard = ({ category }) => (
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 mb-4">
+      <div className="flex items-start justify-between">
+        <div className="flex items-start space-x-3">
+          {category.image ? (
+            <img
+              src={category.image}
+              alt={category.name}
+              className="w-16 h-16 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+              <FaImage className="text-gray-400 text-xl" />
+            </div>
+          )}
           <div className="flex-1">
-            <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <h3 className="font-semibold text-gray-800 text-lg">{category.name}</h3>
+            <div className="flex items-center space-x-2 mt-1">
+              <span className="flex items-center text-sm text-gray-600">
+                <FaBox className="mr-1" />
+                {category.active_product_count || 0} Products
+              </span>
+              {category.isFeatured && (
+                <span className="flex items-center text-sm text-yellow-600">
+                  <FaStar className="mr-1" />
+                  Featured
+                </span>
+              )}
+            </div>
+            <div className="flex items-center space-x-3 mt-2">
+              <div className="flex items-center">
+                <div className={`w-3 h-3 rounded-full mr-1 ${category.isActive ? "bg-green-500" : "bg-gray-400"}`} />
+                <span className="text-xs text-gray-600">{category.isActive ? "Active" : "Inactive"}</span>
+              </div>
             </div>
           </div>
-          <div className="w-full md:w-48">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Status</option>
-              <option value="inStock">In Stock</option>
-              <option value="outOfStock">Out of Stock</option>
-            </select>
-          </div>
         </div>
-
-        {/* Products List */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="p-3 font-semibold text-gray-700">Product</th>
-                <th className="p-3 font-semibold text-gray-700">Name</th>
-                <th className="p-3 font-semibold text-gray-700">Price</th>
-                <th className="p-3 font-semibold text-gray-700">Stock</th>
-                <th className="p-3 font-semibold text-gray-700">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProducts.map((product) => (
-                <tr key={product.id} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="p-3">
-                    {product.image ? (
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-12 h-12 rounded object-cover"
-                      />
-                    ) : (
-                      <span className="text-gray-400 text-sm">No Image</span>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    <div>
-                      <p className="font-medium text-gray-800">{product.name}</p>
-                      <p className="text-sm text-gray-500 truncate max-w-xs">
-                        {product.description}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="p-3 font-medium">${product.price}</td>
-                  <td className="p-3">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      product.inStock 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {product.inStock ? 'In Stock' : 'Out of Stock'}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      product.isActive 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {product.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No products found in this category.
-          </div>
-        )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleRowExpand(category.id);
+          }}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          {expandedRow === category.id ? <FaChevronUp /> : <FaChevronDown />}
+        </button>
       </div>
-    );
-  };
+
+      {/* Expanded Content */}
+      {expandedRow === category.id && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <p className="text-sm text-gray-600 mb-3">
+            {category.description || "No description available"}
+          </p>
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <button
+              onClick={() => toggleCategoryStatus(category.id)}
+              className={`flex items-center justify-center py-2 rounded-lg transition-colors ${category.isActive
+                ? "bg-green-100 text-green-700"
+                : "bg-gray-100 text-gray-700"
+                }`}
+            >
+              {category.isActive ? <FaCheck /> : <FaTimes />}
+              <span className="ml-2 text-sm">{category.isActive ? "Active" : "Inactive"}</span>
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setEditingCategory({ ...category })}
+              className="flex items-center justify-center py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+            >
+              <FaEdit />
+              <span className="ml-2 text-sm">Edit</span>
+            </button>
+            <button
+              onClick={() => setDeleteConfirm(category)}
+              className="flex items-center justify-center py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+            >
+              <FaTrash />
+              <span className="ml-2 text-sm">Delete</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   // Render categories list
   const renderCategoriesList = () => {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
         {/* Error message */}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-100 border border-red四百 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
 
-        {/* Header and Add Button */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Categories Management
-          </h2>
+        {/* Header and Actions */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 space-y-4 md:space-y-0">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+              Categories Management
+            </h2>
+            <p className="text-gray-600 text-sm mt-1">
+              {categories.length} {categories.length === 1 ? "category" : "categories"} found
+            </p>
+          </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+            {/* Mobile Filter Toggle */}
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors md:hidden"
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+            >
+              <FaFilter />
+              Filters
+            </button>
+
             {/* Refresh Button */}
             <button
-              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors shadow-md"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors shadow-sm"
               onClick={refreshProducts}
             >
               <FaSync className="text-lg" />
-              Refresh
+              <span className="hidden sm:inline">Refresh</span>
             </button>
 
             {/* Add Category Button */}
             <button
               onClick={() => setIsAdding(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
             >
-              <FaPlus /> Add Category
+              <FaPlus />
+              <span>Add Category</span>
             </button>
+          </div>
+        </div>
+
+        {/* Search and Filter Bar */}
+        <div className={`mb-6 ${showMobileFilters ? 'block' : 'hidden md:block'}`}>
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex-1">
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search categories..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            <div className="w-full md:w-48">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="featured">Featured</option>
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Add Category Form */}
         {isAdding && (
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <h3 className="text-lg font-semibold mb-3">Add New Category</h3>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category Name *
-              </label>
-              <input
-                type="text"
-                value={newCategory.name}
-                onChange={(e) =>
-                  setNewCategory({ ...newCategory, name: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter category name"
-              />
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Add New Category</h3>
+              <button
+                onClick={resetAddForm}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category Name *
+                </label>
+                <input
+                  type="text"
+                  value={newCategory.name}
+                  onChange={(e) =>
+                    setNewCategory({ ...newCategory, name: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter category name"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Category Image
                 </label>
-                <div className="flex items-center gap-2">
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-500">Click to upload</p>
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                  {!imagePreview ? (
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">Click to upload</p>
+                        <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  ) : (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-24 h-24 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImagePreview("");
+                          setImageFile(null);
+                          setNewCategory({ ...newCategory, image: "" });
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                      >
+                        <FaTimes className="text-xs" />
+                      </button>
+                     
                     </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                  </label>
+                  )}
                 </div>
-                {imagePreview && (
-                  <div className="mt-2">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-20 h-20 object-cover rounded"
-                    />
-                  </div>
-                )}
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
@@ -609,234 +639,210 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                       description: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter category description"
-                  rows="4"
+                  rows="3"
                 />
               </div>
-            </div>
 
-            <div className="flex items-center gap-6 mb-4">
-              <div className="flex items-center">
-                <button
-                  onClick={() =>
-                    setNewCategory({
-                      ...newCategory,
-                      isActive: !newCategory.isActive,
-                    })
-                  }
-                  type="button"
-                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
-                    newCategory.isActive ? "bg-green-600" : "bg-gray-300"
-                  }`}
-                >
-                  <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                      newCategory.isActive ? "translate-x-6" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-                <span className="text-sm">Active</span>
-              </div>
-              <div className="flex items-center">
-                <button
-                  onClick={() =>
-                    setNewCategory({
-                      ...newCategory,
-                      isFeatured: !newCategory.isFeatured,
-                    })
-                  }
-                  type="button"
-                  className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
-                    newCategory.isFeatured ? "bg-yellow-600" : "bg-gray-300"
-                  }`}
-                >
-                  <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                      newCategory.isFeatured ? "translate-x-6" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-                <span className="text-sm">Featured</span>
-              </div>
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                  <span className="text-sm font-medium">Active Status</span>
+                  <button
+                    onClick={() =>
+                      setNewCategory({
+                        ...newCategory,
+                        isActive: !newCategory.isActive,
+                      })
+                    }
+                    type="button"
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newCategory.isActive ? "bg-green-600" : "bg-gray-300"
+                      }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newCategory.isActive ? "translate-x-6" : "translate-x-1"
+                        }`}
+                    />
+                  </button>
+                </div>
 
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddCategory}
-                disabled={isAddingCategory}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {isAddingCategory ? "Adding..." : "Add Category"}
-              </button>
-              <button
-                onClick={resetAddForm}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
-              >
-                Cancel
-              </button>
+                <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                  <span className="text-sm font-medium">Featured</span>
+                  <button
+                    onClick={() =>
+                      setNewCategory({
+                        ...newCategory,
+                        isFeatured: !newCategory.isFeatured,
+                      })
+                    }
+                    type="button"
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newCategory.isFeatured ? "bg-blue-600" : "bg-gray-300"
+                      }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newCategory.isFeatured ? "translate-x-6" : "translate-x-1"
+                        }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                <button
+                  onClick={handleAddCategory}
+                  disabled={isAddingCategory}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+                >
+                  {isAddingCategory ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Adding...
+                    </>
+                  ) : (
+                    "Add Category"
+                  )}
+                </button>
+                <button
+                  onClick={resetAddForm}
+                  className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Categories Table */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="p-3 font-semibold text-gray-700">Image</th>
-                <th className="p-3 font-semibold text-gray-700">Products</th>
-                <th className="p-3 font-semibold text-gray-700">Name</th>
-                <th className="p-3 font-semibold text-gray-700">Status</th>
-                <th className="p-3 font-semibold text-gray-700">Featured</th>
-                <th className="p-3 font-semibold text-gray-700">Visibilty</th>
-                <th className="p-3 font-semibold text-gray-700 text-right">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {categories.map((category) => (
-                <tr
-                  key={category.id}
-                  className="border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  <td className="p-3">
-                    {category.image ? (
-                      <img
-                        src={category.image}
-                        alt={category.name}
-                        className="w-12 h-12 rounded object-cover"
-                      />
-                    ) : (
-                      <span className="text-gray-400 text-sm">No Image</span>
-                    )}
-                  </td>
-                  <td className="p-3 flex flex-col gap-1">
-                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                      {category.active_product_count || 0} Active Products
-                    </span>
-                    {category.isFeatured && (
-                      <span className="text-yellow-600 font-medium text-xs">
-                        ★ Featured
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="p-3">
-                    <div>
-                      <p className="font-medium text-gray-800">
-                        {category.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {category.description}
-                      </p>
-                    </div>
-                  </td>
-
-                  <td className="p-3">
-                    <div className="flex items-center">
-                      <span
-                        className={`w-3 h-3 rounded-full mr-2 ${
-                          category.isActive ? "bg-green-500" : "bg-gray-400"
-                        }`}
-                      />
-                      {category.isActive ? "Active" : "Inactive"}
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <div className="flex items-center">
+        {/* Categories List - Desktop Table */}
+        {!isMobile ? (
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="p-4 font-semibold text-gray-700">Image</th>
+                  <th className="p-4 font-semibold text-gray-700">Products</th>
+                  <th className="p-4 font-semibold text-gray-700">Name</th>
+                  <th className="p-4 font-semibold text-gray-700">Status</th>
+                  <th className="p-4 font-semibold text-gray-700">Featured</th>
+                  <th className="p-4 font-semibold text-gray-700 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((category) => (
+                  <tr
+                    key={category.id}
+                    className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="p-4">
+                      {category.image ? (
+                        <img
+                          src={category.image}
+                          alt={category.name}
+                          className="w-12 h-12 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <FaImage className="text-gray-400" />
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full text-center">
+                          {category.active_product_count || 0}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div>
+                        <p className="font-medium text-gray-800">
+                          {category.name}
+                        </p>
+                        <p className="text-sm text-gray-500 truncate max-w-xs">
+                          {category.description || "No description"}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center">
+                        <span
+                          className={`w-3 h-3 rounded-full mr-2 ${category.isActive ? "bg-green-500" : "bg-gray-400"
+                            }`}
+                        />
+                        <span className="text-sm">{category.isActive ? "Active" : "Inactive"}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleToggleFeaturedApi(category);
                         }}
-                        type="button"
-                        className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
-                          category.isFeatured ? "bg-blue-600" : "bg-gray-300"
-                        }`}
+                        className={`flex items-center justify-center w-12 h-6 rounded-full transition-colors ${category.isFeatured ? "bg-blue-600" : "bg-gray-300"
+                          }`}
                       >
                         <div
-                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                            category.isFeatured
-                              ? "translate-x-6"
-                              : "translate-x-0"
-                          }`}
+                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${category.isFeatured ? "translate-x-3" : "-translate-x-3"
+                            }`}
                         />
                       </button>
-                      <span className="text-sm">Featured</span>
-                    </div>
-                  </td>
-
-                  <td className="p-3">
-                    <div className="flex items-center">
-                      {category.isShown ? (
-                        <FaEye className="text-green-500 mr-1" />
-                      ) : (
-                        <FaEyeSlash className="text-gray-500 mr-1" />
-                      )}
-                      {category.isShown ? "Visible" : "Hidden"}
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <div
-                      className="flex justify-end gap-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        onClick={() => toggleCategoryVisibility(category.id)}
-                        className={`p-2 rounded transition-colors ${
-                          category.isShown
-                            ? "text-green-500 hover:bg-green-50"
-                            : "text-gray-500 hover:bg-gray-100"
-                        }`}
-                        title={
-                          category.isShown ? "Hide category" : "Show category"
-                        }
-                      >
-                        {category.isShown ? <FaEye /> : <FaEyeSlash />}
-                      </button>
-                      <button
-                        onClick={() => toggleCategoryStatus(category.id)}
-                        className={`p-2 rounded transition-colors ${
-                          category.isActive
-                            ? "text-green-500 hover:bg-green-50"
-                            : "text-gray-500 hover:bg-gray-100"
-                        }`}
-                        title={
-                          category.isActive
-                            ? "Deactivate category"
-                            : "Activate category"
-                        }
-                      >
-                        {category.isActive ? <FaCheck /> : <FaTimes />}
-                      </button>
-                      <button
-                        onClick={() => setEditingCategory({ ...category })}
-                        className="p-2 text-blue-500 hover:bg-blue-50 rounded transition-colors"
-                        title="Edit category"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm(category)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
-                        title="Delete category"
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => toggleCategoryStatus(category.id)}
+                          className={`p-2 rounded-lg transition-colors ${category.isActive
+                            ? "bg-green-100 text-green-600 hover:bg-green-200"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                          title={category.isActive ? "Deactivate" : "Activate"}
+                        >
+                          {category.isActive ? <FaCheck /> : <FaTimes />}
+                        </button>
+                        <button
+                          onClick={() => setEditingCategory({ ...category })}
+                          className="p-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(category)}
+                          className="p-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          // Mobile Cards View
+          <div className="space-y-4">
+            {categories.map((category) => (
+              <CategoryCard key={category.id} category={category} />
+            ))}
+          </div>
+        )}
 
         {categories.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No categories found. Add your first category to get started.
+          <div className="text-center py-12">
+            <div className="text-gray-400 mb-4">
+              <FaBox className="text-6xl mx-auto" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Categories Found</h3>
+            <p className="text-gray-500 mb-6">Add your first category to get started</p>
+            <button
+              onClick={() => setIsAdding(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              <FaPlus />
+              Add First Category
+            </button>
           </div>
         )}
       </div>
@@ -845,14 +851,45 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
   return (
     <div className="space-y-6">
-      {selectedCategory ? renderProductList() : renderCategoriesList()}
+      {selectedCategory ? (
+        <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              <FaArrowLeft className="hidden sm:inline" />
+              <span>Back to Categories</span>
+            </button>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+              Products in {selectedCategory.name}
+            </h2>
+          </div>
+          {/* Product list would go here */}
+        </div>
+      ) : (
+        renderCategoriesList()
+      )}
 
       {/* Edit Category Modal */}
       {editingCategory && (
-        <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <h3 className="text-xl font-semibold mb-4">Edit Category</h3>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold">Edit Category</h3>
+                <button
+                  onClick={() => {
+                    setEditingCategory(null);
+                    setImagePreview("");
+                    setImageFile(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -867,7 +904,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                         name: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter category name"
                   />
                 </div>
@@ -884,9 +921,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                         description: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter category description"
-                    rows="4"
+                    rows="3"
                   />
                 </div>
 
@@ -894,33 +931,63 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Category Image
                   </label>
-                  <div className="flex items-center gap-2">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">Click to upload</p>
+                  <div className="space-y-3">
+                    {!imagePreview ? (
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-500">Click to upload new image</p>
+                          <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <div className="relative">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-24 h-24 object-cover rounded-lg border shadow-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImagePreview("");
+                              setImageFile(null);
+                              setEditingCategory({ ...editingCategory, image: "" });
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                          >
+                            <FaTimes className="text-xs" />
+                          </button>
+                        </div>
+                        
                       </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                    </label>
+                    )}
+                    {!imagePreview && editingCategory?.image && (
+                      <div className="flex flex-col items-center">
+                        <p className="text-sm text-gray-600 mb-2">Current Image:</p>
+                        <img
+                          src={editingCategory.image}
+                          alt="Current"
+                          className="w-20 h-20 object-cover rounded-lg border"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Upload a new image to replace this one
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  {imagePreview && (
-                    <div className="mt-2">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-20 h-20 object-cover rounded"
-                      />
-                    </div>
-                  )}
                 </div>
 
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm font-medium">Active Status</span>
                     <button
                       onClick={() =>
                         setEditingCategory({
@@ -929,23 +996,17 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                         })
                       }
                       type="button"
-                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
-                        editingCategory.isActive
-                          ? "bg-green-600"
-                          : "bg-gray-300"
-                      }`}
-                    >
-                      <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                          editingCategory.isActive
-                            ? "translate-x-6"
-                            : "translate-x-0"
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editingCategory.isActive ? "bg-green-600" : "bg-gray-300"
                         }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${editingCategory.isActive ? "translate-x-6" : "translate-x-1"
+                          }`}
                       />
                     </button>
-                    <span className="text-sm">Active</span>
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm font-medium">Featured</span>
                     <button
                       onClick={() =>
                         setEditingCategory({
@@ -954,41 +1015,34 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                         })
                       }
                       type="button"
-                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
-                        editingCategory.isFeatured
-                          ? "bg-yellow-600"
-                          : "bg-gray-300"
-                      }`}
-                    >
-                      <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                          editingCategory.isFeatured
-                            ? "translate-x-6"
-                            : "translate-x-0"
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editingCategory.isFeatured ? "bg-blue-600" : "bg-gray-300"
                         }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${editingCategory.isFeatured ? "translate-x-6" : "translate-x-1"
+                          }`}
                       />
                     </button>
-                    <span className="text-sm">Featured</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t">
+                <button
+                  onClick={handleEditCategory}
+                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Save Changes
+                </button>
                 <button
                   onClick={() => {
                     setEditingCategory(null);
                     setImagePreview("");
                     setImageFile(null);
                   }}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                 >
                   Cancel
-                </button>
-                <button
-                  onClick={handleEditCategory}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Save Changes
                 </button>
               </div>
             </div>
@@ -998,26 +1052,34 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
             <div className="p-6">
-              <h3 className="text-xl font-semibold mb-2">Confirm Deletion</h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to delete the category "
-                {deleteConfirm.name}"? This action cannot be undone.
-              </p>
-              <div className="flex justify-end gap-3">
+              <div className="text-center mb-6">
+                <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                  <FaTrash className="text-red-600 text-2xl" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Delete Category</h3>
+                <p className="text-gray-600">
+                  Are you sure you want to delete "<span className="font-semibold">{deleteConfirm.name}</span>"?
+                </p>
+                <p className="text-sm text-red-600 mt-2">
+                  This action cannot be undone.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleDeleteCategory(deleteConfirm.id)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                 >
-                  Delete
+                  Delete Category
                 </button>
               </div>
             </div>
@@ -1026,7 +1088,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       )}
 
       {/* Toast Notifications */}
-      <div className="fixed top-6 right-6 z-50 flex flex-col gap-2">
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
         {toasts.map((toastItem) => (
           <Toast
             key={toastItem.id}

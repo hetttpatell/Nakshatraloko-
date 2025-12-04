@@ -82,8 +82,8 @@ const ProductModal = ({
         initialProduct.CategoryID !== undefined
           ? parseInt(initialProduct.CategoryID)
           : initialProduct.categoryId !== undefined
-          ? parseInt(initialProduct.categoryId)
-          : ""
+            ? parseInt(initialProduct.categoryId)
+            : ""
       );
       setDescription(
         initialProduct.Description || initialProduct.description || ""
@@ -96,8 +96,8 @@ const ProductModal = ({
         initialProduct.IsActive !== undefined
           ? initialProduct.IsActive
           : initialProduct.isActive !== undefined
-          ? initialProduct.isActive
-          : true
+            ? initialProduct.isActive
+            : true
       );
 
       // ---------------- Rating field ----------------
@@ -105,10 +105,10 @@ const ProductModal = ({
         initialProduct.Rating !== undefined
           ? parseFloat(initialProduct.Rating)
           : initialProduct.rating !== undefined
-          ? parseFloat(initialProduct.rating)
-          : initialProduct.productRatings !== undefined
-          ? parseFloat(initialProduct.productRatings)
-          : 0;
+            ? parseFloat(initialProduct.rating)
+            : initialProduct.productRatings !== undefined
+              ? parseFloat(initialProduct.productRatings)
+              : 0;
 
       // Ensure rating is between 0 and 5
       setRating(Math.min(Math.max(initialRating, 0), 5));
@@ -506,9 +506,8 @@ const ProductModal = ({
             onSave({
               success: true,
               data: response.data,
-              message: `Product ${
-                isEditing ? "updated" : "created"
-              } successfully!`,
+              message: `Product ${isEditing ? "updated" : "created"
+                } successfully!`,
             });
           }, 1000);
         } else {
@@ -759,68 +758,79 @@ const ProductModal = ({
                       {images.map((image, index) => (
                         <div
                           key={index}
-                          className={`relative border rounded-lg p-2 ${
-                            image.isPrimary
+                          className={`relative border rounded-lg p-2 ${image.isPrimary
                               ? "border-blue-500 border-2"
                               : "border-gray-300"
-                          }`}
+                            }`}
                         >
-                          {/* IMAGE */}
-                          {(!image.type || image.type.startsWith("image/")) && (
-                            <img
-                              src={image.imageData}
-                              className="w-full h-32 object-contain rounded"
-                              alt={image.altText}
-                            />
-                          )}
+                          {/* Media Container with Remove Button */}
+                          <div className="relative">
+                            {/* IMAGE */}
+                            {(!image.type || image.type.startsWith("image/")) && (
+                              <img
+                                src={image.imageData}
+                                className="w-full h-32 object-contain rounded"
+                                alt={image.altText}
+                              />
+                            )}
 
-                          {/* VIDEO */}
-                          {image.type && image.type.startsWith("video/") && (
-                            <video
-                              src={image.imageData}
-                              controls
-                              className="w-full h-32 object-contain rounded"
-                            />
-                          )}
+                            {/* VIDEO */}
+                            {image.type && image.type.startsWith("video/") && (
+                              <video
+                                src={image.imageData}
+                                controls
+                                className="w-full h-32 object-contain rounded"
+                              />
+                            )}
 
-                          {/* PRIMARY BADGE */}
-                          {image.isPrimary && (
-                            <span className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 text-xs rounded">
-                              Primary
-                            </span>
-                          )}
+                            {/* REMOVE BUTTON (Red Cross on Top Right of Image/Video) */}
+                            <button
+                              onClick={() => removeImage(index)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
+                              title="Remove"
+                              type="button"
+                            >
+                              <FaTimes className="text-xs" />
+                            </button>
 
-                          {/* Controls */}
-                          <div className="absolute top-2 right-2 flex gap-1">
+                            {/* PRIMARY BADGE */}
+                            {image.isPrimary && (
+                              <span className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 text-xs rounded shadow">
+                                Primary
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Controls Below Image */}
+                          <div className="flex justify-center gap-2 mt-2">
                             <button
                               onClick={() => moveImage(index, "up")}
                               disabled={index === 0}
-                              className="bg-white p-1 rounded shadow disabled:opacity-50"
+                              className="p-1 text-gray-600 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Move up"
+                              type="button"
                             >
-                              <FaArrowUp size={10} />
+                              <FaArrowUp size={12} />
                             </button>
 
                             <button
                               onClick={() => moveImage(index, "down")}
                               disabled={index === images.length - 1}
-                              className="bg-white p-1 rounded shadow disabled:opacity-50"
+                              className="p-1 text-gray-600 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Move down"
+                              type="button"
                             >
-                              <FaArrowDown size={10} />
+                              <FaArrowDown size={12} />
                             </button>
 
                             <button
                               onClick={() => setPrimaryImage(index)}
                               disabled={image.isPrimary}
-                              className="bg-white p-1 rounded shadow disabled:opacity-50 text-xs font-bold"
+                              className="p-1 text-gray-600 hover:text-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Set as primary"
+                              type="button"
                             >
-                              P
-                            </button>
-
-                            <button
-                              onClick={() => removeImage(index)}
-                              className="bg-white p-1 rounded shadow"
-                            >
-                              <FaTrash size={10} className="text-red-500" />
+                              <span className="text-xs font-bold">P</span>
                             </button>
                           </div>
 
@@ -834,7 +844,7 @@ const ProductModal = ({
                               setImages(updated);
                             }}
                             placeholder="Description"
-                            className="w-full text-xs mt-2 p-1 border border-gray-200 rounded"
+                            className="w-full text-xs mt-2 p-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                           />
                         </div>
                       ))}
