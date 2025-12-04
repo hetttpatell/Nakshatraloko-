@@ -17,19 +17,26 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const IMG_URL = import.meta.env.VITE_IMG_URL;
 
 const normalizeImage = (url) => {
-  if (!url) return "/s1.jpeg"; // fallback
+  if (!url) return "/s1.jpeg"; // fallback for null
 
-  // Absolute URL, return as-is
+  // Absolute URL → return as-is
   if (url.startsWith("http")) return url;
 
-  // Remove leading slash if exists
-  const cleanUrl = url.replace(/^\/+/, "");
+  // Remove leading slash(s)
+  url = url.replace(/^\/+/, "");
 
-  // Ensure IMG_URL ends with /
-  const baseUrl = IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/";
+  // If missing uploads → add it
+  if (!url.startsWith("uploads/")) {
+    url = "uploads/" + url;
+  }
 
-  // Combine
-  return `${baseUrl}uploads/${cleanUrl}`;
+  // Clean duplicate uploads/uploads
+  url = url.replace(/^uploads\/uploads\//, "uploads/");
+
+  // Ensure base URL ends with slash
+  const base = IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/";
+
+  return base + url;
 };
 
 const ProductsPage = () => {
@@ -157,11 +164,8 @@ const ProductsPage = () => {
             price: p.firstsizeprice
               ? `₹ ${parseFloat(p.firstsizeprice).toLocaleString("en-IN")}`
               : "₹ 0",
-            img: p.primaryimage
-              ? p.primaryimage.startsWith("http")
-                ? p.primaryimage
-                : `${IMG_URL}/uploads${p.primaryimage}`
-              : null,
+            img: normalizeImage(p.primaryimage),
+
             rating: parseFloat(p.avgrating || 0),
             productRating: p.productratings ? parseFloat(p.productratings) : 0, // Individual product rating
             reviewCount: p.reviewcount || 0, // Review count

@@ -19,6 +19,7 @@ const IMG_URL = import.meta.env.VITE_IMG_URL;
 const ProductModal = ({
   title,
   initialProduct = {},
+  initialImages = [],
   onClose,
   onSave,
   sizeOptions = [],
@@ -43,26 +44,14 @@ const ProductModal = ({
   const [categoryData, setCategoryData] = useState([]);
   const [apiStatus, setApiStatus] = useState({ loading: false, message: "" });
 
-  const getCleanImagePath = (url) => {
-    if (!url) return "";
-    // Find "/api/uploads/" in the string
-    const idx = url.indexOf("/api/uploads/");
-    if (idx !== -1) {
-      // Keep only the part after "/api/uploads/"
-      return url.substring(idx + "/api/uploads".length);
-    }
-    const idx2 = url.indexOf("/uploads/");
-    if (idx2 !== -1) {
-      return url.substring(idx2 + "/uploads".length);
-    }
-    // If already relative like "/product-xxx.png", return as-is
-    return url.startsWith("/") ? url : `/${url}`;
+  const normalizeImages = (imgs = []) => {
+    return imgs.map((img) => ({
+      ...img,
+      imageData: img.imageData || `${BACKEND_URL}/uploads/${img.image}`,
+      type:
+        img.type || (img.image?.endsWith(".mp4") ? "video/mp4" : "image/jpeg"),
+    }));
   };
-
-  const sanitizedImages = images.map((img) => ({
-    ...img,
-    imageData: getCleanImagePath(img.imageData),
-  }));
 
   useEffect(() => {
     axios
@@ -75,6 +64,12 @@ const ProductModal = ({
       // .catch((err) => console.error("Category fetch error:", err));
       .catch((err) => console.log(err));
   }, []);
+
+  useEffect(() => {
+    if (initialImages.length > 0) {
+      setImages(normalizeImages(initialImages));
+    }
+  }, [initialImages]);
 
   // Populate state when editing
   useEffect(() => {
@@ -146,30 +141,14 @@ const ProductModal = ({
       const productImages =
         initialProduct.Images || initialProduct.images || [];
       if (Array.isArray(productImages) && productImages.length > 0) {
-        const formattedImages = productImages.map((img) => {
-          let imageUrl = img.imageData || img.imageUrl || "";
-
-          if (imageUrl) {
-            const uploadsIndex = imageUrl.indexOf("/api/uploads");
-            const uploadsFallback = imageUrl.indexOf("/uploads");
-            const startIndex =
-              uploadsIndex !== -1 ? uploadsIndex : uploadsFallback;
-
-            if (startIndex !== -1) {
-              const cleanPath = imageUrl.substring(startIndex);
-              imageUrl = `${IMG_URL}${cleanPath.replace(/([^:]\/)\/+/g, "$1")}`;
-            }
-          }
-
-          return {
-            ...img,
-            imageData: imageUrl,
-            isExisting: true,
-            originalUrl: imageUrl,
-            id: img.id || img.ID || null,
-            altText: img.altText || "",
-          };
-        });
+        const formattedImages = productImages.map((img) => ({
+          ...img,
+          imageData: img.imageData,
+          type:
+            img.type ||
+            (img.imageData?.endsWith(".mp4") ? "video/mp4" : "image/jpeg"),
+          isExisting: true,
+        }));
 
         setImages(formattedImages);
       } else {
@@ -179,15 +158,16 @@ const ProductModal = ({
   }, [initialProduct]);
 
   const validateFile = (file) => {
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_FILE_SIZE = 20 * 1024 * 1024; // allow up to 20MB
     const errors = {};
 
     if (file.size > MAX_FILE_SIZE) {
-      errors.fileSize = "File size must be less than 5MB";
+      errors.fileSize = "Max file size is 20MB.";
     }
 
-    if (!file.type.startsWith("image/")) {
-      errors.fileType = "File must be an image";
+    // 🔥 allow images AND videos
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      errors.fileType = "Only images and videos are allowed.";
     }
 
     return errors;
@@ -200,8 +180,9 @@ const ProductModal = ({
     const newErrors = {};
     const validFiles = [];
 
+    // Validate incoming files
     files.forEach((file, index) => {
-      const fileErrors = validateFile(file);
+      const fileErrors = validateFile(file); // your existing validator
 
       if (Object.keys(fileErrors).length > 0) {
         newErrors[`file-${index}`] = fileErrors;
@@ -210,8 +191,8 @@ const ProductModal = ({
       }
     });
 
+    // If invalid, stop upload
     if (Object.keys(newErrors).length > 0) {
-      // console.log("Validation errors:", newErrors);
       setErrors(newErrors);
       setApiStatus({ loading: false, message: "" });
       submittingRef.current = false;
@@ -224,12 +205,14 @@ const ProductModal = ({
 
     validFiles.forEach((file) => {
       const objectUrl = URL.createObjectURL(file);
+
       const newImage = {
-        imageData: objectUrl,
-        altText: `${name || "Product"} image`,
-        isPrimary: images.length === 0,
+        file, // needed for submission later
+        type: file.type, // 🔥 important for video/image preview
+        imageData: objectUrl, // preview URL
+        altText: file.name, // default
+        isPrimary: newImages.length === 0, // first uploaded becomes primary
         isActive: true,
-        file: file,
         isExisting: false,
       };
 
@@ -240,24 +223,23 @@ const ProductModal = ({
     setImageFiles(newImageFiles);
     setImages(newImages);
 
-    // Clear file input
+    // reset input so same file can be reselected
     e.target.value = "";
   };
 
   const removeImage = (index) => {
     setImages((prev) => {
-      const newImages = [...prev];
-      newImages.splice(index, 1);
+      const updated = prev.filter((_, i) => i !== index);
 
-      // If we removed the primary image and there are other images, set the first one as primary
-      if (prev[index].isPrimary && newImages.length > 0) {
-        newImages[0].isPrimary = true;
+      // If deleted primary -> assign new one
+      if (!updated.some((img) => img.isPrimary) && updated.length > 0) {
+        updated[0].isPrimary = true;
       }
 
-      return newImages;
+      return updated;
     });
 
-    // Only remove from imageFiles if it's a new file (not an existing image)
+    // Only remove file from imageFiles if it was newly uploaded
     if (!images[index].isExisting) {
       setImageFiles((prev) => {
         const newFiles = [...prev];
@@ -284,38 +266,33 @@ const ProductModal = ({
       return;
     }
 
+    const targetIndex = direction === "up" ? index - 1 : index + 1; // 🔥 move OUTSIDE setImages
+
+    // Swap inside UI
     setImages((prev) => {
       const newImages = [...prev];
-      const targetIndex = direction === "up" ? index - 1 : index + 1;
-
-      // Swap positions
       [newImages[index], newImages[targetIndex]] = [
         newImages[targetIndex],
         newImages[index],
       ];
-
       return newImages;
     });
 
-    // Only rearrange imageFiles for new images
+    // Swap inside File List too
     setImageFiles((prev) => {
       const newFiles = [...prev];
-      // Find the indices of new files in the images array
       const newFileIndices = images
         .map((img, idx) => (!img.isExisting ? idx : -1))
         .filter((idx) => idx !== -1);
 
-      // If both images at these indices are new files, swap them
       if (
         newFileIndices.includes(index) &&
         newFileIndices.includes(targetIndex)
       ) {
-        const fileIndex1 = newFileIndices.indexOf(index);
-        const fileIndex2 = newFileIndices.indexOf(targetIndex);
-        [newFiles[fileIndex1], newFiles[fileIndex2]] = [
-          newFiles[fileIndex2],
-          newFiles[fileIndex1],
-        ];
+        const i1 = newFileIndices.indexOf(index);
+        const i2 = newFileIndices.indexOf(targetIndex);
+
+        [newFiles[i1], newFiles[i2]] = [newFiles[i2], newFiles[i1]];
       }
 
       return newFiles;
@@ -506,16 +483,14 @@ const ProductModal = ({
         });
 
         // --- API Call ---
-        
+
         const response = await axios.post(
           `${BACKEND_URL}saveProduct`,
           formData,
           {
             headers: {
               "Content-Type": "multipart/form-data",
-              Authorization: `${
-                localStorage.getItem("authToken")
-              }`,
+              Authorization: `${localStorage.getItem("authToken")}`,
             },
             timeout: 30000, // 30 second timeout
           }
@@ -687,7 +662,6 @@ const ProductModal = ({
                   <p className="text-red-500 text-sm">{errors.categoryId}</p>
                 )}
               </div>
-
               {/* Product Name */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
@@ -705,7 +679,6 @@ const ProductModal = ({
                   <p className="text-red-500 text-sm">{errors.name}</p>
                 )}
               </div>
-
               {/* Product Rating */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
@@ -733,143 +706,136 @@ const ProductModal = ({
                   allowed)
                 </p>
               </div>
-
-              {/* Image Upload */}
+              {/* Media Upload (Images + Videos) */}
               <div className="space-y-2 md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  Product Images *
+                  Product Media (Images + Videos) *
                 </label>
 
-                {errors.images && (
-                  <p className="text-red-500 text-sm">{errors.images}</p>
-                )}
+                {/* Upload box */}
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <svg
+                      className="w-8 h-8 mb-4 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 20 16"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5
+                 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4
+                 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                      />
+                    </svg>
+                    <p className="text-sm text-gray-500">
+                      <span className="font-semibold">Click to upload</span> or
+                      drag & drop
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Images & Videos (Max 5MB)
+                    </p>
+                  </div>
 
-                <div className="flex flex-col items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <svg
-                        className="w-8 h-8 mb-4 text-gray-500"
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 20 16"
-                      >
-                        <path
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                        />
-                      </svg>
-                      <p className="mb-2 text-sm text-gray-500">
-                        <span className="font-semibold">Click to upload</span>{" "}
-                        or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        SVG, PNG, JPG or GIF (MAX. 5MB)
-                      </p>
-                    </div>
-                    <input
-                      id="dropzone-file"
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      multiple
-                    />
-                  </label>
-                </div>
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={handleImageUpload}
+                    multiple
+                    className="hidden"
+                  />
+                </label>
 
-                {/* Image Previews */}
+                {/* PREVIEW SECTION */}
                 {images.length > 0 && (
                   <div className="mt-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">
-                      Uploaded Images:
+                      Uploaded Media:
                     </h4>
+
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {images.map((image, index) => (
                         <div
                           key={index}
                           className={`relative border rounded-lg p-2 ${
                             image.isPrimary
-                              ? "border-2 border-blue-500"
-                              : "border-gray-200"
+                              ? "border-blue-500 border-2"
+                              : "border-gray-300"
                           }`}
                         >
-                          <img
-                            src={image.imageData}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-32 object-contain rounded"
-                          />
-
-                          {/* Existing image badge */}
-                          {image.isExisting && (
-                            <span className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                              Existing
-                            </span>
+                          {/* IMAGE */}
+                          {(!image.type || image.type.startsWith("image/")) && (
+                            <img
+                              src={image.imageData}
+                              className="w-full h-32 object-contain rounded"
+                              alt={image.altText}
+                            />
                           )}
 
-                          {/* Primary badge */}
+                          {/* VIDEO */}
+                          {image.type && image.type.startsWith("video/") && (
+                            <video
+                              src={image.imageData}
+                              controls
+                              className="w-full h-32 object-contain rounded"
+                            />
+                          )}
+
+                          {/* PRIMARY BADGE */}
                           {image.isPrimary && (
-                            <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                            <span className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 text-xs rounded">
                               Primary
                             </span>
                           )}
 
-                          {/* Image controls */}
-                          <div className="absolute top-2 right-2 flex space-x-1">
+                          {/* Controls */}
+                          <div className="absolute top-2 right-2 flex gap-1">
                             <button
-                              type="button"
                               onClick={() => moveImage(index, "up")}
                               disabled={index === 0}
-                              className="bg-white rounded p-1 shadow-sm disabled:opacity-50"
-                              title="Move up"
+                              className="bg-white p-1 rounded shadow disabled:opacity-50"
                             >
-                              <FaArrowUp size={12} />
+                              <FaArrowUp size={10} />
                             </button>
+
                             <button
-                              type="button"
                               onClick={() => moveImage(index, "down")}
                               disabled={index === images.length - 1}
-                              className="bg-white rounded p-1 shadow-sm disabled:opacity-50"
-                              title="Move down"
+                              className="bg-white p-1 rounded shadow disabled:opacity-50"
                             >
-                              <FaArrowDown size={12} />
+                              <FaArrowDown size={10} />
                             </button>
+
                             <button
-                              type="button"
                               onClick={() => setPrimaryImage(index)}
                               disabled={image.isPrimary}
-                              className="bg-white rounded p-1 shadow-sm disabled:opacity-50"
-                              title="Set as primary"
+                              className="bg-white p-1 rounded shadow disabled:opacity-50 text-xs font-bold"
                             >
-                              <span className="text-xs font-bold">P</span>
+                              P
                             </button>
+
                             <button
-                              type="button"
                               onClick={() => removeImage(index)}
-                              className="bg-white rounded p-1 shadow-sm"
-                              title="Remove image"
+                              className="bg-white p-1 rounded shadow"
                             >
-                              <FaTrash size={12} className="text-red-500" />
+                              <FaTrash size={10} className="text-red-500" />
                             </button>
                           </div>
 
-                          {/* Alt text input */}
-                          <div className="mt-2">
-                            <input
-                              type="text"
-                              value={image.altText}
-                              onChange={(e) => {
-                                const newImages = [...images];
-                                newImages[index].altText = e.target.value;
-                                setImages(newImages);
-                              }}
-                              placeholder="Image description"
-                              className="w-full text-xs p-1 border border-gray-200 rounded"
-                            />
-                          </div>
+                          {/* ALT TEXT INPUT */}
+                          <input
+                            type="text"
+                            value={image.altText}
+                            onChange={(e) => {
+                              const updated = [...images];
+                              updated[index].altText = e.target.value;
+                              setImages(updated);
+                            }}
+                            placeholder="Description"
+                            className="w-full text-xs mt-2 p-1 border border-gray-200 rounded"
+                          />
                         </div>
                       ))}
                     </div>
@@ -891,7 +857,6 @@ const ProductModal = ({
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm resize-vertical"
                 />
               </div>
-
               {/* How to Wear */}
               <div className="space-y-2 md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
@@ -906,7 +871,6 @@ const ProductModal = ({
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm resize-vertical"
                 />
               </div>
-
               {/* Advantages */}
               <div className="space-y-2 md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
@@ -920,7 +884,6 @@ const ProductModal = ({
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm resize-vertical"
                 />
               </div>
-
               {/* Sizes */}
               <div className="space-y-2 md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 uppercase tracking-wide">
@@ -1047,7 +1010,6 @@ const ProductModal = ({
                   <FaPlus size={14} className="mr-2" /> Add Another Size
                 </button>
               </div>
-
               {/* Active Status */}
               <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg md:col-span-2">
                 <div className="flex items-center h-5">

@@ -19,8 +19,7 @@ import Toast from "./Toast";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
-import { useProtectedAction } from "../../CustomHooks/useProductAction"
-
+import { useProtectedAction } from "../../CustomHooks/useProductAction";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const IMG_URL = import.meta.env.VITE_IMG_URL;
@@ -88,31 +87,31 @@ const ProductDetails = () => {
   const [applicableCoupons, setApplicableCoupons] = useState([]);
   const { addToWishlist, wishlist } = useWishlist();
   const { addToCart } = useCart();
-  const { protectedCartAction, protectedWishlistAction, isAuthenticated } = useProtectedAction();
-
+  const { protectedCartAction, protectedWishlistAction, isAuthenticated } =
+    useProtectedAction();
 
   const normalizeImage = (url) => {
-    let fixedUrl = url?.trim() || "";
+    if (!url) return "/s1.jpeg";
 
-    // If the URL already has the host (http://localhost:8001)
-    if (fixedUrl.startsWith("http")) {
-      // Remove double slashes
-      fixedUrl = fixedUrl.replace(/([^:]\/)\/+/g, "$1");
+    let clean = url.trim();
 
-      // Replace the base URL to use your API uploads path
-      fixedUrl = fixedUrl.replace(
-        /^http:\/\/localhost:8001\/uploads/,
-        `${IMG_URL}/uploads`
-      );
-    } else {
-      // Relative path: prepend /uploads if missing
-      if (!fixedUrl.startsWith("/uploads/")) {
-        fixedUrl = `/uploads/${fixedUrl.replace(/^\/+/, "")}`;
-      }
-      fixedUrl = `${IMG_URL}${fixedUrl}`.replace(/([^:]\/)\/+/g, "$1");
+    // Already a full URL (http...)
+    if (clean.startsWith("http")) {
+      // FIX: Replace /uploads → /api/uploads
+      clean = clean.replace("/uploads/", "/api/uploads/");
+      return clean;
     }
 
-    return fixedUrl;
+    // Ensure path starts with /api/uploads/
+    clean = clean.replace(/^\/+/, ""); // remove leading slashes
+
+    if (!clean.startsWith("api/uploads/")) {
+      if (clean.startsWith("uploads/")) clean = "api/" + clean;
+      else clean = "api/uploads/" + clean;
+    }
+
+    const base = IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/";
+    return `${base}${clean}`.replace(/([^:]\/)\/+/g, "$1");
   };
 
   // Fetch reviews
@@ -168,7 +167,7 @@ const ProductDetails = () => {
       },
       {
         showToast: showToast,
-        successMessage: `${product.name} added to cart successfully!`
+        successMessage: `${product.name} added to cart successfully!`,
       }
     );
   };
@@ -195,11 +194,10 @@ const ProductDetails = () => {
         }
       },
       {
-        showToast: showToast
+        showToast: showToast,
       }
     );
   };
-
 
   // Submit review
   const submitReview = async () => {
@@ -378,7 +376,6 @@ const ProductDetails = () => {
           }
         );
 
-
         const productData = res.data?.data?.product;
         if (!isMounted || !productData) return;
 
@@ -425,7 +422,6 @@ const ProductDetails = () => {
       }
     };
 
-
     loadProduct();
     fetchReviews(); // Fetch reviews when component mounts
 
@@ -433,7 +429,6 @@ const ProductDetails = () => {
       isMounted = false;
     };
   }, [id]);
-
 
   // Add this function to your component
   const renderStars = (rating) => {
@@ -590,7 +585,12 @@ const ProductDetails = () => {
       <div className="w-full max-w-[1400px] mx-auto px-5 md:px-12 py-10">
         {/* Breadcrumb */}
         <nav className="text-sm text-color-text-muted mb-6 flex items-center">
-          <span className="hover:text-color-primary cursor-pointer" onClick={() => navigate("/")}>Home</span>
+          <span
+            className="hover:text-color-primary cursor-pointer"
+            onClick={() => navigate("/")}
+          >
+            Home
+          </span>
           {/* <FiChevronRight className="mx-2 text-xs" />
           <span className="hover:text-color-primary cursor-pointer">
             Jewelry
@@ -609,9 +609,10 @@ const ProductDetails = () => {
                   <div
                     key={index}
                     className={`relative w-20 h-24 sm:w-24 sm:h-28 rounded-sm cursor-pointer border transition-all duration-300 ease-in-out
-                      ${mainImage === img.src
-                        ? "ring-2 ring-color-primary ring-offset-2 scale-105 border-color-primary"
-                        : "border-color-border hover:border-color-primary opacity-80 hover:opacity-100"
+                      ${
+                        mainImage === img.src
+                          ? "ring-2 ring-color-primary ring-offset-2 scale-105 border-color-primary"
+                          : "border-color-border hover:border-color-primary opacity-80 hover:opacity-100"
                       }`}
                     onClick={() => {
                       setMainImage(img.src);
@@ -629,8 +630,9 @@ const ProductDetails = () => {
 
               {/* Main image */}
               <div
-                className={`relative w-full max-w-lg aspect-[3/4] bg-color-surface rounded-lg shadow-lg mx-auto order-1 lg:order-2 overflow-hidden group ${isImageZoomed ? "cursor-zoom-out" : "cursor-zoom-in"
-                  }`}
+                className={`relative w-full max-w-lg aspect-[3/4] bg-color-surface rounded-lg shadow-lg mx-auto order-1 lg:order-2 overflow-hidden group ${
+                  isImageZoomed ? "cursor-zoom-out" : "cursor-zoom-in"
+                }`}
                 onClick={() => setIsImageZoomed(!isImageZoomed)}
                 onMouseMove={handleImageZoom}
                 onMouseLeave={resetZoom}
@@ -688,10 +690,11 @@ const ProductDetails = () => {
                 {product.size.map((item) => (
                   <button
                     key={item}
-                    className={`px-5 py-2.5 rounded-sm text-sm font-medium transition-all duration-200 ${selectedSize === item
-                      ? "bg-color-primary text-color-surface border border-color-primary shadow-md"
-                      : "bg-color-surface text-color-text border border-color-border hover:border-color-primary hover:shadow-md"
-                      }`}
+                    className={`px-5 py-2.5 rounded-sm text-sm font-medium transition-all duration-200 ${
+                      selectedSize === item
+                        ? "bg-color-primary text-color-surface border border-color-primary shadow-md"
+                        : "bg-color-surface text-color-text border border-color-border hover:border-color-primary hover:shadow-md"
+                    }`}
                     onClick={() => setSelectedSize(item)}
                   >
                     {item}
@@ -767,7 +770,12 @@ const ProductDetails = () => {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 10H6L5 9z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 10H6L5 9z"
+                  />
                 </svg>
                 <span className="relative">
                   ADD TO BAG
@@ -777,10 +785,11 @@ const ProductDetails = () => {
 
               <Button
                 onClick={handleWishlistToggle}
-                className={`px-8 py-3.5 font-medium text-sm transition-all duration-300 ease-out transform hover:scale-105 flex items-center justify-center gap-3 group ${isWishlisted
-                  ? "bg-gradient-to-r from-color-primary to-color-primary-dark text-color-surface shadow-lg hover:shadow-xl"
-                  : "bg-color-surface text-color-text border-2 border-color-border hover:border-color-primary hover:shadow-md"
-                  }`}
+                className={`px-8 py-3.5 font-medium text-sm transition-all duration-300 ease-out transform hover:scale-105 flex items-center justify-center gap-3 group ${
+                  isWishlisted
+                    ? "bg-gradient-to-r from-color-primary to-color-primary-dark text-color-surface shadow-lg hover:shadow-xl"
+                    : "bg-color-surface text-color-text border-2 border-color-border hover:border-color-primary hover:shadow-md"
+                }`}
               >
                 {isWishlisted ? (
                   <>
@@ -941,20 +950,22 @@ const ProductDetails = () => {
         <div className="border-b border-color-border mb-8 mt-12">
           <div className="flex space-x-8">
             <button
-              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === "description"
-                ? "border-color-primary text-color-primary"
-                : "border-transparent text-color-text-muted hover:text-color-text"
-                }`}
+              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                activeTab === "description"
+                  ? "border-color-primary text-color-primary"
+                  : "border-transparent text-color-text-muted hover:text-color-text"
+              }`}
               onClick={() => handleTabChange("description")}
             >
               DESCRIPTION
             </button>
 
             <button
-              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === "reviews"
-                ? "border-color-primary text-color-primary"
-                : "border-transparent text-color-text-muted hover:text-color-text"
-                }`}
+              className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${
+                activeTab === "reviews"
+                  ? "border-color-primary text-color-primary"
+                  : "border-transparent text-color-text-muted hover:text-color-text"
+              }`}
               onClick={() => handleTabChange("reviews")}
             >
               REVIEWS ({reviews.length})
@@ -1113,7 +1124,7 @@ const ProductDetails = () => {
                         }
                       >
                         {star <=
-                          (reviewForm.hoverRating || reviewForm.rating) ? (
+                        (reviewForm.hoverRating || reviewForm.rating) ? (
                           <AiFillStar className="text-color-rating" />
                         ) : (
                           <AiOutlineStar className="text-color-text-muted" />
@@ -1122,7 +1133,8 @@ const ProductDetails = () => {
                     ))}
                     <span className="ml-3 text-sm text-color-text-muted">
                       {reviewForm.rating > 0 &&
-                        `${reviewForm.rating} star${reviewForm.rating > 1 ? "s" : ""
+                        `${reviewForm.rating} star${
+                          reviewForm.rating > 1 ? "s" : ""
                         }`}
                     </span>
                   </div>
@@ -1354,7 +1366,9 @@ const ProductDetails = () => {
         <Toast
           message={customToast.message}
           type={customToast.type}
-          onClose={() => setCustomToast((prev) => ({ ...prev, visible: false }))}
+          onClose={() =>
+            setCustomToast((prev) => ({ ...prev, visible: false }))
+          }
           duration={customToast.type === "success" ? 3000 : 4000}
         />
       )}
