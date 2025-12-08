@@ -621,7 +621,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                       >
                         <FaTimes className="text-xs" />
                       </button>
-                     
+
                     </div>
                   )}
                 </div>
@@ -873,23 +873,10 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
       {/* Edit Category Modal */}
       {editingCategory && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
             <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold">Edit Category</h3>
-                <button
-                  onClick={() => {
-                    setEditingCategory(null);
-                    setImagePreview("");
-                    setImageFile(null);
-                  }}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-
+              <h3 className="text-xl font-semibold mb-4">Edit Category</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -904,7 +891,7 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                         name: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter category name"
                   />
                 </div>
@@ -921,9 +908,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                         description: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter category description"
-                    rows="3"
+                    rows="4"
                   />
                 </div>
 
@@ -931,63 +918,33 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Category Image
                   </label>
-                  <div className="space-y-3">
-                    {!imagePreview ? (
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
-                          <p className="text-sm text-gray-500">Click to upload new image</p>
-                          <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                        />
-                      </label>
-                    ) : (
-                      <div className="flex flex-col items-center">
-                        <div className="relative">
-                          <img
-                            src={imagePreview}
-                            alt="Preview"
-                            className="w-24 h-24 object-cover rounded-lg border shadow-sm"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setImagePreview("");
-                              setImageFile(null);
-                              setEditingCategory({ ...editingCategory, image: "" });
-                            }}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
-                          >
-                            <FaTimes className="text-xs" />
-                          </button>
-                        </div>
-                        
+                  <div className="flex items-center gap-2">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">Click to upload</p>
                       </div>
-                    )}
-                    {!imagePreview && editingCategory?.image && (
-                      <div className="flex flex-col items-center">
-                        <p className="text-sm text-gray-600 mb-2">Current Image:</p>
-                        <img
-                          src={editingCategory.image}
-                          alt="Current"
-                          className="w-20 h-20 object-cover rounded-lg border"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Upload a new image to replace this one
-                        </p>
-                      </div>
-                    )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-20 h-20 object-cover rounded"
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm font-medium">Active Status</span>
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center">
                     <button
                       onClick={() =>
                         setEditingCategory({
@@ -996,17 +953,21 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                         })
                       }
                       type="button"
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editingCategory.isActive ? "bg-green-600" : "bg-gray-300"
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isActive
+                        ? "bg-green-600"
+                        : "bg-gray-300"
                         }`}
                     >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${editingCategory.isActive ? "translate-x-6" : "translate-x-1"
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isActive
+                          ? "translate-x-6"
+                          : "translate-x-0"
                           }`}
                       />
                     </button>
+                    <span className="text-sm">Active</span>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm font-medium">Featured</span>
+                  <div className="flex items-center">
                     <button
                       onClick={() =>
                         setEditingCategory({
@@ -1015,34 +976,39 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                         })
                       }
                       type="button"
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editingCategory.isFeatured ? "bg-blue-600" : "bg-gray-300"
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isFeatured
+                        ? "bg-yellow-600"
+                        : "bg-gray-300"
                         }`}
                     >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${editingCategory.isFeatured ? "translate-x-6" : "translate-x-1"
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isFeatured
+                          ? "translate-x-6"
+                          : "translate-x-0"
                           }`}
                       />
                     </button>
+                    <span className="text-sm">Featured</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t">
-                <button
-                  onClick={handleEditCategory}
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Save Changes
-                </button>
+              <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => {
                     setEditingCategory(null);
                     setImagePreview("");
                     setImageFile(null);
                   }}
-                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
                 >
                   Cancel
+                </button>
+                <button
+                  onClick={handleEditCategory}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Save Changes
                 </button>
               </div>
             </div>
@@ -1052,34 +1018,26 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+        <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
             <div className="p-6">
-              <div className="text-center mb-6">
-                <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                  <FaTrash className="text-red-600 text-2xl" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Delete Category</h3>
-                <p className="text-gray-600">
-                  Are you sure you want to delete "<span className="font-semibold">{deleteConfirm.name}</span>"?
-                </p>
-                <p className="text-sm text-red-600 mt-2">
-                  This action cannot be undone.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3">
+              <h3 className="text-xl font-semibold mb-2">Confirm Deletion</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete the category "
+                {deleteConfirm.name}"? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleDeleteCategory(deleteConfirm.id)}
-                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                 >
-                  Delete Category
+                  Delete
                 </button>
               </div>
             </div>
