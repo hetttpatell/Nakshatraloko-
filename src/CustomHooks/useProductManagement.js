@@ -2,6 +2,7 @@ import React, { useCallback, useState, useEffect } from "react";
 import axios from "axios";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import Toast from "../Components/Product/Toast";
+const IMG_URL = import.meta.env.VITE_IMG_URL;
 
 export const useProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -28,6 +29,19 @@ export const useProductManagement = () => {
 
   const closeToast = () => {
     setToastData(null);
+  };
+
+  const normalizeImage = (url) => {
+    if (!url) return "/s1.jpeg";
+
+    url = url.trim().replace(/^\/+/, ""); // remove leading slash
+
+    if (!url.startsWith("uploads/")) {
+      url = "uploads/" + url;
+    }
+
+    const base = IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/";
+    return base + url;
   };
 
   const loadProducts = useCallback(async () => {
@@ -62,7 +76,7 @@ export const useProductManagement = () => {
             howToWear: item.HowToWear,
             isActive: item.IsActive,
             isFeatured: featuredIds.includes(item.ID),
-            primaryImage: item.PrimaryImage,
+            primaryImage: normalizeImage(item.PrimaryImage),
             IsSlidShow: item.IsSlidShow || false,
           }));
 
@@ -151,14 +165,19 @@ export const useProductManagement = () => {
           HowToWear: product.howToWear,
           IsActive: product.isActive,
           sizes: product.sizes || [],
-          images: product.images || [],
+          images: (product.images || []).map(img => ({
+            ...img,
+            imageData: normalizeImage(img.imageData)
+          })),
           price: product.sizes?.[0]?.price || 0,
           dummyPrice: product.sizes?.[0]?.dummyPrice || 0,
           discountPercentage: product.sizes?.[0]
             ? Math.round(((product.sizes[0].dummyPrice - product.sizes[0].price) / product.sizes[0].dummyPrice) * 100)
             : 0,
           stock: product.sizes?.[0]?.stock || 0,
-          primaryImage: product.images?.find(img => img.isPrimary)?.imageData || null,
+          primaryImage: normalizeImage(
+            product.images?.find(img => img.isPrimary)?.imageData
+          ) || null,
         };
 
         setEditingProduct(normalizedProduct);

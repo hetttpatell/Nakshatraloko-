@@ -71,7 +71,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   // Helper functions
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "/s1.jpeg";
-    return `${IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/"}uploads/${imagePath.replace(/^\/+/, "")}`;
+    return `${
+      IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/"
+    }uploads/${imagePath.replace(/^\/+/, "")}`;
   };
 
   const showToast = (message, type = "success") => {
@@ -101,30 +103,26 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
   // Unified API function
   const saveCategoryAPI = async (categoryData, imageFile = null) => {
-    try {
-      const token = localStorage.getItem("authToken");
-      const formData = new FormData();
+    const token = localStorage.getItem("authToken");
+    const formData = new FormData();
 
-      // Append all category data
-      Object.keys(categoryData).forEach(key => {
-        if (key !== 'image' && key !== 'active_product_count') {
-          formData.append(key, categoryData[key]);
-        }
-      });
+    // Append all category data except image fields & derived fields
+    Object.keys(categoryData).forEach((key) => {
+      if (key !== "image" && key !== "active_product_count") {
+        formData.append(key, categoryData[key]);
+      }
+    });
 
-      if (imageFile) formData.append("images", imageFile);
+    if (imageFile) formData.append("images", imageFile);
 
-      const response = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
-        headers: {
-          Authorization: token,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+    const response = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
+      headers: {
+        Authorization: token,
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    return response.data;
   };
 
   // Fetch categories from API
@@ -165,7 +163,8 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     setCategories((prev) =>
       prev.map((category) => {
         const activeCount = products.filter((p) => {
-          const productCategoryId = p.categoryId?.toString() || p.category?.toString();
+          const productCategoryId =
+            p.categoryId?.toString() || p.category?.toString();
           return p.isActive && productCategoryId === category.id?.toString();
         }).length;
 
@@ -234,16 +233,14 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
 
       const updatedCategory = {
         ...category,
-        isFeatured: !category.isFeatured
+        isFeatured: !category.isFeatured,
       };
 
       const result = await saveCategoryAPI(updatedCategory);
 
       if (result.success) {
         setCategories((prev) =>
-          prev.map((cat) =>
-            cat.id === category.id ? updatedCategory : cat
-          )
+          prev.map((cat) => (cat.id === category.id ? updatedCategory : cat))
         );
         showToast(result.message || "Category updated successfully", "success");
       }
@@ -257,18 +254,39 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     if (!editingCategory?.name?.trim()) return;
 
     try {
+      // 1️⃣ Update category
       const result = await saveCategoryAPI(editingCategory, imageFile);
 
       if (result.success) {
-        setCategories(categories.map((cat) =>
-          cat.id === editingCategory.id ? editingCategory : cat
-        ));
+        // 2️⃣ Now fetch updated category from VIEW
+        const updatedResponse = await axios.post(
+          `${BACKEND_URL}getCatogaryById/${editingCategory.id}`
+        );
+
+        
+        if (updatedResponse.data.success) {
+          const updatedCategory = updatedResponse.data.data;
+
+          // Fix image path
+          updatedCategory.image = getImageUrl(updatedCategory.Image);
+
+          // 3️⃣ Replace local category with fully updated backend category
+          setCategories((prev) =>
+            prev.map((cat) =>
+              cat.id === editingCategory.id ? updatedCategory : cat
+            )
+          );
+        }
+
+        // Cleanup
         setEditingCategory(null);
         setImageFile(null);
         setImagePreview("");
+
         showToast(result.message || "Category updated successfully", "success");
       }
     } catch (err) {
+      console.error(err);
       setError("Failed to update category.");
     }
   };
@@ -290,7 +308,10 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       if (response.data.success) {
         setCategories(categories.filter((cat) => cat.id !== id));
         setDeleteConfirm(null);
-        showToast(response.data.message || "Category deleted successfully", "success");
+        showToast(
+          response.data.message || "Category deleted successfully",
+          "success"
+        );
 
         if (selectedCategory && selectedCategory.id === id) {
           setSelectedCategory(null);
@@ -402,7 +423,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             </div>
           )}
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-800 text-lg">{category.name}</h3>
+            <h3 className="font-semibold text-gray-800 text-lg">
+              {category.name}
+            </h3>
             <div className="flex items-center space-x-2 mt-1">
               <span className="flex items-center text-sm text-gray-600">
                 <FaBox className="mr-1" />
@@ -417,8 +440,14 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             </div>
             <div className="flex items-center space-x-3 mt-2">
               <div className="flex items-center">
-                <div className={`w-3 h-3 rounded-full mr-1 ${category.isActive ? "bg-green-500" : "bg-gray-400"}`} />
-                <span className="text-xs text-gray-600">{category.isActive ? "Active" : "Inactive"}</span>
+                <div
+                  className={`w-3 h-3 rounded-full mr-1 ${
+                    category.isActive ? "bg-green-500" : "bg-gray-400"
+                  }`}
+                />
+                <span className="text-xs text-gray-600">
+                  {category.isActive ? "Active" : "Inactive"}
+                </span>
               </div>
             </div>
           </div>
@@ -443,13 +472,16 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
           <div className="grid grid-cols-2 gap-2 mb-3">
             <button
               onClick={() => toggleCategoryStatus(category.id)}
-              className={`flex items-center justify-center py-2 rounded-lg transition-colors ${category.isActive
-                ? "bg-green-100 text-green-700"
-                : "bg-gray-100 text-gray-700"
-                }`}
+              className={`flex items-center justify-center py-2 rounded-lg transition-colors ${
+                category.isActive
+                  ? "bg-green-100 text-green-700"
+                  : "bg-gray-100 text-gray-700"
+              }`}
             >
               {category.isActive ? <FaCheck /> : <FaTimes />}
-              <span className="ml-2 text-sm">{category.isActive ? "Active" : "Inactive"}</span>
+              <span className="ml-2 text-sm">
+                {category.isActive ? "Active" : "Inactive"}
+              </span>
             </button>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -491,7 +523,8 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
               Categories Management
             </h2>
             <p className="text-gray-600 text-sm mt-1">
-              {categories.length} {categories.length === 1 ? "category" : "categories"} found
+              {categories.length}{" "}
+              {categories.length === 1 ? "category" : "categories"} found
             </p>
           </div>
 
@@ -526,7 +559,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
         </div>
 
         {/* Search and Filter Bar */}
-        <div className={`mb-6 ${showMobileFilters ? 'block' : 'hidden md:block'}`}>
+        <div
+          className={`mb-6 ${showMobileFilters ? "block" : "hidden md:block"}`}
+        >
           <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1">
               <div className="relative">
@@ -594,7 +629,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
                         <p className="text-sm text-gray-500">Click to upload</p>
-                        <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          PNG, JPG, GIF up to 5MB
+                        </p>
                       </div>
                       <input
                         type="file"
@@ -621,7 +658,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                       >
                         <FaTimes className="text-xs" />
                       </button>
-
                     </div>
                   )}
                 </div>
@@ -656,12 +692,14 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                       })
                     }
                     type="button"
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newCategory.isActive ? "bg-green-600" : "bg-gray-300"
-                      }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      newCategory.isActive ? "bg-green-600" : "bg-gray-300"
+                    }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newCategory.isActive ? "translate-x-6" : "translate-x-1"
-                        }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        newCategory.isActive ? "translate-x-6" : "translate-x-1"
+                      }`}
                     />
                   </button>
                 </div>
@@ -676,12 +714,16 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                       })
                     }
                     type="button"
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newCategory.isFeatured ? "bg-blue-600" : "bg-gray-300"
-                      }`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      newCategory.isFeatured ? "bg-blue-600" : "bg-gray-300"
+                    }`}
                   >
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newCategory.isFeatured ? "translate-x-6" : "translate-x-1"
-                        }`}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        newCategory.isFeatured
+                          ? "translate-x-6"
+                          : "translate-x-1"
+                      }`}
                     />
                   </button>
                 </div>
@@ -724,7 +766,9 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                   <th className="p-4 font-semibold text-gray-700">Name</th>
                   <th className="p-4 font-semibold text-gray-700">Status</th>
                   <th className="p-4 font-semibold text-gray-700">Featured</th>
-                  <th className="p-4 font-semibold text-gray-700 text-right">Actions</th>
+                  <th className="p-4 font-semibold text-gray-700 text-right">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -766,10 +810,13 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                     <td className="p-4">
                       <div className="flex items-center">
                         <span
-                          className={`w-3 h-3 rounded-full mr-2 ${category.isActive ? "bg-green-500" : "bg-gray-400"
-                            }`}
+                          className={`w-3 h-3 rounded-full mr-2 ${
+                            category.isActive ? "bg-green-500" : "bg-gray-400"
+                          }`}
                         />
-                        <span className="text-sm">{category.isActive ? "Active" : "Inactive"}</span>
+                        <span className="text-sm">
+                          {category.isActive ? "Active" : "Inactive"}
+                        </span>
                       </div>
                     </td>
                     <td className="p-4">
@@ -778,12 +825,16 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                           e.stopPropagation();
                           handleToggleFeaturedApi(category);
                         }}
-                        className={`flex items-center justify-center w-12 h-6 rounded-full transition-colors ${category.isFeatured ? "bg-blue-600" : "bg-gray-300"
-                          }`}
+                        className={`flex items-center justify-center w-12 h-6 rounded-full transition-colors ${
+                          category.isFeatured ? "bg-blue-600" : "bg-gray-300"
+                        }`}
                       >
                         <div
-                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${category.isFeatured ? "translate-x-3" : "-translate-x-3"
-                            }`}
+                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                            category.isFeatured
+                              ? "translate-x-3"
+                              : "-translate-x-3"
+                          }`}
                         />
                       </button>
                     </td>
@@ -791,10 +842,11 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => toggleCategoryStatus(category.id)}
-                          className={`p-2 rounded-lg transition-colors ${category.isActive
-                            ? "bg-green-100 text-green-600 hover:bg-green-200"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
+                          className={`p-2 rounded-lg transition-colors ${
+                            category.isActive
+                              ? "bg-green-100 text-green-600 hover:bg-green-200"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          }`}
                           title={category.isActive ? "Deactivate" : "Activate"}
                         >
                           {category.isActive ? <FaCheck /> : <FaTimes />}
@@ -834,8 +886,12 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
             <div className="text-gray-400 mb-4">
               <FaBox className="text-6xl mx-auto" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Categories Found</h3>
-            <p className="text-gray-500 mb-6">Add your first category to get started</p>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              No Categories Found
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Add your first category to get started
+            </p>
             <button
               onClick={() => setIsAdding(true)}
               className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
@@ -953,16 +1009,18 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                         })
                       }
                       type="button"
-                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isActive
-                        ? "bg-green-600"
-                        : "bg-gray-300"
-                        }`}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
+                        editingCategory.isActive
+                          ? "bg-green-600"
+                          : "bg-gray-300"
+                      }`}
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isActive
-                          ? "translate-x-6"
-                          : "translate-x-0"
-                          }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          editingCategory.isActive
+                            ? "translate-x-6"
+                            : "translate-x-0"
+                        }`}
                       />
                     </button>
                     <span className="text-sm">Active</span>
@@ -976,16 +1034,18 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                         })
                       }
                       type="button"
-                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${editingCategory.isFeatured
-                        ? "bg-yellow-600"
-                        : "bg-gray-300"
-                        }`}
+                      className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors mr-2 ${
+                        editingCategory.isFeatured
+                          ? "bg-yellow-600"
+                          : "bg-gray-300"
+                      }`}
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${editingCategory.isFeatured
-                          ? "translate-x-6"
-                          : "translate-x-0"
-                          }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          editingCategory.isFeatured
+                            ? "translate-x-6"
+                            : "translate-x-0"
+                        }`}
                       />
                     </button>
                     <span className="text-sm">Featured</span>

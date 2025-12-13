@@ -93,25 +93,20 @@ const ProductDetails = () => {
   const normalizeImage = (url) => {
     if (!url) return "/s1.jpeg";
 
-    let clean = url.trim();
+    url = url.trim();
 
-    // Already a full URL (http...)
-    if (clean.startsWith("http")) {
-      // FIX: Replace /uploads → /api/uploads
-      clean = clean.replace("/uploads/", "/api/uploads/");
-      return clean;
+    // Remove leading slashes
+    url = url.replace(/^\/+/, "");
+
+    // If file does not include uploads → add it
+    if (!url.startsWith("uploads/")) {
+      url = "uploads/" + url;
     }
 
-    // Ensure path starts with /api/uploads/
-    clean = clean.replace(/^\/+/, ""); // remove leading slashes
-
-    if (!clean.startsWith("api/uploads/")) {
-      if (clean.startsWith("uploads/")) clean = "api/" + clean;
-      else clean = "api/uploads/" + clean;
-    }
-
+    // Ensure IMG_URL ends with /
     const base = IMG_URL.endsWith("/") ? IMG_URL : IMG_URL + "/";
-    return `${base}${clean}`.replace(/([^:]\/)\/+/g, "$1");
+
+    return base + url;
   };
 
   // Fetch reviews

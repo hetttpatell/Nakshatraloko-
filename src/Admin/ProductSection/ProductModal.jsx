@@ -19,6 +19,7 @@ const IMG_URL = import.meta.env.VITE_IMG_URL;
 const ProductModal = ({
   title,
   initialProduct = {},
+  initialImages = [],
   onClose,
   onSave,
   sizeOptions = [],
@@ -59,10 +60,41 @@ const ProductModal = ({
     return url.startsWith("/") ? url : `/${url}`;
   };
 
-  const sanitizedImages = images.map((img) => ({
-    ...img,
-    imageData: getCleanImagePath(img.imageData),
-  }));
+  const normalizeImages = (imgs = []) => {
+    return imgs
+      .map((img) => {
+        let url = img.image || img.imageData || img.originalUrl || "";
+
+        if (!url) return null;
+
+        // Always extract only filename (last part)
+        let filename = url.split("/").pop();
+
+        // Build correct full URL
+        const cleanUrl = `${IMG_URL}/api/uploads/${filename}`;
+
+        // Detect file type
+        const ext = filename.split(".").pop().toLowerCase();
+        const type = ["mp4", "mov", "webm"].includes(ext)
+          ? "video/mp4"
+          : "image/jpeg";
+
+        return {
+          ...img,
+          imageData: cleanUrl, // Final clean image URL
+          type, // Correct MIME type
+          isExisting: true,
+          originalUrl: `/api/uploads/${filename}`, // This is what backend wants
+        };
+      })
+      .filter(Boolean);
+  };
+
+  useEffect(() => {
+    if (initialImages.length > 0) {
+      setImages(normalizeImages(initialImages));
+    }
+  }, [initialImages]);
 
   useEffect(() => {
     axios
@@ -146,35 +178,44 @@ const ProductModal = ({
       const productImages =
         initialProduct.Images || initialProduct.images || [];
       if (Array.isArray(productImages) && productImages.length > 0) {
-        const formattedImages = productImages
-          .filter((img) => img && typeof img === "object") // remove bad items
-          .map((img) => {
-            let imageUrl = img.imageData || img.imageUrl || "";
+        // const formattedImages = productImages
+        //   .filter((img) => img && typeof img === "object") // remove bad items
+        //   .map((img) => {
+        //     let imageUrl = img.imageData || img.imageUrl || "";
 
-            if (imageUrl) {
-              const uploadsIndex = imageUrl.indexOf("/api/uploads");
-              const uploadsFallback = imageUrl.indexOf("/uploads");
-              const startIndex =
-                uploadsIndex !== -1 ? uploadsIndex : uploadsFallback;
+        //     if (imageUrl) {
+        //       const uploadsIndex = imageUrl.indexOf("/api/uploads");
+        //       const uploadsFallback = imageUrl.indexOf("/uploads");
+        //       const startIndex =
+        //         uploadsIndex !== -1 ? uploadsIndex : uploadsFallback;
 
-              if (startIndex !== -1) {
-                const cleanPath = imageUrl.substring(startIndex);
-                imageUrl = `${IMG_URL}${cleanPath.replace(
-                  /([^:]\/)\/+/g,
-                  "$1"
-                )}`;
-              }
-            }
+        //       if (startIndex !== -1) {
+        //         const cleanPath = imageUrl.substring(startIndex);
+        //         imageUrl = `${IMG_URL}${cleanPath.replace(
+        //           /([^:]\/)\/+/g,
+        //           "$1"
+        //         )}`;
+        //       }
+        //     }
 
-            return {
-              ...img,
-              imageData: imageUrl,
-              isExisting: true,
-              originalUrl: imageUrl,
-              id: img.id || img.ID || null,
-              altText: img.altText || "",
-            };
-          });
+        //     return {
+        //       ...img,
+        //       imageData: imageUrl,
+        //       isExisting: true,
+        //       originalUrl: imageUrl,
+        //       id: img.id || img.ID || null,
+        //       altText: img.altText || "",
+        //     };
+        //   });
+
+        const formattedImages = productImages.map((img) => ({
+          ...img,
+          imageData: img.imageData,
+          type:
+            img.type ||
+            (img.imageData?.endsWith(".mp4") ? "video/mp4" : "image/jpeg"),
+          isExisting: true,
+        }));
 
         setImages(formattedImages);
       } else {
@@ -184,15 +225,17 @@ const ProductModal = ({
   }, [initialProduct]);
 
   const validateFile = (file) => {
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    // const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_FILE_SIZE = 20 * 1024 * 1024; // allow up to 20MB
     const errors = {};
 
     if (file.size > MAX_FILE_SIZE) {
-      errors.fileSize = "File size must be less than 5MB";
+      errors.fileSize = "File size must be less than 20MB";
     }
 
-    if (!file.type.startsWith("image/")) {
-      errors.fileType = "File must be an image";
+    // 🔥 allow images AND videos
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      errors.fileType = "Only images and videos are allowed.";
     }
 
     return errors;
@@ -230,12 +273,11 @@ const ProductModal = ({
     validFiles.forEach((file) => {
       const objectUrl = URL.createObjectURL(file);
       const newImage = {
-        imageData: objectUrl,
-        altText: `${name || "Product"} image`,
-        isPrimary: images.length === 0,
-        isActive: true,
-        file: file,
-        isExisting: false,
+        file, // needed for submission later
+        type: file.type, // 🔥 important for video/image preview
+        imageData: objectUrl, // preview URL
+        altText: file.name, // default
+        isPrimary: newImages.length === 0,
       };
 
       newImageFiles.push(file);
@@ -253,13 +295,14 @@ const ProductModal = ({
     setImages((prev) => {
       const newImages = [...prev];
       newImages.splice(index, 1);
+      const updated = prev.filter((_, i) => i !== index);
 
       // If we removed the primary image and there are other images, set the first one as primary
-      if (prev[index].isPrimary && newImages.length > 0) {
-        newImages[0].isPrimary = true;
+      if (!updated.some((img) => img.isPrimary) && updated.length > 0) {
+        updated[0].isPrimary = true;
       }
 
-      return newImages;
+      return updated;
     });
 
     // Only remove from imageFiles if it's a new file (not an existing image)
@@ -506,7 +549,11 @@ const ProductModal = ({
         // Append new image files
         images.forEach((img) => {
           if (img.file && !img.isExisting) {
-            formData.append("images", img.file);
+            if (img.type.startsWith("video/")) {
+              formData.append("videos", img.file); // send video separately
+            } else {
+              formData.append("images", img.file); // send image
+            }
           }
         });
 
@@ -777,7 +824,7 @@ const ProductModal = ({
                       id="dropzone-file"
                       type="file"
                       className="hidden"
-                      accept="image/*"
+                      accept="image/*,video/*"
                       onChange={handleImageUpload}
                       multiple
                     />
@@ -788,93 +835,117 @@ const ProductModal = ({
                 {images.length > 0 && (
                   <div className="mt-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">
-                      Uploaded Images:
+                      Uploaded Media (Images + Videos):
                     </h4>
+
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {images.map((image, index) => (
-                        <div
-                          key={index}
-                          className={`relative border rounded-lg p-2 ${
-                            image.isPrimary
-                              ? "border-2 border-blue-500"
-                              : "border-gray-200"
-                          }`}
-                        >
-                          <img
-                            src={image.imageData}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-32 object-contain rounded"
-                          />
+                      {images.map((media, index) => {
+                        // Auto-detect type if missing
+                        const ext = media.imageData
+                          ?.split(".")
+                          .pop()
+                          .toLowerCase();
+                        const isVideo =
+                          media.type?.startsWith("video/") ||
+                          ["mp4", "mov", "webm"].includes(ext);
+                        const isImage =
+                          media.type?.startsWith("image/") || !isVideo;
 
-                          {/* Existing image badge */}
-                          {image.isExisting && (
-                            <span className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                              Existing
-                            </span>
-                          )}
+                        return (
+                          <div
+                            key={index}
+                            className={`relative border rounded-lg p-2 ${
+                              media.isPrimary
+                                ? "border-blue-500 border-2"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {/* IMAGE PREVIEW */}
+                            {isImage && (
+                              <img
+                                src={media.imageData}
+                                alt={media.altText || "Image"}
+                                loading="lazy"
+                                className="w-full h-32 object-contain rounded"
+                              />
+                            )}
 
-                          {/* Primary badge */}
-                          {image.isPrimary && (
-                            <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                              Primary
-                            </span>
-                          )}
+                            {/* VIDEO PREVIEW */}
+                            {isVideo && (
+                              <video
+                                src={media.imageData}
+                                controls
+                                className="w-full h-32 object-contain rounded"
+                              ></video>
+                            )}
 
-                          {/* Image controls */}
-                          <div className="absolute top-2 right-2 flex space-x-1">
-                            <button
-                              type="button"
-                              onClick={() => moveImage(index, "up")}
-                              disabled={index === 0}
-                              className="bg-white rounded p-1 shadow-sm disabled:opacity-50"
-                              title="Move up"
-                            >
-                              <FaArrowUp size={12} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => moveImage(index, "down")}
-                              disabled={index === images.length - 1}
-                              className="bg-white rounded p-1 shadow-sm disabled:opacity-50"
-                              title="Move down"
-                            >
-                              <FaArrowDown size={12} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setPrimaryImage(index)}
-                              disabled={image.isPrimary}
-                              className="bg-white rounded p-1 shadow-sm disabled:opacity-50"
-                              title="Set as primary"
-                            >
-                              <span className="text-xs font-bold">P</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeImage(index)}
-                              className="bg-white rounded p-1 shadow-sm"
-                              title="Remove image"
-                            >
-                              <FaTrash size={12} className="text-red-500" />
-                            </button>
-                          </div>
+                            {/* Existing Badge */}
+                            {media.isExisting && (
+                              <span className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                                Existing
+                              </span>
+                            )}
 
-                          {/* Alt text input */}
-                          <div className="mt-2">
+                            {/* Primary Badge */}
+                            {media.isPrimary && (
+                              <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                                Primary
+                              </span>
+                            )}
+
+                            {/* Controls */}
+                            <div className="absolute top-2 right-2 flex gap-1">
+                              <button
+                                type="button"
+                                onClick={() => moveImage(index, "up")}
+                                disabled={index === 0}
+                                className="bg-white p-1 rounded shadow disabled:opacity-50"
+                              >
+                                <FaArrowUp size={10} />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => moveImage(index, "down")}
+                                disabled={index === images.length - 1}
+                                className="bg-white p-1 rounded shadow disabled:opacity-50"
+                              >
+                                <FaArrowDown size={10} />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => setPrimaryImage(index)}
+                                disabled={media.isPrimary}
+                                className="bg-white p-1 rounded shadow disabled:opacity-50"
+                              >
+                                P
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => removeImage(index)}
+                                className="bg-white p-1 rounded shadow"
+                              >
+                                <FaTrash size={10} className="text-red-600" />
+                              </button>
+                            </div>
+
+                            {/* Alt text */}
                             <input
                               type="text"
-                              value={image.altText}
+                              value={media.altText || ""}
                               onChange={(e) => {
-                                const newImages = [...images];
-                                newImages[index].altText = e.target.value;
-                                setImages(newImages);
+                                const updated = [...images];
+                                updated[index].altText = e.target.value;
+                                setImages(updated);
                               }}
-                              placeholder="Image description"
-                              className="w-full text-xs p-1 border border-gray-200 rounded"
+                              placeholder="Description"
+                              className="w-full text-xs mt-2 p-1 border border-gray-200 rounded"
                             />
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
