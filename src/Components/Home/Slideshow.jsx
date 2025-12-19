@@ -37,10 +37,10 @@ export default function HeroSection() {
     } else {  
       // If missing "uploads", prepend it
       if (!imageUrl.startsWith("/uploads/")) {
-        imageUrl = `/uploads${imageUrl}`;
+        imageUrl = `/uploads/${imageUrl}`;
       }
       imageUrl = `${IMG_URL}${imageUrl}`.replace(/([^:]\/)\/+/g, "$1");
-      console.log({imageUrl})
+      // console.log({imageUrl})
     }
 
     return {
@@ -203,7 +203,7 @@ export default function HeroSection() {
               className="w-full h-full object-cover"
               loading="lazy"
               onError={(e) => {
-                console.error("Error loading image:", slides[current].image);
+                // console.error("Error loading image:", slides[current].image);
                 e.target.style.display = 'none';
               }}
             />

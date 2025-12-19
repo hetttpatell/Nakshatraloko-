@@ -90,6 +90,10 @@ const ProductDetails = () => {
   const { protectedCartAction, protectedWishlistAction, isAuthenticated } =
     useProtectedAction();
 
+  const isVideo = (url) => {
+    return /\.(mp4|webm|mov|avi|mkv)$/i.test(url);
+  };
+
   const normalizeImage = (url) => {
     if (!url) return "/s1.jpeg";
 
@@ -614,11 +618,19 @@ const ProductDetails = () => {
                       resetZoom();
                     }}
                   >
-                    <img
-                      src={img.src}
-                      alt={img.alt}
-                      className="w-full h-full object-cover rounded-sm"
-                    />
+                    {isVideo(img.src) ? (
+                      <video
+                        src={img.src}
+                        className="w-full h-full object-cover rounded-sm"
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={img.src}
+                        alt={img.alt}
+                        className="w-full h-full object-cover rounded-sm"
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -632,12 +644,20 @@ const ProductDetails = () => {
                 onMouseMove={handleImageZoom}
                 onMouseLeave={resetZoom}
               >
-                <img
-                  src={mainImage}
-                  alt={product.name}
-                  className="w-full h-full object-cover rounded-lg transition-transform duration-500"
-                  style={zoomStyle}
-                />
+                {isVideo(mainImage) ? (
+                  <video
+                    src={mainImage}
+                    controls
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                ) : (
+                  <img
+                    src={mainImage}
+                    alt={product.name}
+                    className="w-full h-full object-cover rounded-lg transition-transform duration-500"
+                    style={zoomStyle}
+                  />
+                )}
 
                 <div className="absolute bottom-4 right-4 bg-black/70 text-color-surface text-xs px-3 py-2 rounded-full flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <FiZoomIn className="text-sm" />
