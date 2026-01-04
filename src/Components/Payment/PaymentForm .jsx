@@ -497,7 +497,7 @@ const PaymentPage = () => {
         const { data } = await axios.post(
           `${BACKEND_URL}create-razorpay-order`,
           {
-            amount: totalAmount * 100, // convert to paise for Razorpay
+            amount: totalAmount, // convert to paise for Razorpay
           },
           {
             headers: {
