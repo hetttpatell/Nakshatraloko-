@@ -85,6 +85,7 @@ const PaymentPage = () => {
     address: "",
     city: "",
     zip: "",
+    state: "",
     country: "",
     paymentMethod: "upi",
     cardNumber: "",
@@ -427,295 +428,150 @@ const PaymentPage = () => {
     });
   };
 
-  const handlePayment = async () => {
-    setLoading(true);
-    setError("");
+const handlePayment = async () => {
+  setLoading(true);
+  setError("");
 
-    // Basic form validation
-    if (
-      !formData.fullName ||
-      !formData.email ||
-      !formData.address ||
-      !formData.city ||
-      !formData.zip ||
-      !formData.country
-    ) {
-      setError("Please fill in all required shipping details.");
+  // ✅ Only shipping validation (optional but recommended)
+  if (
+    !formData.fullName ||
+    !formData.email ||
+    !formData.address ||
+    !formData.state ||
+    !formData.city ||
+    !formData.zip ||
+    !formData.country
+  ) {
+    setError("Please fill in all required shipping details.");
+    setLoading(false);
+    return;
+  }
+
+  try {
+    // 1️⃣ Load Razorpay script
+    if (typeof window.Razorpay === "undefined") {
+      await loadRazorpayScript();
+    }
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setError("Session expired. Please login again.");
       setLoading(false);
       return;
     }
 
-    if (formData.paymentMethod === "card") {
-      if (
-        !/^\d{16}$/.test(formData.cardNumber) ||
-        !/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.cardExpiry) ||
-        !/^\d{3}$/.test(formData.cardCVC)
-      ) {
-        setError("Please enter valid card details.");
-        setLoading(false);
-        return;
+    // 2️⃣ Decode user
+    const decodedToken = decodeJWT(token);
+    const userId =
+      decodedToken?.id || decodedToken?.userId || decodedToken?.sub;
+
+    // 3️⃣ Create Razorpay Order (BACKEND CALL)
+    const { data } = await axios.post(
+      `${BACKEND_URL}create-razorpay-order`,
+      { amount: totalAmount },
+      {
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json",
+        },
       }
+    );
 
-      // Simulate card processing
-      setTimeout(() => {
-        setLoading(false);
-        proceedToThankYou();
-      }, 1000);
-    } else if (formData.paymentMethod === "upi") {
-      if (!/^[\w.-]+@[a-zA-Z]+$/.test(formData.upiId)) {
-        setError("Please enter a valid UPI ID.");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // ✅ FIRST: Load Razorpay script if not already loaded
-        if (typeof window.Razorpay === "undefined") {
-          console.log("Razorpay not loaded, loading script...");
-          await loadRazorpayScript();
-        }
-
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          setError("Authentication token not found. Please login again.");
-          setLoading(false);
-          return;
-        }
-
-        // Decode the token to get user ID
-        const decodedToken = decodeJWT(token);
-        const userId =
-          decodedToken?.id || decodedToken?.userId || decodedToken?.sub;
-
-        if (!userId) {
-          setError("User information not found in token. Please login again.");
-          setLoading(false);
-          return;
-        }
-
-        // Step 1: Create Razorpay Order
-        const { data } = await axios.post(
-          `${BACKEND_URL}create-razorpay-order`,
-          {
-            amount: totalAmount, // convert to paise for Razorpay
-          },
-          {
-            headers: {
-              Authorization: `${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!data.success) {
-          throw new Error(data.message || "Failed to create payment order");
-        }
-
-        // Prepare order details for verification
-        // In your handlePayment function, update the orderDetails:
-        const orderDetails = {
-          userId: userId,
-          shippingAddress: {
-            fullName: formData.fullName,
-            email: formData.email,
-            address: formData.address,
-            city: formData.city,
-            zip: formData.zip,
-            country: formData.country,
-          },
-          paymentMethod: "upi",
-          orderItems: cartItems.map((item) => ({
-            ProductID: item.id,
-            productId: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image,
-          })),
-          subtotal: subtotalAmount,
-          discount: discount,
-          total: totalAmount,
-          couponId: appliedCoupon?.ID || null,
-          couponCode: appliedCoupon?.Code || appliedCoupon?.code || null,
-        };
-
-        const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-          amount: data.amount,
-          currency: data.currency,
-          order_id: data.orderId,
-          name: "Nakshatraloka",
-          description:
-            "Secure payment for your Nakshatraloka order — curated fashion, lifestyle, and spiritual products delivered with care.",
-          handler: async function (response) {
-            try {
-              // Step 2: Verify Payment on your backend
-              const verifyResponse = await axios.post(
-                `${BACKEND_URL}verify-payment`,
-                {
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  orderDetails: orderDetails,
-                },
-                {
-                  headers: {
-                    Authorization: `${token}`,
-                    "Content-Type": "application/json",
-                  },
-                }
-              );
-
-              if (verifyResponse.data.success) {
-                showToast("Payment Successful!", "success");
-
-                try {
-                  // ✅ Remove all purchased items from cart
-                  for (const item of cartItems) {
-                    await axios.post(
-                      `${BACKEND_URL}saveCart`,
-                      { productId: item.id },
-                      {
-                        headers: {
-                          Authorization: `${token}`,
-                          "Content-Type": "application/json",
-                        },
-                      }
-                    );
-                  }
-
-                  // ✅ Refresh the cart context to update count and UI instantly
-                  await getCart(); // 🔥 This line ensures UI updates without page reload
-                } catch (cartError) {
-                  console.error("Error while clearing cart:", cartError);
-                }
-
-                // ✅ Step 3: Navigate to thank you page with saved order data
-                proceedToThankYou(verifyResponse.data);
-              } else {
-                showToast("Payment verification failed", "error");
-                setError(
-                  "Payment verification failed. Please contact support."
-                );
-              }
-            } catch (verifyError) {
-              console.error("Payment verification error:", verifyError);
-              showToast("Payment verification failed", "error");
-              setError("Payment verification failed. Please contact support.");
-            }
-          },
-          prefill: {
-            name: formData.fullName,
-            email: formData.email,
-          },
-          theme: {
-            color: "#3399cc",
-          },
-          modal: {
-            ondismiss: function () {
-              setLoading(false);
-              showToast("Payment cancelled", "info");
-            },
-          },
-        };
-
-        console.log("Opening Razorpay with options:", options);
-
-        // ✅ DOUBLE CHECK: Ensure Razorpay is available before creating instance
-        if (typeof window.Razorpay === "undefined") {
-          throw new Error(
-            "Payment gateway is not available. Please refresh the page and try again."
-          );
-        }
-
-        const razorpay = new window.Razorpay(options);
-        razorpay.open();
-      } catch (error) {
-        console.error("Payment initiation error:", error);
-        showToast("Payment initiation failed", "error");
-        setError(
-          error.message ||
-            error.response?.data?.message ||
-            "Payment initiation failed"
-        );
-        setLoading(false);
-      }
-    } else if (formData.paymentMethod === "cod") {
-      // For COD, we need to save the order directly
-      try {
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          setError("Authentication token not found. Please login again.");
-          setLoading(false);
-          return;
-        }
-
-        // Decode the token to get user ID for COD as well
-        const decodedToken = decodeJWT(token);
-        const userId =
-          decodedToken?.id || decodedToken?.userId || decodedToken?.sub;
-
-        if (!userId) {
-          setError("User information not found. Please login again.");
-          setLoading(false);
-          return;
-        }
-
-        // Prepare order data for COD
-        const orderData = {
-          shippingAddress: {
-            fullName: formData.fullName,
-            email: formData.email,
-            address: formData.address,
-            city: formData.city,
-            zip: formData.zip,
-            country: formData.country,
-          },
-          paymentMethod: "cod",
-          orderItems: cartItems.map((item) => ({
-            productId: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image,
-          })),
-          orderStatus: "Confirmed",
-          paymentStatus: "Pending",
-          subtotal: subtotalAmount,
-          discount: discount,
-          total: totalAmount, // Add COD charges
-          couponId: appliedCoupon ? appliedCoupon.ID : null,
-        };
-
-        // Save COD order directly
-        const response = await axios.post(
-          `${BACKEND_URL}save-order`,
-          orderData,
-          {
-            headers: {
-              Authorization: `${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response.data.success) {
-          showToast("Order placed successfully!", "success");
-          proceedToThankYou(response.data);
-        } else {
-          throw new Error(response.data.message || "Failed to place order");
-        }
-      } catch (error) {
-        console.error("COD order error:", error);
-        showToast("Failed to place order", "error");
-        setError(error.response?.data?.message || "Failed to place order");
-        setLoading(false);
-      }
-    } else {
-      setError("Please select a valid payment method.");
-      setLoading(false);
+    if (!data.success) {
+      throw new Error("Failed to create Razorpay order");
     }
-  };
+
+    // 4️⃣ Order details (for verification + DB save)
+    const orderDetails = {
+      userId,
+      shippingAddress: {
+        fullName: formData.fullName,
+        email: formData.email,
+        address: formData.address,
+        city: formData.city,
+        zip: formData.zip,
+        country: formData.country,
+      },
+      orderItems: cartItems.map((item) => ({
+        productId: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+      })),
+      subtotal: subtotalAmount,
+      discount,
+      total: totalAmount,
+      couponCode: appliedCoupon?.code || null,
+    };
+
+    // 5️⃣ Razorpay Checkout
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: data.amount,
+      currency: data.currency,
+      order_id: data.orderId,
+      name: "Nakshatraloka",
+      description: "Order Payment",
+      prefill: {
+        name: formData.fullName,
+        email: formData.email,
+      },
+      handler: async (response) => {
+        // 6️⃣ Verify payment (BACKEND CALL)
+        const verifyResponse = await axios.post(
+          `${BACKEND_URL}verify-payment`,
+          {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            orderDetails,
+          },
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (verifyResponse.data.success) {
+          showToast("Payment Successful!", "success");
+
+          // Clear cart
+          for (const item of cartItems) {
+            await axios.post(
+              `${BACKEND_URL}saveCart`,
+              { productId: item.id },
+              { headers: { Authorization: token } }
+            );
+          }
+
+          await getCart();
+          proceedToThankYou(verifyResponse.data);
+        } else {
+          setError("Payment verification failed.");
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          setLoading(false);
+          showToast("Payment cancelled", "info");
+        },
+      },
+      theme: {
+        color: "#3399cc",
+      },
+    };
+
+    new window.Razorpay(options).open();
+  } catch (err) {
+    console.error(err);
+    setError("Payment failed. Please try again.");
+    setLoading(false);
+  }
+};
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1129,6 +985,13 @@ const PaymentPage = () => {
                     required
                   />
                   <UnderlineInput
+                    label="State"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                    required
+                  />
+                  <UnderlineInput
                     label="Country"
                     name="country"
                     value={formData.country}
@@ -1138,7 +1001,7 @@ const PaymentPage = () => {
                 </div>
 
                 {/* Payment Method */}
-                <h3 className="text-xl font-medium mb-5 text-[var(--color-text)] tracking-wide">
+                {/* <h3 className="text-xl font-medium mb-5 text-[var(--color-text)] tracking-wide">
                   Payment Method
                 </h3>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-6">
@@ -1174,10 +1037,10 @@ const PaymentPage = () => {
                       {label}
                     </motion.button>
                   ))}
-                </div>
+                </div> */}
 
                 {/* Payment Fields */}
-                <AnimatePresence mode="wait" initial={false}>
+                {/* <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={formData.paymentMethod}
                     initial={{ opacity: 0, y: 18 }}
@@ -1239,7 +1102,7 @@ const PaymentPage = () => {
                       </div>
                     )}
                   </motion.div>
-                </AnimatePresence>
+                </AnimatePresence> */}
               </div>
 
               {/* Error message */}
