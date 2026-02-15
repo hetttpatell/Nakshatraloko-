@@ -41,8 +41,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     isShown: true,
     isActive: true,
     isFeatured: false,
-    image: "",
-    active_product_count: 0,
   });
   const [toasts, setToasts] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -58,6 +56,13 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const { refreshProducts } = useProductManagement();
+
+  useEffect(() => {
+    if (editingCategory?.image) {
+      setImagePreview(editingCategory.image);
+      setImageFile(null);
+    }
+  }, [editingCategory]);
 
   // Handle responsive behavior
   useEffect(() => {
@@ -92,8 +97,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
       isShown: true,
       isActive: true,
       isFeatured: false,
-      image: "",
-      active_product_count: 0,
     });
     setImageFile(null);
     setImagePreview("");
@@ -106,14 +109,21 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     const token = localStorage.getItem("authToken");
     const formData = new FormData();
 
-    // Append all category data except image fields & derived fields
-    Object.keys(categoryData).forEach((key) => {
-      if (key !== "image" && key !== "active_product_count") {
-        formData.append(key, categoryData[key]);
-      }
-    });
+    // Explicitly append fields (SAFE & CLEAR)
+    formData.append("name", categoryData.name || "");
+    formData.append("description", categoryData.description || "");
+    formData.append("isShown", categoryData.isShown);
+    formData.append("isActive", categoryData.isActive);
+    formData.append("isFeatured", categoryData.isFeatured);
 
-    if (imageFile) formData.append("images", imageFile);
+    // Append ID for edit
+    if (categoryData.id) {
+      formData.append("id", categoryData.id);
+    }
+
+    if (imageFile) {
+      formData.append("images", imageFile);
+    }
 
     const response = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
       headers: {
@@ -176,17 +186,15 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
   // Image upload handler
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-        if (isAdding) setNewCategory({ ...newCategory, image: reader.result });
-        else if (editingCategory)
-          setEditingCategory({ ...editingCategory, image: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    setImageFile(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Add new category
@@ -263,20 +271,23 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
           `${BACKEND_URL}getCatogaryById/${editingCategory.id}`
         );
 
-        
-        if (updatedResponse.data.success) {
-          const updatedCategory = updatedResponse.data.data;
+        const raw = updatedResponse.data.data;
 
-          // Fix image path
-          updatedCategory.image = getImageUrl(updatedCategory.Image);
-
-          // 3️⃣ Replace local category with fully updated backend category
-          setCategories((prev) =>
-            prev.map((cat) =>
-              cat.id === editingCategory.id ? updatedCategory : cat
-            )
-          );
-        }
+        const updatedCategory = {
+          id: raw._id || raw.id || raw.ID,
+          name: raw.name || raw.Name || "",
+          description: raw.description || raw.Description || "",
+          isActive: raw.isActive ?? raw.IsActive ?? true,
+          isFeatured: raw.isFeatured ?? raw.IsFeatured ?? false,
+          isShown: raw.isShown ?? raw.IsShown ?? true,
+          active_product_count: raw.active_product_count ?? 0,
+          image: getImageUrl(raw.Image),
+        };
+        setCategories((prev) =>
+          prev.map((cat) =>
+            cat.id === editingCategory.id ? updatedCategory : cat
+          )
+        );
 
         // Cleanup
         setEditingCategory(null);
@@ -486,7 +497,11 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button
-              onClick={() => setEditingCategory({ ...category })}
+              onClick={() => {
+                setEditingCategory({ ...category });
+                setImagePreview(category.image || "");
+                setImageFile(null); //
+              }}
               className="flex items-center justify-center py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
             >
               <FaEdit />
@@ -652,7 +667,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                         onClick={() => {
                           setImagePreview("");
                           setImageFile(null);
-                          setNewCategory({ ...newCategory, image: "" });
                         }}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
                       >
@@ -852,7 +866,11 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                           {category.isActive ? <FaCheck /> : <FaTimes />}
                         </button>
                         <button
-                          onClick={() => setEditingCategory({ ...category })}
+                          onClick={() => {
+                            setEditingCategory({ ...category });
+                            setImagePreview(category.image || "");
+                            setImageFile(null);
+                          }}
                           className="p-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-lg transition-colors"
                           title="Edit"
                         >
@@ -975,28 +993,41 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
                     Category Image
                   </label>
                   <div className="flex items-center gap-2">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">Click to upload</p>
+                    {!imagePreview ? (
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-500">
+                            Click to upload
+                          </p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    ) : (
+                      <div className="relative w-fit">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-24 h-24 object-cover rounded-lg border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImagePreview("");
+                            setImageFile(null);
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                        >
+                          <FaTimes className="text-xs" />
+                        </button>
                       </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                    </label>
+                    )}
                   </div>
-                  {imagePreview && (
-                    <div className="mt-2">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-20 h-20 object-cover rounded"
-                      />
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-6">

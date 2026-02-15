@@ -1,4 +1,3 @@
-// components/StatsOverview.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -10,28 +9,32 @@ import {
   FaDollarSign,
 } from "react-icons/fa";
 
-const StatsOverview = ({ isMobile }) => {
-  const [stats, setStats] = useState(null);
+const StatsOverview = ({
+  stats,
+  setStats,
+  setSalesData,
+  setPieData,
+  onNavigate,
+}) => {
   const [loading, setLoading] = useState(true);
-
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-  // Fetch dashboard stats
   useEffect(() => {
-    let token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("authToken");
 
     axios
       .post(
         `${BACKEND_URL}admin/dashboardStats`,
         {},
-        {
-          headers: {
-            Authorization: token,
-          },
-        }
+        { headers: { Authorization: token } }
       )
       .then((res) => {
-        setStats(res.data);
+        const dashboard = res.data.get_admin_dashboard_stats;
+
+        setStats(dashboard.stats);
+        setSalesData(dashboard.sales_overview || []);
+        setPieData(dashboard.top_products || []);
+
         setLoading(false);
       })
       .catch((err) => {
@@ -44,31 +47,35 @@ const StatsOverview = ({ isMobile }) => {
     return <p className="text-center text-gray-500">Loading dashboard...</p>;
   }
 
+  const formatNumber = (value) =>
+    value != null ? value.toLocaleString() : "0";
+
   const overviewData = [
     {
       title: "Total Sales",
-      value: stats.total_sales,
+      value: formatNumber(stats.total_sales),
       icon: <FaShoppingCart className="text-blue-500" />,
       isPositive: true,
       change: "+12%",
     },
     {
       title: "Active Users",
-      value: stats.active_users,
+      value: formatNumber(stats.active_users),
       icon: <FaUsers className="text-green-500" />,
       isPositive: true,
       change: "+8%",
     },
     {
       title: "Pending Orders",
-      value: stats.pending_orders,
+      value: formatNumber(stats.pending_orders),
       icon: <FaClock className="text-yellow-500" />,
       isPositive: false,
       change: "-3%",
+      onClick: () => onNavigate("Orders"),
     },
     {
       title: "Revenue",
-      value: stats.total_revenue,
+      value: `₹${formatNumber(stats.total_revenue)}`,
       icon: <FaDollarSign className="text-purple-500" />,
       isPositive: true,
       change: "+15%",

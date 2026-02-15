@@ -13,7 +13,7 @@ import {
   BarChart,
   Bar,
   CartesianGrid,
-  Legend
+  Legend,
 } from "recharts";
 import {
   FaBell,
@@ -30,7 +30,7 @@ import {
   FaEye,
   FaEdit,
   FaTrash,
-  FaTimes
+  FaTimes,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
@@ -45,9 +45,7 @@ import CategoriesAdmin from "./CatagoryAdmin/CategoriesAdmin";
 import Coupons from "./Coupons/Coupons";
 import Consultancy from "./Consultancy/Consultancy";
 import Reviews from "./Reviews/Reviews";
-
-// API utility
-import api from "../Utils/api";
+import Dashboard from "./Dashboard";
 
 const Admin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -62,58 +60,58 @@ const Admin = () => {
   }, []);
 
   const checkAuthentication = () => {
-  const token = localStorage.getItem("authToken");
-  const userData = localStorage.getItem("user");
-  
-  // console.log('Token exists:', !!token);
-  // console.log('User data in localStorage:', userData);
-  
-  if (!token) {
-    navigate("/");
-    return;
-  }
-  
-  try {
-    let parsedUser = userData ? JSON.parse(userData) : {};
-    // console.log('Parsed user from localStorage:', parsedUser);
-    
-    // Fallback: extract user info from token if user data is missing
-    if (Object.keys(parsedUser).length === 0) {
-      // console.log('No user data in localStorage, extracting from token...');
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        // console.log('Token payload:', payload);
-        parsedUser = {
-          id: payload.id,
-          email: payload.email,
-          role: payload.role,
-          fullname: payload.fullname || payload.email
-        };
-        localStorage.setItem('user', JSON.stringify(parsedUser));
-        // console.log('User data saved to localStorage:', parsedUser);
-      } catch (tokenError) {
-        // console.error('Error parsing token:', tokenError);
-      }
-    }
-    
-    setUser(parsedUser);
-    
-    // Check if user is admin (case-insensitive)
-    const userRole = parsedUser.role?.toLowerCase();
-    // console.log('User role:', userRole);
-    
-    if (userRole !== 'admin') {
-      // console.log('User is not admin, redirecting...');
+    const token = localStorage.getItem("authToken");
+    const userData = localStorage.getItem("user");
+
+    // console.log('Token exists:', !!token);
+    // console.log('User data in localStorage:', userData);
+
+    if (!token) {
       navigate("/");
       return;
     }
-    
-    // console.log('Admin access granted!');
-  } catch (error) {
-    // console.error("Error in authentication check:", error);
-    navigate("/");
-  }
-};
+
+    try {
+      let parsedUser = userData ? JSON.parse(userData) : {};
+      // console.log('Parsed user from localStorage:', parsedUser);
+
+      // Fallback: extract user info from token if user data is missing
+      if (Object.keys(parsedUser).length === 0) {
+        // console.log('No user data in localStorage, extracting from token...');
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          // console.log('Token payload:', payload);
+          parsedUser = {
+            id: payload.id,
+            email: payload.email,
+            role: payload.role,
+            fullname: payload.fullname || payload.email,
+          };
+          localStorage.setItem("user", JSON.stringify(parsedUser));
+          // console.log('User data saved to localStorage:', parsedUser);
+        } catch (tokenError) {
+          // console.error('Error parsing token:', tokenError);
+        }
+      }
+
+      setUser(parsedUser);
+
+      // Check if user is admin (case-insensitive)
+      const userRole = parsedUser.role?.toLowerCase();
+      // console.log('User role:', userRole);
+
+      if (userRole !== "admin") {
+        // console.log('User is not admin, redirecting...');
+        navigate("/");
+        return;
+      }
+
+      // console.log('Admin access granted!');
+    } catch (error) {
+      // console.error("Error in authentication check:", error);
+      navigate("/");
+    }
+  };
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
@@ -136,8 +134,8 @@ const Admin = () => {
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [sidebarOpen]);
 
   // Close sidebar when a menu item is clicked on mobile
@@ -164,11 +162,17 @@ const Admin = () => {
       )}
 
       {/* Sidebar */}
-      <div className={`
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-        ${isMobile ? 'fixed inset-y-0 left-0 z-30 w-64 transform transition duration-300 ease-in-out' : 'relative'} 
+      <div
+        className={`
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+        ${
+          isMobile
+            ? "fixed inset-y-0 left-0 z-30 w-64 transform transition duration-300 ease-in-out"
+            : "relative"
+        } 
         flex-shrink-0 z-40
-      `}>
+      `}
+      >
         <Sidebar
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
@@ -194,7 +198,9 @@ const Admin = () => {
               </button>
 
               {/* Page title */}
-              <h1 className="text-xl font-semibold text-gray-800">{activePage}</h1>
+              <h1 className="text-xl font-semibold text-gray-800">
+                {activePage}
+              </h1>
             </div>
 
             {/* Right side header content (notifications, user profile, etc.) */}
@@ -209,7 +215,7 @@ const Admin = () => {
                   <FaUserCircle className="h-5 w-5 text-gray-600" />
                 </div>
                 <span className="hidden md:block text-sm font-medium text-gray-700">
-                  {user ? user.fullname || user.email : 'Admin User'}
+                  {user ? user.fullname || user.email : "Admin User"}
                 </span>
               </div>
 
@@ -229,40 +235,24 @@ const Admin = () => {
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {activePage === "Dashboard" && (
             <>
-              {/* Overview Widgets */}
-              <StatsOverview isMobile={isMobile} />
-
-              {/* Charts */}
-              <ChartsSection isMobile={isMobile} />
-
-              {/* Recent Orders Table */}
+              <Dashboard isMobile={isMobile} onNavigate={(page) => setActivePage(page)}/>
               <RecentOrders isMobile={isMobile} />
             </>
           )}
 
-          {activePage === "Orders" && (
-            <OrdersManagement isMobile={isMobile} />
-          )}
+          {activePage === "Orders" && <OrdersManagement isMobile={isMobile} />}
 
-          {activePage === "Products" && (
-            <ProductAdmin isMobile={isMobile} />
-          )}
+          {activePage === "Products" && <ProductAdmin isMobile={isMobile} />}
 
           {activePage === "Catagories" && (
             <CategoriesAdmin isMobile={isMobile} />
           )}
 
-          {activePage === "Coupons" && (
-            <Coupons isMobile={isMobile} />
-          )}
+          {activePage === "Coupons" && <Coupons isMobile={isMobile} />}
 
-          {activePage === "Consultancy" && (
-            <Consultancy isMobile={isMobile} />
-          )}
-         
-          {activePage === "Reviews" && (
-            <Reviews isMobile={isMobile} />
-          )}
+          {activePage === "Consultancy" && <Consultancy isMobile={isMobile} />}
+
+          {activePage === "Reviews" && <Reviews isMobile={isMobile} />}
 
           {activePage === "Settings" && (
             <div className="bg-white rounded-lg shadow p-4 md:p-6">
