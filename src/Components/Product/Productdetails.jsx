@@ -20,6 +20,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import { useProtectedAction } from "../../CustomHooks/useProductAction";
+import SEO from "../SEO/SEO";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const IMG_URL = import.meta.env.VITE_IMG_URL;
@@ -580,8 +581,40 @@ const ProductDetails = () => {
     return date.toLocaleDateString();
   };
 
+  // Build SEO data from product
+  const productSchema = product ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.images?.[0]?.src || "",
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "INR",
+      price: getAdjustedPrice(),
+      availability: "https://schema.org/InStock"
+    },
+    aggregateRating: product.rating ? {
+      "@type": "AggregateRating",
+      ratingValue: product.rating,
+      bestRating: "5",
+      worstRating: "1",
+      ratingCount: product.reviews || 1
+    } : null
+  } : null;
+
   return (
-    <div className="bg-color-background min-h-screen">
+    <>
+      <SEO 
+        title={`${product?.name || 'Product'} - Naksatraloka | Buy Authentic Rudraksha & Spiritual Products`}
+        description={product?.description?.slice(0, 160) || `Buy authentic ${product?.name || 'spiritual products'} at Naksatraloka. Best quality Rudraksha, gemstones, and spiritual products with free shipping.`}
+        keywords={`${product?.name || 'Rudraksha'}, spiritual products, gemstone, buy ${product?.name || 'spiritual products'} online, authentic rudraksha, astrology products`}
+        url={`/product/${id}`}
+        type="product"
+        image={product?.images?.[0]?.src}
+        schema={productSchema}
+      />
+      <div className="bg-color-background min-h-screen">
       <div className="w-full max-w-[1400px] mx-auto px-5 md:px-12 py-10">
         {/* Breadcrumb */}
         <nav className="text-sm text-color-text-muted mb-6 flex items-center">
@@ -1393,6 +1426,7 @@ const ProductDetails = () => {
         />
       )}
     </div>
+    </>
   );
 };
 

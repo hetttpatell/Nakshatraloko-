@@ -8,63 +8,63 @@ const femaleImg = "https://www.w3schools.com/howto/img_avatar2.png";
 const reviews = [
   {
     id: 1,
-    name: "Dayal Singh Solanki",
-    title: "CEO, Company X",
-    description: "I am thoroughly impressed with the exceptional service provided by Brand Expert. Their attention to detail and professionalism exceeded my expectations. The team delivered our project ahead of schedule with outstanding quality that has significantly improved our brand perception.",
+    name: "Rajesh Kumar Sharma",
+    title: "Spiritual Seeker",
+    description: "After wearing the 7 Mukhi Rudraksha from Nakshatraloka, I've experienced a remarkable sense of calm and clarity in my daily life. The authenticity of their Rudraksha is truly unmatched. Highly recommended for anyone seeking spiritual growth.",
     img: maleImg,
     stars: 5,
-    date: "January 15, 2023",
-    category: "Brand Design"
+    date: "December 15, 2024",
+    category: "7 Mukhi Rudraksha"
   },
   {
     id: 2,
-    name: "Priya Patel",
-    title: "Marketing Director",
-    description: "Working with this team transformed our digital presence. Their strategic approach to our rebranding resulted in a 40% increase in customer engagement. I would recommend them to any business looking to elevate their brand.",
+    name: "Priya Venkatesh",
+    title: "Yoga Instructor",
+    description: "The guidance I received from Nakshatraloka's experts helped me choose the perfect Rudraksha for my meditation practice. I feel more centered and connected than ever before. Thank you for your authentic products and genuine guidance.",
     img: femaleImg,
     stars: 5,
-    date: "March 22, 2023",
-    category: "Digital Marketing"
+    date: "November 28, 2024",
+    category: "Spiritual Consultation"
   },
   {
     id: 3,
-    name: "Sudhakar_33",
-    title: "Company Manager",
-    description: "Great and awesome work. Really I was worried because I couldn't trust anyone online, but they delivered beyond what I imagined possible. The communication was excellent throughout the process.",
+    name: "Anand Mishra",
+    title: "Business Professional",
+    description: "I was initially skeptical about online spiritual products, but Nakshatraloka exceeded all my expectations. The 5 Mukhi Rudraksha I purchased is genuine and powerful. I've noticed significant positive changes in my professional life since wearing it.",
     img: maleImg,
     stars: 5,
-    date: "April 5, 2023",
-    category: "Web Development"
+    date: "November 10, 2024",
+    category: "5 Mukhi Rudraksha"
   },
   {
     id: 4,
-    name: "Ajay Sharma",
-    title: "Brand Designer",
-    description: "ब्रांड एक्सपर्ट लोगोस डिज़ाइनर जैसे नाम से ही ब्रांड क्वालिटी शब्द का उच्चारण होता है. उनका काम वाकई में प्रशंसनीय है. मैं निश्चित रूप से फिर से उनके साथ काम करूंगा।",
-    img: maleImg,
+    name: "Smt. Lakshmi Narayanan",
+    title: "Homemaker & Spiritual Enthusiast",
+    description: "नक्षत्रलोका से खरीदी गई रुद्राक्ष बहुत प्रामाणिक है। मैंने अपने पति के लिए 9 मुखी रुद्राक्ष ली थी और उनकी सेहत में सुधार देखा है। धन्यवाद नक्षत्रलोका आपकी प्रामाणिकता के लिए।",
+    img: femaleImg,
     stars: 5,
-    date: "May 18, 2023",
-    category: "Logo Design"
+    date: "October 22, 2024",
+    category: "9 Mukhi Rudraksha"
   },
   {
     id: 5,
-    name: "Laxman Lokare",
-    title: "Product Manager",
-    description: "They are very prompt and responsive. It has been extremely smooth working with them. The final deliverables were exactly what we needed for our product launch and helped us exceed our Q3 targets.",
+    name: "Dr. Suresh Reddy",
+    title: "Healthcare Professional",
+    description: "As a doctor, I appreciate the authenticity and quality of Nakshatraloka's products. Their Gemstone consultation helped me find the right Pukhraj for my astrological chart. The positive energy in my home has increased significantly.",
     img: maleImg,
     stars: 5,
-    date: "June 30, 2023",
-    category: "Product Strategy"
+    date: "October 5, 2024",
+    category: "Yellow Sapphire (Pukhraj)"
   },
   {
     id: 6,
-    name: "Ananya Desai",
-    title: "Creative Director",
-    description: "The creativity and innovation brought to our project was remarkable. They understood our vision perfectly and executed it with precision. Our new brand identity has received countless compliments.",
+    name: "Meera Iyer",
+    title: "Spiritual Guide",
+    description: "I've recommended Nakshatraloka to many of my students seeking spiritual enlightenment. Their Rudraksha beads are authentic and sourced ethically. The transformative power of genuine Rudraksha is truly remarkable.",
     img: femaleImg,
     stars: 5,
-    date: "August 12, 2023",
-    category: "Creative Direction"
+    date: "September 18, 2024",
+    category: "Rudraksha Mala"
   }
 ];
 
@@ -112,7 +112,7 @@ const ModernTestimonialsCarousel = () => {
           text: review.description,
           url: window.location.href,
         });
-      } catch (error) {
+      } catch {
         // console.log('Error sharing:', error);
       }
     } else {
@@ -166,7 +166,7 @@ const ModernTestimonialsCarousel = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-[var(--color-text-light)] text-lg max-w-2xl mx-auto"
           >
-            Discover why customers trust us with their jewelry needs
+            Discover why thousands trust Nakshatraloka for authentic Rudraksha and spiritual wellness
           </motion.p>
 
           {/* View Toggle */}

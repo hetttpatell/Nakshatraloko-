@@ -9,20 +9,29 @@ import ConsultationForm from "./HelpingForm";
 import ExpertCall from "./ExpertCall";
 import axios from "axios";
 import CouponsBanner from "../Coupons/CouponsBanner";
+import SEO from "../SEO/SEO";
 
 export default function Home() {
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)]">
-      <CouponsBanner />
-      <HeroSection />
-      <ValueProposition />
-      <FeaturedProducts />
-      <BrandStory />
-      <Collections />
-      <Testimonials />
-      <ConsultationForm />
-      <ExpertCall />
-    </div>
+    <>
+      <SEO 
+        title="Naksatraloka - Authentic Rudraksha & Spiritual Products | Best Online Store"
+        description="Naksatraloka offers authentic Rudraksha, spiritual products, gemstones, and astrology solutions. Explore our divine collection of rudraksha beads, mala, gemstones, and spiritual jewelry with free shipping across India."
+        keywords="Rudraksha, spiritual products, gemstones, astrology, rudraksha mala, healing beads, spiritual jewelry, gemstone jewelry, rudraksha beads, online spiritual store India"
+        url="/"
+      />
+      <div className="min-h-screen bg-[var(--color-background)]">
+        <CouponsBanner />
+        <HeroSection />
+        <ValueProposition />
+        <FeaturedProducts />
+        <BrandStory />
+        <Collections />
+        <Testimonials />
+        <ConsultationForm />
+        <ExpertCall />
+      </div>
+    </>
   );
 }

@@ -164,6 +164,7 @@ export const useProductManagement = () => {
           Advantages: product.advantages,
           HowToWear: product.howToWear,
           IsActive: product.isActive,
+          productRatings: product.productRatings,
           sizes: product.sizes || [],
           images: (product.images || []).map(img => ({
             ...img,

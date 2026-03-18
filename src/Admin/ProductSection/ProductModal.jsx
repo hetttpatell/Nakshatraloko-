@@ -8,7 +8,6 @@ import {
   FaTrash,
   FaPlus,
   FaMinus,
-  FaSync,
   FaStar,
 } from "react-icons/fa";
 import jwtDecode from "../../CustomHooks/jwtUtils";
@@ -775,13 +774,13 @@ const ProductModal = ({
                   value={rating}
                   onChange={handleRatingInputChange}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
-                  placeholder="Enter rating (0-5)"
+                  placeholder="Enter rating"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                {/* <p className="text-xs text-gray-500 mt-1">
                   Click stars or enter a value between 0 and 5 (decimals
                   allowed)
-                </p>
+                </p> */}
               </div>
 
               {/* Image Upload */}

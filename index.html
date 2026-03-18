@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
 
@@ -7,40 +9,122 @@
     rel="stylesheet"
   />
 
-  <!-- Favicon (Logo for Google search) -->
+  <!-- Favicon -->
   <link rel="icon" type="image/png" href="/Logo.png" />
+  <link rel="apple-touch-icon" href="/Logo.png" />
 
   <!-- Viewport -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- SEO TITLE -->
+  <!-- SEO - Primary Meta Tags -->
   <title>Naksatraloka - Authentic Rudraksha & Spiritual Products</title>
-
-  <!-- SEO DESCRIPTION (VERY IMPORTANT) -->
+  <meta name="title" content="Naksatraloka - Authentic Rudraksha & Spiritual Products" />
+  
+  <!-- SEO DESCRIPTION -->
   <meta
     name="description"
-    content="Naksatraloka offers authentic Rudraksha, spiritual products, and astrology solutions. Explore divine energy products online."
+    content="Naksatraloka offers authentic Rudraksha, spiritual products, gemstones, and astrology solutions. Explore divine energy products online with free shipping."
   />
 
-  <!-- Open Graph (helps Google + social preview) -->
-  <meta property="og:title" content="Naksatraloka" />
-  <meta
-    property="og:description"
-    content="Authentic Rudraksha and spiritual products from Naksatraloka."
-  />
-  <meta property="og:image" content="https://naksatraloka.com/Logo.png" />
+  <!-- Keywords -->
+  <meta name="keywords" content="Rudraksha, spiritual products, gemstones, astrology, healing beads, rudraksha mala, spiritual jewelry, gemstone jewelry, online spiritual store" />
+
+  <!-- Author -->
+  <meta name="author" content="Naksatraloka" />
+
+  <!-- Robots -->
+  <meta name="robots" content="index, follow" />
+  <meta name="googlebot" content="index, follow" />
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://naksatraloka.com/" />
+
+  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://naksatraloka.com/" />
+  <meta property="og:title" content="Naksatraloka - Authentic Rudraksha & Spiritual Products" />
+  <meta property="og:description" content="Naksatraloka offers authentic Rudraksha, spiritual products, and astrology solutions. Explore divine energy products online." />
+  <meta property="og:image" content="https://naksatraloka.com/Logo.png" />
+  <meta property="og:site_name" content="Naksatraloka" />
+  <meta property="og:locale" content="en_IN" />
 
-  <!-- Logo Schema (helps show logo in search) -->
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://naksatraloka.com/" />
+  <meta property="twitter:title" content="Naksatraloka - Authentic Rudraksha & Spiritual Products" />
+  <meta property="twitter:description" content="Naksatraloka offers authentic Rudraksha, spiritual products, and astrology solutions. Explore divine energy products online." />
+  <meta property="twitter:image" content="https://naksatraloka.com/Logo.png" />
+
+  <!-- Language -->
+  <meta http-equiv="content-language" content="en-IN" />
+
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#B8860B" />
+
+  <!-- Geographic -->
+  <meta name="geo.region" content="IN" />
+  <meta name="geo.placename" content="India" />
+
+  <!-- Rating -->
+  <meta name="rating" content="General" />
+
+  <!-- Distribution -->
+  <meta name="distribution" content="Global" />
+
+  <!-- Organization Schema -->
   <script type="application/ld+json">
   {
-    "@type": "Corporation",
+    "@context": "https://schema.org",
+    "@type": "Organization",
     "name": "Naksatraloka",
     "url": "https://naksatraloka.com",
-    "logo": "https://naksatraloka.com/Logo.png"
+    "logo": "https://naksatraloka.com/Logo.png",
+    "description": "Naksatraloka offers authentic Rudraksha, spiritual products, gemstones, and astrology solutions.",
+    "sameAs": [
+      "https://www.facebook.com/naksatraloka",
+      "https://www.instagram.com/naksatraloka",
+      "https://twitter.com/naksatraloka"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+91-XXXXXXXXXX",
+      "contactType": "customer service",
+      "availableLanguage": ["English", "Hindi"]
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "IN",
+      "addressRegion": "India"
+    }
+  }
+  </script>
+
+  <!-- Website Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Naksatraloka",
+    "url": "https://naksatraloka.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://naksatraloka.com/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
   }
   </script>
 
   <!-- Razorpay -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+  <!-- Preconnect to external domains -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 </head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
