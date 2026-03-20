@@ -7,6 +7,7 @@ import LoginSignup from "../Components/Login/Login";
 import logo from "/Logo.png";
 import axios from "axios";
 import { useProtectedAction } from "../CustomHooks/useProductAction"
+import { useAuthModal } from "../Context/AuthContext";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 // ---------- MENU DATA ---------- 
@@ -110,7 +111,6 @@ const NavItem = ({ item, location, isMobile, closeMenu, navRef, onItemHover, cat
   const itemRef = useRef(null);
   const clickTimeoutRef = useRef(null);
   const leaveTimeoutRef = useRef(null);
-
   const handleMouseEnter = () => {
     // Clear any pending leave timeout
     if (leaveTimeoutRef.current) {
@@ -291,7 +291,7 @@ const UserMenuIcon = ({
 // ---------- MAIN HEADER ----------
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
+  // const [showLogin, setShowLogin] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [hoverUnderlineStyle, setHoverUnderlineStyle] = useState({});
@@ -313,6 +313,7 @@ export default function Header() {
   const { wishlist, setWishlist, fetchWishlist } = useWishlist();
   const { protectedCartAction, protectedWishlistAction } = useProtectedAction();
   const location = useLocation();
+  const { openLoginModal } = useAuthModal();
 
   // Enhanced cart count calculation with proper fallback
   const cartCount = cart?.reduce((sum, item) => {
@@ -480,12 +481,7 @@ export default function Header() {
 
     // Check on component mount
     checkLoginState();
-
-    // Check when login modal closes
-    if (!showLogin) {
-      checkLoginState();
-    }
-  }, [showLogin, fetchCart, fetchWishlist]);
+  }, [fetchCart, fetchWishlist]);
 
 
   const handleLogout = () => {
@@ -519,7 +515,6 @@ export default function Header() {
         // console.error("Error processing login success:", error);
       }
     }
-    setShowLogin(false);
   };
 
   // Handle scroll effect
@@ -754,9 +749,7 @@ export default function Header() {
                       ? fetchWishlist
                       : undefined
                   }
-                  requireAuth={item.to === "/cart" ? protectedCartAction :
-                    item.to === "/wishlist" ? protectedWishlistAction :
-                      undefined}
+                requireAuth={{protectedCartAction,protectedWishlistAction}}
                 />
               ))}
 
@@ -779,7 +772,7 @@ export default function Header() {
                 </button>
               ) : (
                 <button
-                  onClick={() => setShowLogin(true)}
+                  onClick={openLoginModal}
                   className="p-3 rounded-xl transition-all duration-300 ease-out text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md"
                 >
                   Login
@@ -842,7 +835,7 @@ export default function Header() {
                 ) : (
                   <button
                     onClick={() => {
-                      setShowLogin(true);
+                      openLoginModal();
                       closeMenu();
                     }}
                     className="flex-1 p-3 rounded-xl transition-all duration-300 ease-out text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md flex items-center justify-center"
@@ -930,13 +923,6 @@ export default function Header() {
         )}
       </header>
 
-      {/* Login/Signup Modal */}
-      {showLogin && (
-        <LoginSignup
-          onClose={() => setShowLogin(false)}
-          onLoginSuccess={handleLoginSuccess}
-        />
-      )}
 
       {/* Spacer to prevent content from being hidden behind fixed header */}
       <div className={`h-24 transition-all duration-500 ease-out ${scrolled ? "h-20" : "h-24"}`}></div>

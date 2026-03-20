@@ -36,6 +36,7 @@ import Admin from "./Admin/Admin.jsx";
 import ProtectedRoute from "./Components/ProtectedRoute.jsx";
 import ProductsPage from "./Components/Gemstones/Gemstones.jsx";
 import AboutSection from "./Components/Home/AboutSection.jsx";
+
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
@@ -77,14 +78,14 @@ const router = createBrowserRouter(
 
       <Route path="payment/:id" element={<PaymentForm />} />
       <Route path="thankyou" element={<ThankYouPage />} />
-    </Route>
-  )
+    </Route>,
+  ),
 );
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <HelmetProvider>
-      <RouterProvider router={router} />
+        <RouterProvider router={router} />
     </HelmetProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
