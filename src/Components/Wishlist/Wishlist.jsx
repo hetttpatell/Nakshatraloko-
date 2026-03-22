@@ -487,7 +487,7 @@ export default function Wishlist() {
                 wishlist.
               </p>
               <Link
-                to="/gemstones"
+                to="/products"
                 className="px-8 py-3 bg-[var(--color-primary)] text-white font-medium rounded-full hover:bg-[var(--color-primary-dark)] flex items-center gap-2"
               >
                 <Sparkles size={16} /> Browse Products

@@ -333,7 +333,7 @@ export default function Collections() {
           viewport={{ once: true }}
         >
           <Link
-            to="/gemstones"
+            to="/products"
             className="inline-flex items-center gap-2 px-6 py-2.5 md:px-8 md:py-3.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-medium rounded-full transition-all duration-300 hover:gap-3 shadow-lg hover:shadow-[var(--color-primary)]/20 hover:shadow-xl text-sm md:text-base"
           >
             View All Collections

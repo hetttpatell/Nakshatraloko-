@@ -30,7 +30,7 @@ And when life aligns, there are happy faces at all places.
 
 This is Nakshatraloka.
 This is your cosmic home.`,
-    img: "/abot.jpg",
+    img: "/waterKavach.png",
   };
 
   // Function to format paragraphs with special handling for the "We believe" section

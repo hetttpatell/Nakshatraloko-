@@ -119,7 +119,7 @@ const Footer = () => {
 
           {/* Brand Description */}
           <p className="text-[var(--color-text-light)] text-sm leading-relaxed">
-            Discover exquisite gemstones and jewelry crafted with precision. Each piece is thoughtfully designed to complement your unique style and energy.
+            Discover exquisite crafted products with precision. Each piece is thoughtfully designed to complement your unique style and energy.
           </p>
 
           {/* Social Icons */}
@@ -198,7 +198,7 @@ const Footer = () => {
           <ul className="space-y-3">
             {[
               { label: "Home", to: "/" },
-              { label: "Product", to: "/gemstones" },
+              { label: "Product", to: "/products" },
               { label: "FAQs", to: "/faqs" },
               { label: "Blogs", to: "/blogs" }
             ].map((item) => (

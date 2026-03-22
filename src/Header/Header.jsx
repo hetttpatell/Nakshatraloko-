@@ -13,7 +13,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 // ---------- MENU DATA ---------- 
 const initialMenuItems = [
   { label: "Home", to: "/" },
-  { label: "Shop", to: "/gemstones" },
+  { label: "Shop", to: "/products" },
   {
     label: "Categories",
     to: "/",
@@ -30,7 +30,7 @@ const userMenuItems = [
 ];
 
 // Pages where search should be visible
-const searchEnabledPages = ["/gemstones", "/categories", "/faqs", "/blogs"];
+const searchEnabledPages = ["/products", "/categories", "/faqs", "/blogs"];
 
 // ---------- HELPER COMPONENTS ----------
 const Badge = ({ count }) =>
@@ -862,7 +862,7 @@ export default function Header() {
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[var(--color-text-muted)] h-5 w-5" />
                 <input
                   type="text"
-                  placeholder="Search for gemstones, categories, or products..."
+                  placeholder="Search for categories, or products..."
                   className="w-full pl-12 pr-4 py-3 bg-[var(--color-background)] border border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all duration-300"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}

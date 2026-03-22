@@ -642,7 +642,7 @@ export default function Cart() {
 
                 <div className="mt-8 flex flex-col gap-4">
                   <Link
-                    to="/gemstones"
+                    to="/products"
                     className="w-full py-3 border border-[var(--color-primary)] text-[var(--color-primary)] tracking-wide font-medium uppercase rounded-full hover:bg-[var(--color-primary)]/10 transition text-center"
                   >
                     Continue Shopping
@@ -701,7 +701,7 @@ export default function Cart() {
                 Looks like you haven't added anything yet
               </p>
               <Link
-                to="/gemstones"
+                to="/products"
                 className="inline-flex items-center gap-2 px-8 py-3 bg-[var(--color-primary)] text-white font-medium rounded-full hover:bg-[var(--color-primary-dark)] transition-all shadow-md hover:shadow-lg"
               >
                 <Sparkles size={16} />

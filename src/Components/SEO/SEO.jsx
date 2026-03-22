@@ -3,8 +3,8 @@ import { Helmet } from "react-helmet-async";
 
 const SEO = ({
   title = "Naksatraloka - Authentic Rudraksha & Spiritual Products",
-  description = "Naksatraloka offers authentic Rudraksha, spiritual products, gemstones, and astrology solutions. Explore divine energy products online with free shipping.",
-  keywords = "Rudraksha, spiritual products, gemstones, astrology, healing beads, rudraksha mala, spiritual jewelry",
+  description = "Naksatraloka offers authentic Rudraksha, spiritual products, and astrology solutions. Explore divine energy products online with free shipping.",
+  keywords = "Rudraksha, spiritual products, astrology, healing beads, rudraksha mala, spiritual jewelry",
   image = "https://naksatraloka.com/Logo.png",
   url = "",
   type = "website",

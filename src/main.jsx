@@ -48,7 +48,7 @@ const router = createBrowserRouter(
       <Route path="blog/:id" element={<DetailBlog />} />
 
       {/* Gemstones Page */}
-      <Route path="gemstones" element={<Gemstones />} />
+      <Route path="products" element={<Gemstones />} />
       <Route path="expertcall" element={<ExpertCall />} />
 
       <Route path="custom" element={<Custom />} />

@@ -4,7 +4,7 @@ import { AiFillStar, AiOutlineStar, AiOutlineHeart, AiFillHeart } from "react-ic
 import { useWishlist } from "../../Context/WishlistContext";
 import { useCart } from "../../Context/CartContext";
 import axios from "axios";
-import { motion } from "framer-motion";
+import {motion} from "framer-motion";
 import { Sparkles, Zap } from "lucide-react";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -17,37 +17,39 @@ const Recommendation = () => {
   const { addToCart } = useCart();
 
   // Helper function to map product data to consistent format
-  const mapProductData = (product) => {
-    let imagePath = product.PrimaryImage;
+const mapProductData = (product) => {
+  let imagePath = product.PrimaryImage;
 
-    // If already absolute URL (starts with http), use directly
-    if (imagePath?.startsWith("http")) {
-      return {
-        id: product.ID || product.id,
-        name: product.Name || product.name,
-        price:
-          typeof product.Price === "string"
-            ? parseFloat(product.Price.replace(/[^\d.]/g, ""))
-            : product.Price || product.price,
-        image: imagePath, // use as-is
-        rating: product.Rating || product.rating || 4.5,
-        brand: product.Brand || product.brand || "STYLIUM",
-      };
-    }
+  let finalImage = "";
 
-    // Else treat it as relative path → prepend backend URL
-    return {
-      id: product.ID || product.id,
-      name: product.Name || product.name,
-      price:
-        typeof product.Price === "string"
-          ? parseFloat(product.Price.replace(/[^\d.]/g, ""))
-          : product.Price || product.price,
-      image: `${IMG_URL}/uploads${imagePath}`, // prepend correctly
-      rating: product.Rating || product.rating || 4.5,
-      brand: product.Brand || product.brand || "STYLIUM",
-    };
+  if (!imagePath) {
+    finalImage = "/s1.jpeg"; // optional fallback
+  }
+  // Case 1: Full URL
+  else if (imagePath.startsWith("http")) {
+    finalImage = imagePath;
+  }
+  // Case 2: Starts with "/"
+  else if (imagePath.startsWith("/")) {
+    finalImage = `${IMG_URL}/uploads${imagePath}`;
+  }
+  // Case 3: Missing "/" (your main bug)
+  else {
+    finalImage = `${IMG_URL}/uploads/${imagePath}`;
+  }
+
+  return {
+    id: product.ID || product.id,
+    name: product.Name || product.name,
+    price:
+      typeof product.Price === "string"
+        ? parseFloat(product.Price.replace(/[^\d.]/g, ""))
+        : product.Price || product.price,
+    image: finalImage,
+    rating: product.Rating || product.rating || 4.5,
+    brand: product.Brand || product.brand || "STYLIUM",
   };
+};
 
   // Fetch all products and select 4 random ones
   const fetchRecommendedProducts = async () => {
@@ -194,7 +196,7 @@ const Recommendation = () => {
                 <div className="relative z-0">
                   <div className="relative overflow-hidden">
                     <img
-                      src={product.image}
+                      src={`${product.image}`}
                       alt={product.name}
                       className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
                     />

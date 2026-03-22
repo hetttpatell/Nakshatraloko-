@@ -32,9 +32,9 @@ const productquestions = [
       "We offer a 30-day return policy for all unworn items in their original packaging with proof of purchase.",
   },
   {
-    title: "Are the gemstones authentic?",
+    title: "Are the products authentic?",
     content:
-      "Yes, all our gemstones are 100% authentic and come with a certificate of authenticity.",
+      "Yes, all our products are 100% authentic and come with a certificate of authenticity.",
   },
   {
     title: "Do you offer custom designs?",
@@ -633,7 +633,7 @@ const isWishlisted =
         title={`${product?.name || "Product"} - Naksatraloka | Buy Authentic Rudraksha & Spiritual Products`}
         description={
           product?.description?.slice(0, 160) ||
-          `Buy authentic ${product?.name || "spiritual products"} at Naksatraloka. Best quality Rudraksha, gemstones, and spiritual products with free shipping.`
+          `Buy authentic ${product?.name || "spiritual products"} at Naksatraloka. Best quality Rudraksha, and spiritual products with free shipping.`
         }
         keywords={`${product?.name || "Rudraksha"}, spiritual products, gemstone, buy ${product?.name || "spiritual products"} online, authentic rudraksha, astrology products`}
         url={`/product/${id}`}

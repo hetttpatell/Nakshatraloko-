@@ -15,7 +15,7 @@ const features = [
   {
     icon: <Award className="w-8 h-8" />,
     title: "Energized & Blessed",
-    description: "Our gemstones are spiritually cleansed and energized with Vedic rituals to maximize their astrological power."
+    description: "Our products are spiritually cleansed and energized with Vedic rituals to maximize their astrological power."
   },
   {
     icon: <Heart className="w-8 h-8" />,
