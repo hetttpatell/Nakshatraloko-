@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Calendar, Star, Shield, Bell, Moon, Sun, Zap, CreditCard, MapPin, Heart, Smartphone, UserCog, Package, Clock, CheckCircle, XCircle, Truck } from "lucide-react";
+import {
+  User,
+  Mail,
+  Calendar,
+  Star,
+  Shield,
+  Bell,
+  Moon,
+  Sun,
+  Zap,
+  CreditCard,
+  MapPin,
+  Heart,
+  Smartphone,
+  UserCog,
+  Package,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Truck,
+} from "lucide-react";
 import axios from "axios";
 import { FaMobile } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +37,7 @@ export default function UserAccount() {
     gender: "male",
     address: "123 Main Street, New York, NY 10001",
     fullNameAtBirth: "John Michael Doe",
-    membership: "premium"
+    membership: "premium",
   });
 
   const [activeTab, setActiveTab] = useState("orders"); // Default to orders tab for demo
@@ -26,103 +46,103 @@ export default function UserAccount() {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const navigate = useNavigate();
 
-  // Dummy orders data as a refrece 
-  const dummyOrders = [
-    {
-      _id: "order_001",
-      orderId: "ORD-2023-001",
-      createdAt: "2023-10-15T10:30:00Z",
-      updatedAt: "2023-10-20T14:00:00Z",
-      deliveredAt: "2023-10-20T14:00:00Z",
-      status: "delivered",
-      totalAmount: 2999.99,
-      items: [
-        {
-          productId: "prod_001",
-          productName: "Premium Birth Chart Reading",
-          quantity: 1,
-          price: 1999.99,
-          image: "/api/placeholder/48/48"
-        },
-        {
-          productId: "prod_002",
-          productName: "Monthly Horoscope Subscription",
-          quantity: 3,
-          price: 333.33,
-          image: "/api/placeholder/48/48"
-        }
-      ],
-      shippingAddress: {
-        street: "123 Main Street",
-        city: "New York",
-        state: "NY",
-        zipCode: "10001",
-        country: "USA"
-      }
-    },
-    {
-      _id: "order_002",
-      orderId: "ORD-2024-015",
-      createdAt: "2024-01-20T14:45:00Z",
-      updatedAt: "2024-01-21T09:15:00Z",
-      status: "processing",
-      totalAmount: 1599.50,
-      items: [
-        {
-          productId: "prod_003",
-          productName: "Relationship Compatibility Report",
-          quantity: 1,
-          price: 899.50,
-          image: "/api/placeholder/48/48"
-        },
-        {
-          productId: "prod_004",
-          productName: "Personalized Crystal Set",
-          quantity: 2,
-          price: 350.00,
-          image: "/api/placeholder/48/48"
-        }
-      ],
-      shippingAddress: {
-        street: "123 Main Street",
-        city: "New York",
-        state: "NY",
-        zipCode: "10001",
-        country: "USA"
-      }
-    },
-    {
-      _id: "order_003", // This order can be cancelled
-      orderId: "ORD-2024-027",
-      createdAt: new Date().toISOString(), // Recent order
-      updatedAt: new Date().toISOString(),
-      status: "pending",
-      totalAmount: 2499.00,
-      items: [
-        {
-          productId: "prod_005",
-          productName: "Complete Astrological Profile Package",
-          quantity: 1,
-          price: 1999.00,
-          image: "/api/placeholder/48/48"
-        },
-        {
-          productId: "prod_006",
-          productName: "Tarot Reading Session",
-          quantity: 1,
-          price: 500.00,
-          image: "/api/placeholder/48/48"
-        }
-      ],
-      shippingAddress: {
-        street: "123 Main Street",
-        city: "New York",
-        state: "NY",
-        zipCode: "10001",
-        country: "USA"
-      }
-    }
-  ];
+  // Dummy orders data as a refrece
+  // const dummyOrders = [
+  //   {
+  //     _id: "order_001",
+  //     orderId: "ORD-2023-001",
+  //     createdAt: "2023-10-15T10:30:00Z",
+  //     updatedAt: "2023-10-20T14:00:00Z",
+  //     deliveredAt: "2023-10-20T14:00:00Z",
+  //     status: "delivered",
+  //     totalAmount: 2999.99,
+  //     items: [
+  //       {
+  //         productId: "prod_001",
+  //         productName: "Premium Birth Chart Reading",
+  //         quantity: 1,
+  //         price: 1999.99,
+  //         image: "/api/placeholder/48/48",
+  //       },
+  //       {
+  //         productId: "prod_002",
+  //         productName: "Monthly Horoscope Subscription",
+  //         quantity: 3,
+  //         price: 333.33,
+  //         image: "/api/placeholder/48/48",
+  //       },
+  //     ],
+  //     shippingAddress: {
+  //       street: "123 Main Street",
+  //       city: "New York",
+  //       state: "NY",
+  //       zipCode: "10001",
+  //       country: "USA",
+  //     },
+  //   },
+  //   {
+  //     _id: "order_002",
+  //     orderId: "ORD-2024-015",
+  //     createdAt: "2024-01-20T14:45:00Z",
+  //     updatedAt: "2024-01-21T09:15:00Z",
+  //     status: "processing",
+  //     totalAmount: 1599.5,
+  //     items: [
+  //       {
+  //         productId: "prod_003",
+  //         productName: "Relationship Compatibility Report",
+  //         quantity: 1,
+  //         price: 899.5,
+  //         image: "/api/placeholder/48/48",
+  //       },
+  //       {
+  //         productId: "prod_004",
+  //         productName: "Personalized Crystal Set",
+  //         quantity: 2,
+  //         price: 350.0,
+  //         image: "/api/placeholder/48/48",
+  //       },
+  //     ],
+  //     shippingAddress: {
+  //       street: "123 Main Street",
+  //       city: "New York",
+  //       state: "NY",
+  //       zipCode: "10001",
+  //       country: "USA",
+  //     },
+  //   },
+  //   {
+  //     _id: "order_003", // This order can be cancelled
+  //     orderId: "ORD-2024-027",
+  //     createdAt: new Date().toISOString(), // Recent order
+  //     updatedAt: new Date().toISOString(),
+  //     status: "pending",
+  //     totalAmount: 2499.0,
+  //     items: [
+  //       {
+  //         productId: "prod_005",
+  //         productName: "Complete Astrological Profile Package",
+  //         quantity: 1,
+  //         price: 1999.0,
+  //         image: "/api/placeholder/48/48",
+  //       },
+  //       {
+  //         productId: "prod_006",
+  //         productName: "Tarot Reading Session",
+  //         quantity: 1,
+  //         price: 500.0,
+  //         image: "/api/placeholder/48/48",
+  //       },
+  //     ],
+  //     shippingAddress: {
+  //       street: "123 Main Street",
+  //       city: "New York",
+  //       state: "NY",
+  //       zipCode: "10001",
+  //       country: "USA",
+  //     },
+  //   },
+  // ];
 
   // ✅ Fetch user data on component mount
   useEffect(() => {
@@ -132,7 +152,7 @@ export default function UserAccount() {
         const res = await axios.post(
           `${BACKEND_URL}user/profile`,
           {},
-          { headers: { Authorization: `${token}` } }
+          { headers: { Authorization: `${token}` } },
         );
 
         if (res.data.success && res.data.user) {
@@ -148,7 +168,7 @@ export default function UserAccount() {
             gender: userData.Gender || prev.gender,
             address: userData.Address || prev.address,
             fullNameAtBirth: userData.FullNameAtBirth || prev.fullNameAtBirth,
-            membership: userData.role || prev.membership
+            membership: userData.role || prev.membership,
           }));
         }
       } catch (err) {
@@ -171,26 +191,42 @@ export default function UserAccount() {
     setLoadingOrders(true);
     try {
       const token = localStorage.getItem("authToken");
-      const res = await axios.post(
-        `${BACKEND_URL}user/orders`,
-        {},
-        { headers: { Authorization: `${token}` } }
-      );
 
-      if (res.data.success && res.data.orders) {
-        setOrders(res.data.orders);
+      const res = await axios.get(`${BACKEND_URL}orderHistory`, {
+        headers: { Authorization: `${token}` },
+      });
+
+      if (res.data.success && res.data.data) {
+        const formattedOrders = res.data.data.map((order) => ({
+          _id: order.orderId,
+          orderId: order.orderId,
+
+          createdAt: order.orderDate,
+          updatedAt: order.deliveredAt,
+          deliveredAt: order.deliveredAt,
+
+          status:
+            order.orderStatus === "Completed"
+              ? "delivered"
+              : (order.orderStatus || "pending").toLowerCase(),
+              
+          totalAmount: order.totalAmount,
+
+          items: order.items.map((item) => ({
+            productId: item.productId,
+            productName: item.productName,
+            quantity: item.quantity,
+            price: item.unitPrice,
+          })),
+        }));
+
+        setOrders(formattedOrders);
       } else {
-        // Use dummy data if API fails or returns empty
-        setOrders(dummyOrders);
+        setOrders([]);
       }
     } catch (err) {
-      // console.error("Failed to fetch orders:", err);
-      // Use dummy data for demo
-      setTimeout(() => {
-        setOrders(dummyOrders);
-        setLoadingOrders(false);
-      }, 1000);
-      return;
+      console.error("Failed to fetch orders:", err);
+      setOrders([]);
     }
     setLoadingOrders(false);
   };
@@ -199,7 +235,7 @@ export default function UserAccount() {
     const { name, value, type, checked } = e.target;
     setUser({
       ...user,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -222,13 +258,9 @@ export default function UserAccount() {
         FullNameAtBirth: user.fullNameAtBirth || "",
       };
 
-      const res = await axios.post(
-        `${BACKEND_URL}updateUser`,
-        payload,
-        {
-          headers: { Authorization: `${token}` },
-        }
-      );
+      const res = await axios.post(`${BACKEND_URL}updateUser`, payload, {
+        headers: { Authorization: `${token}` },
+      });
 
       if (res.data.success) {
         // alert("Profile updated successfully!");
@@ -249,20 +281,22 @@ export default function UserAccount() {
       const res = await axios.post(
         `${BACKEND_URL}user/cancel-order`,
         { orderId },
-        { headers: { Authorization: `${token}` } }
+        { headers: { Authorization: `${token}` } },
       );
 
       if (res.data.success) {
         // Update local orders state
-        setOrders(orders.map(order => 
-          order._id === orderId 
-            ? { 
-                ...order, 
-                status: 'cancelled',
-                updatedAt: new Date().toISOString()
-              }
-            : order
-        ));
+        setOrders(
+          orders.map((order) =>
+            order._id === orderId
+              ? {
+                  ...order,
+                  status: "cancelled",
+                  updatedAt: new Date().toISOString(),
+                }
+              : order,
+          ),
+        );
         // alert("Order cancelled successfully!");
       } else {
         // alert(res.data.message || "Failed to cancel order");
@@ -270,15 +304,17 @@ export default function UserAccount() {
     } catch (err) {
       // console.error("Failed to cancel order:", err);
       // Simulate cancellation for demo
-      setOrders(orders.map(order => 
-        order._id === orderId 
-          ? { 
-              ...order, 
-              status: 'cancelled',
-              updatedAt: new Date().toISOString()
-            }
-          : order
-      ));
+      setOrders(
+        orders.map((order) =>
+          order._id === orderId
+            ? {
+                ...order,
+                status: "cancelled",
+                updatedAt: new Date().toISOString(),
+              }
+            : order,
+        ),
+      );
       // alert("Order cancelled successfully! (Demo mode)");
     }
   };
@@ -289,36 +325,52 @@ export default function UserAccount() {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return date.toLocaleDateString('en-US', options);
+    const options = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return date.toLocaleDateString("en-US", options);
   };
 
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     }).format(price);
   };
 
   const getStatusIcon = (status) => {
-    switch(status) {
-      case 'pending': return <Clock size={16} className="text-yellow-500" />;
-      case 'processing': return <Truck size={16} className="text-blue-500" />;
-      case 'delivered': return <CheckCircle size={16} className="text-green-500" />;
-      case 'cancelled': return <XCircle size={16} className="text-red-500" />;
-      default: return <Clock size={16} className="text-gray-500" />;
+    switch (status) {
+      case "pending":
+        return <Clock size={16} className="text-yellow-500" />;
+      case "processing":
+        return <Truck size={16} className="text-blue-500" />;
+      case "delivered":
+        return <CheckCircle size={16} className="text-green-500" />;
+      case "cancelled":
+        return <XCircle size={16} className="text-red-500" />;
+      default:
+        return <Clock size={16} className="text-gray-500" />;
     }
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'processing': return 'bg-blue-100 text-blue-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "processing":
+        return "bg-blue-100 text-blue-800";
+      case "delivered":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -352,10 +404,14 @@ export default function UserAccount() {
               <div className="w-24 h-24 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center mb-4">
                 <User size={40} className="text-[var(--color-primary)]" />
               </div>
-              <h2 className="font-bold text-lg text-[var(--color-text)]">{user.name}</h2>
+              <h2 className="font-bold text-lg text-[var(--color-text)]">
+                {user.name}
+              </h2>
               <div className="inline-flex items-center gap-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 rounded-full mt-2">
                 <Shield size={12} />
-                <span className="text-xs font-medium">{user.membership} Member</span>
+                <span className="text-xs font-medium">
+                  {user.membership} Member
+                </span>
               </div>
               <div className="mt-4 text-sm text-[var(--color-text-light)]">
                 <p>Member since Oct 2022</p>
@@ -366,7 +422,12 @@ export default function UserAccount() {
             <nav className="space-y-2">
               {[
                 { id: "profile", label: "Profile", icon: User },
-                { id: "orders", label: "Order History", icon: Package, badge: orders.length },
+                {
+                  id: "orders",
+                  label: "Order History",
+                  icon: Package,
+                  badge: orders.length,
+                },
                 // { id: "astrology", label: "Astrological Profile", icon: Star },
                 // { id: "notifications", label: "Notifications", icon: Bell },
                 // { id: "billing", label: "Billing", icon: CreditCard },
@@ -376,10 +437,11 @@ export default function UserAccount() {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-left transition-colors ${activeTab === item.id
-                    ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-medium"
-                    : "text-[var(--color-text-light)] hover:bg-[var(--color-primary-light)]"
-                    }`}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-left transition-colors ${
+                    activeTab === item.id
+                      ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-medium"
+                      : "text-[var(--color-text-light)] hover:bg-[var(--color-primary-light)]"
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon size={18} />
@@ -392,7 +454,7 @@ export default function UserAccount() {
                   )}
                 </button>
               ))}
-              
+
               {/* Admin Panel Button - Conditionally Rendered */}
               {user.membership === "admin" && (
                 <button
@@ -426,7 +488,7 @@ export default function UserAccount() {
                   {editMode ? "Cancel" : "Edit Profile"}
                 </button>
               )}
-              {activeTab === "orders" && (
+              {/* {activeTab === "orders" && (
                 <div className="flex gap-2">
                   <button
                     onClick={() => setOrders([...dummyOrders])}
@@ -441,7 +503,7 @@ export default function UserAccount() {
                     Refresh
                   </button>
                 </div>
-              )}
+              )} */}
             </div>
 
             {activeTab === "profile" && (
@@ -450,9 +512,14 @@ export default function UserAccount() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Full Name */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Full Name</label>
+                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                      Full Name
+                    </label>
                     <div className="relative">
-                      <User size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" />
+                      <User
+                        size={18}
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]"
+                      />
                       <input
                         type="text"
                         name="name"
@@ -466,9 +533,14 @@ export default function UserAccount() {
 
                   {/* Email */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Email Address</label>
+                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                      Email Address
+                    </label>
                     <div className="relative">
-                      <Mail size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" />
+                      <Mail
+                        size={18}
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]"
+                      />
                       <input
                         type="email"
                         name="email"
@@ -482,9 +554,14 @@ export default function UserAccount() {
 
                   {/* Phone */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Phone Number</label>
+                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                      Phone Number
+                    </label>
                     <div className="relative">
-                      <Smartphone size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" />
+                      <Smartphone
+                        size={18}
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]"
+                      />
                       <input
                         type="tel"
                         name="phone"
@@ -498,9 +575,14 @@ export default function UserAccount() {
 
                   {/* Birth Date */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Birth Date</label>
+                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                      Birth Date
+                    </label>
                     <div className="relative">
-                      <Calendar size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" />
+                      <Calendar
+                        size={18}
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]"
+                      />
                       <input
                         type="date"
                         name="birthDate"
@@ -514,9 +596,14 @@ export default function UserAccount() {
 
                   {/* Birth Time */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Birth Time</label>
+                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                      Birth Time
+                    </label>
                     <div className="relative">
-                      <Calendar size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" />
+                      <Calendar
+                        size={18}
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]"
+                      />
                       <input
                         type="time"
                         name="birthTime"
@@ -530,9 +617,14 @@ export default function UserAccount() {
 
                   {/* Birth Place */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Birth Place</label>
+                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                      Birth Place
+                    </label>
                     <div className="relative">
-                      <MapPin size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" />
+                      <MapPin
+                        size={18}
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]"
+                      />
                       <input
                         type="text"
                         name="birthPlace"
@@ -546,7 +638,9 @@ export default function UserAccount() {
 
                   {/* Gender */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Gender</label>
+                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                      Gender
+                    </label>
                     <select
                       name="gender"
                       value={user.gender}
@@ -562,9 +656,14 @@ export default function UserAccount() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Full Name (Real Name)</label>
+                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                      Full Name (Real Name)
+                    </label>
                     <div className="relative">
-                      <User size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" />
+                      <User
+                        size={18}
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]"
+                      />
                       <input
                         type="text"
                         name="fullNameAtBirth"
@@ -578,9 +677,14 @@ export default function UserAccount() {
 
                   {/* Address */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">Address</label>
+                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                      Address
+                    </label>
                     <div className="relative">
-                      <MapPin size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]" />
+                      <MapPin
+                        size={18}
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-text-light)]"
+                      />
                       <input
                         type="text"
                         name="address"
@@ -620,19 +724,28 @@ export default function UserAccount() {
                 {loadingOrders ? (
                   <div className="text-center py-12">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)] mx-auto"></div>
-                    <p className="mt-4 text-[var(--color-text-light)]">Loading orders...</p>
+                    <p className="mt-4 text-[var(--color-text-light)]">
+                      Loading orders...
+                    </p>
                   </div>
                 ) : orders.length === 0 ? (
                   <div className="text-center py-12">
-                    <Package size={48} className="mx-auto text-[var(--color-text-light)] mb-4" />
-                    <h3 className="text-lg font-medium text-[var(--color-text)] mb-2">No orders yet</h3>
-                    <p className="text-[var(--color-text-light)]">Your order history will appear here</p>
-                    <button
+                    <Package
+                      size={48}
+                      className="mx-auto text-[var(--color-text-light)] mb-4"
+                    />
+                    <h3 className="text-lg font-medium text-[var(--color-text)] mb-2">
+                      No orders yet
+                    </h3>
+                    <p className="text-[var(--color-text-light)]">
+                      Your order history will appear here
+                    </p>
+                    {/* <button
                       onClick={() => setOrders(dummyOrders)}
                       className="mt-4 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors"
                     >
                       Load Demo Orders
-                    </button>
+                    </button> */}
                   </div>
                 ) : (
                   <>
@@ -640,19 +753,27 @@ export default function UserAccount() {
                     <div className="flex flex-wrap gap-4 mb-6 p-4 bg-[var(--color-background)] rounded-lg">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                        <span className="text-sm text-[var(--color-text-light)]">Pending</span>
+                        <span className="text-sm text-[var(--color-text-light)]">
+                          Pending
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                        <span className="text-sm text-[var(--color-text-light)]">Processing</span>
+                        <span className="text-sm text-[var(--color-text-light)]">
+                          Processing
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                        <span className="text-sm text-[var(--color-text-light)]">Delivered</span>
+                        <span className="text-sm text-[var(--color-text-light)]">
+                          Delivered
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                        <span className="text-sm text-[var(--color-text-light)]">Cancelled</span>
+                        <span className="text-sm text-[var(--color-text-light)]">
+                          Cancelled
+                        </span>
                       </div>
                     </div>
 
@@ -666,16 +787,19 @@ export default function UserAccount() {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-medium text-[var(--color-text)]">
-                                  Order #{order.orderId}
+                                  Order #ORD-{order.orderId}
                                 </h3>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                <span
+                                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}
+                                >
+                                  {order.status.charAt(0).toUpperCase() +
+                                    order.status.slice(1)}
                                 </span>
-                                {order.status === 'pending' && (
+                                {/* {order.status === "pending" && (
                                   <span className="text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded">
                                     Can be cancelled
                                   </span>
-                                )}
+                                )} */}
                               </div>
                               <p className="text-sm text-[var(--color-text-light)]">
                                 Placed on {formatDate(order.createdAt)}
@@ -686,7 +810,12 @@ export default function UserAccount() {
                                 {formatPrice(order.totalAmount)}
                               </p>
                               <p className="text-xs text-[var(--color-text-light)] mt-1">
-                                {order.items?.length} item{order.items?.length !== 1 ? 's' : ''}
+                                {order.items?.reduce(
+                                  (sum, i) => sum + i.quantity,
+                                  0,
+                                )}{" "}
+                                items
+                                {order.items?.length !== 1 ? "s" : ""}
                               </p>
                             </div>
                           </div>
@@ -694,14 +823,23 @@ export default function UserAccount() {
                           {/* Order Items */}
                           <div className="space-y-3 mb-4">
                             {order.items?.map((item, index) => (
-                              <div key={index} className="flex items-center gap-3 p-3 bg-[var(--color-background)] rounded">
+                              <div
+                                key={index}
+                                className="flex items-center gap-3 p-3 bg-[var(--color-background)] rounded"
+                              >
                                 <div className="w-12 h-12 bg-[var(--color-primary-light)] rounded flex items-center justify-center">
-                                  <Package size={20} className="text-[var(--color-primary)]" />
+                                  <Package
+                                    size={20}
+                                    className="text-[var(--color-primary)]"
+                                  />
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="font-medium text-[var(--color-text)]">{item.productName}</h4>
+                                  <h4 className="font-medium text-[var(--color-text)]">
+                                    {item.productName}
+                                  </h4>
                                   <p className="text-sm text-[var(--color-text-light)]">
-                                    Qty: {item.quantity} × {formatPrice(item.price)}
+                                    Qty: {item.quantity} ×{" "}
+                                    {formatPrice(item.price)}
                                   </p>
                                 </div>
                                 <div className="text-right">
@@ -721,23 +859,30 @@ export default function UserAccount() {
                             <div className="flex items-center gap-2">
                               {getStatusIcon(order.status)}
                               <span className="text-sm text-[var(--color-text-light)]">
-                                {order.status === 'pending' && 'Order is pending confirmation'}
-                                {order.status === 'processing' && 'Order is being processed'}
-                                {order.status === 'delivered' && `Delivered on ${formatDate(order.deliveredAt || order.updatedAt)}`}
-                                {order.status === 'cancelled' && `Cancelled on ${formatDate(order.updatedAt)}`}
+                                {order.status === "pending" &&
+                                  "Order is pending confirmation"}
+                                {order.status === "processing" &&
+                                  "Order is being processed"}
+                                {order.status === "delivered" &&
+                                  `Delivered on ${formatDate(order.deliveredAt || order.updatedAt)}`}
+                                {/* {order.status === "cancelled" &&
+                                  `Cancelled on ${formatDate(order.updatedAt)}`} */}
                               </span>
                             </div>
-                            
-                            <div className="flex gap-2">
-                              {order.status === 'delivered' && (
+
+                            {/* <div className="flex gap-2">
+                              {order.status === "delivered" && (
                                 <button
-                                  onClick={() => alert('Reorder functionality coming soon!')}
+                                  onClick={() =>
+                                    alert("Reorder functionality coming soon!")
+                                  }
                                   className="px-4 py-2 border border-[var(--color-primary)] text-[var(--color-primary)] rounded-lg text-sm font-medium hover:bg-[var(--color-primary-light)] transition-colors"
                                 >
                                   Reorder
                                 </button>
                               )}
-                              {(order.status === 'pending' || order.status === 'processing') && (
+                              {(order.status === "pending" ||
+                                order.status === "processing") && (
                                 <button
                                   onClick={() => handleCancelOrder(order._id)}
                                   className="px-4 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
@@ -745,7 +890,7 @@ export default function UserAccount() {
                                   Cancel Order
                                 </button>
                               )}
-                            </div>
+                            </div> */}
                           </div>
                         </div>
                       ))}

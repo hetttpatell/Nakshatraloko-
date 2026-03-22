@@ -128,7 +128,6 @@ const CategoriesAdmin = ({ products = [], onCategoryChange }) => {
     const response = await axios.post(`${BACKEND_URL}saveCatogary`, formData, {
       headers: {
         Authorization: token,
-        "Content-Type": "multipart/form-data",
       },
     });
 
