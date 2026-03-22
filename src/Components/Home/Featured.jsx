@@ -131,7 +131,7 @@ const getImageUrl = (imageText) => {
 
           <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-[var(--color-text)] mb-3 md:mb-4">
             Featured{" "}
-            <span className="text-[var(--color-primary)]">Masterpieces</span>
+            <span className="text-[var(--color-primary)]">Products</span>
           </h2>
 
           <p className="text-sm md:text-lg text-[var(--color-text-light)] max-w-2xl mx-auto px-2">

@@ -44,7 +44,7 @@ const productquestions = [
   {
     title: "How long does shipping take?",
     content:
-      "Standard shipping takes 3-5 business days. Express shipping is available for an additional fee with 1-2 day delivery.",
+      "Standard shipping takes 10-15 business days.",
   },
 ];
 
@@ -408,7 +408,7 @@ const handleWishlistToggle = () => {
           advantages: productData.advantages
             ? productData.advantages.split(",").map((a) => a.trim())
             : [],
-          shipping: "Delivered in 5-7 business days",
+          shipping: "Delivered in 10-15 business days",
           isInWishlist: !!productData.isInWishlist,
         };
 
@@ -1105,7 +1105,7 @@ const isWishlisted =
                   {product.shipping}
                 </p>
 
-                <div className="bg-color-background-alt p-6 border border-color-border rounded-sm">
+                {/* <div className="bg-color-background-alt p-6 border border-color-border rounded-sm">
                   <h4 className="font-serif font-normal text-color-text mb-3">
                     Jewelry Care Instructions
                   </h4>
@@ -1123,7 +1123,7 @@ const isWishlisted =
                       Clean with a soft, dry cloth after wear
                     </li>
                   </ul>
-                </div>
+                </div> */}
               </div>
             </div>
           )}
