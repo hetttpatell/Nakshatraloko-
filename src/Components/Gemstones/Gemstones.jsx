@@ -557,10 +557,10 @@ const ProductsPage = () => {
                       )}
 
                       {/* Review count */}
-                      <div className="text-xs text-[var(--color-text-light)]">
+                      {/* <div className="text-xs text-[var(--color-text-light)]">
                         {product.reviewCount}{" "}
                         {product.reviewCount === 1 ? "review" : "reviews"}
-                      </div>
+                      </div> */}
                     </div>
 
                     <div className="flex flex-col gap-1.5 md:gap-2 pt-2 md:pt-3 border-t border-[var(--color-border-light)]">
