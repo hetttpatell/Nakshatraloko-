@@ -174,51 +174,31 @@ const ProductModal = ({
       }
 
       // ---------------- Images ----------------
-      const productImages =
-        initialProduct.Images || initialProduct.images || [];
+      const productImages = initialProduct.Images || initialProduct.images || initialProduct.imageArray || [];
       if (Array.isArray(productImages) && productImages.length > 0) {
-        // const formattedImages = productImages
-        //   .filter((img) => img && typeof img === "object") // remove bad items
-        //   .map((img) => {
-        //     let imageUrl = img.imageData || img.imageUrl || "";
-
-        //     if (imageUrl) {
-        //       const uploadsIndex = imageUrl.indexOf("/api/uploads");
-        //       const uploadsFallback = imageUrl.indexOf("/uploads");
-        //       const startIndex =
-        //         uploadsIndex !== -1 ? uploadsIndex : uploadsFallback;
-
-        //       if (startIndex !== -1) {
-        //         const cleanPath = imageUrl.substring(startIndex);
-        //         imageUrl = `${IMG_URL}${cleanPath.replace(
-        //           /([^:]\/)\/+/g,
-        //           "$1"
-        //         )}`;
-        //       }
-        //     }
-
-        //     return {
-        //       ...img,
-        //       imageData: imageUrl,
-        //       isExisting: true,
-        //       originalUrl: imageUrl,
-        //       id: img.id || img.ID || null,
-        //       altText: img.altText || "",
-        //     };
-        //   });
-
-        const formattedImages = productImages.map((img) => ({
-          ...img,
-          imageData: img.imageData,
-          type:
-            img.type ||
-            (img.imageData?.endsWith(".mp4") ? "video/mp4" : "image/jpeg"),
-          isExisting: true,
-        }));
+        const formattedImages = productImages.map((img) => {
+          const imagePath = img.image || img.imageData || img.imageUrl || img.originalUrl || img.PrimaryImage || '';
+          const cleanOriginal = imagePath ? getCleanImagePath(imagePath) : '';
+          
+          return {
+            ...img,
+            imageData: img.imageData || `${IMG_URL}/api/uploads/${imagePath.split('/').pop() || ''}`,
+            originalUrl: cleanOriginal || imagePath,
+            type: img.type || (imagePath.toLowerCase().includes('.mp4') ? "video/mp4" : "image/jpeg"),
+            isExisting: true,
+            id: img.id || img.ID || img.imageId,
+            altText: img.altText || '',
+            isPrimary: img.isPrimary || false
+          };
+        }).filter(img => img.originalUrl || img.imageData);  // preserve only valid images
 
         setImages(formattedImages);
       } else {
-        setImages([]);
+        // Preserve empty images array only if no images field at all
+        if (!initialProduct.Images && !initialProduct.images) {
+          setImages([]);
+        }
+        // else keep current (from initialImages prop)
       }
     }
   }, [initialProduct]);
@@ -533,16 +513,19 @@ const ProductModal = ({
         }));
         formData.append("imageFiles", JSON.stringify(imagesMeta));
 
-        // Handle existing images
+        // Handle existing images - ensure image field preserved
         const existingImages = images
           .filter((img) => img.isExisting)
-          .map((img) => ({
-            id: img.id,
-            image: img.originalUrl,
-            altText: img.altText || "",
-            isPrimary: img.isPrimary,
-            isActive: true,
-          }));
+          .map((img) => {
+            const imageValue = img.originalUrl || img.image || getCleanImagePath(img.imageData) || img.imagePath || '';
+            return {
+              id: img.id,
+              image: imageValue,  // critical: backend expects 'image' field
+              altText: img.altText || "",
+              isPrimary: Boolean(img.isPrimary),
+              isActive: true,
+            };
+          });
         formData.append("existingImageUrls", JSON.stringify(existingImages));
 
         // Append new image files
@@ -644,43 +627,7 @@ const ProductModal = ({
     };
   }, [images]);
 
-  // Function to render stars for rating
-  const renderStars = () => {
-    return Array.from({ length: 5 }, (_, index) => {
-      const starValue = index + 1;
-      const isFullStar = starValue <= Math.floor(rating);
-      const isHalfStar = rating % 1 >= 0.5 && starValue === Math.ceil(rating);
-      const isHovered = starValue <= hoverRating;
 
-      return (
-        <button
-          key={index}
-          type="button"
-          onClick={() => handleStarClick(starValue)}
-          onMouseEnter={() => handleStarHover(starValue)}
-          onMouseLeave={handleStarLeave}
-          className="text-2xl focus:outline-none relative"
-        >
-          {/* Empty star */}
-          <FaStar className="text-gray-300 absolute inset-0" />
-
-          {/* Half star (when applicable) */}
-          {isHalfStar && (
-            <div className="overflow-hidden w-1/2 absolute inset-0">
-              <FaStar className="text-yellow-400" />
-            </div>
-          )}
-
-          {/* Full star (when applicable) */}
-          {(isFullStar || isHovered) && (
-            <FaStar
-              className={isHovered ? "text-yellow-300" : "text-yellow-400"}
-            />
-          )}
-        </button>
-      );
-    });
-  };
 
   return (
     <div className="fixed inset-0 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50 p-4">

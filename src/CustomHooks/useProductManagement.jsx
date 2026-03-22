@@ -19,7 +19,7 @@ export const useProductManagement = () => {
   });
 
   const [error, setError] = useState(null);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const _featuredProducts = useState([])[0];
   const [isSaving, setIsSaving] = useState(false);
   const [toastData, setToastData] = useState(null);
 
@@ -81,7 +81,7 @@ export const useProductManagement = () => {
           }));
 
         setProducts(normalized);
-        setFeaturedProducts(featuredIds);
+        // setFeaturedProducts(featuredIds); // unused
       } else {
         throw new Error("Failed to fetch products or featured products");
       }
@@ -153,31 +153,43 @@ export const useProductManagement = () => {
     try {
       setIsSaving(true);
       const response = await axios.post(`${BACKEND_URL}getProductById/${productId}`);
-      console.log({ response });
       if (response.data.success) {
         const product = response.data.data.product;
-        const normalizedProduct = {
-          id: product.id,
-          categoryId: product.categoryId,
-          Name: product.name,
-          Description: product.description,
-          Advantages: product.advantages,
-          HowToWear: product.howToWear,
-          IsActive: product.isActive,
-          productRatings: product.productRatings,
-          sizes: product.sizes || [],
-          images: (product.images || []).map(img => ({
+        // Robust image normalization - handle various backend field names
+        const normalizeProductImage = (img) => {
+          if (!img) return null;
+          const imagePath = img.image || img.imageData || img.imageUrl || img.PrimaryImage || img.originalUrl || img.imagePath || '';
+          if (!imagePath) return null;
+          return {
             ...img,
-            imageData: normalizeImage(img.imageData)
-          })),
-          price: product.sizes?.[0]?.price || 0,
-          dummyPrice: product.sizes?.[0]?.dummyPrice || 0,
+            imageData: normalizeImage(imagePath),
+            originalUrl: imagePath,  // preserve backend path for formData
+            type: img.type || (imagePath.endsWith('.mp4') || imagePath.endsWith('.mov') || imagePath.endsWith('.webm') ? "video/mp4" : "image/jpeg"),
+            isExisting: true
+          };
+        };
+
+        const normalizedProduct = {
+          id: product.id || product.ID,
+          categoryId: product.categoryId || product.CatogaryID,
+          Name: product.name || product.Name,
+          Description: product.description || product.Description,
+          Advantages: product.advantages || product.Advantages,
+          HowToWear: product.howToWear || product.HowToWear,
+          IsActive: product.isActive || product.IsActive,
+          Rating: product.productRatings || product.rating || product.Rating || 0,
+          sizes: product.sizes || product.Sizes || [],
+          images: (product.images || product.Images || []).map(normalizeProductImage).filter(Boolean),
+          price: product.sizes?.[0]?.price || product.Price || 0,
+          dummyPrice: product.sizes?.[0]?.dummyPrice || product.DummyPrice || 0,
           discountPercentage: product.sizes?.[0]
             ? Math.round(((product.sizes[0].dummyPrice - product.sizes[0].price) / product.sizes[0].dummyPrice) * 100)
-            : 0,
-          stock: product.sizes?.[0]?.stock || 0,
+            : (product.DummyPrice && product.Price ? Math.round(((product.DummyPrice - product.Price) / product.DummyPrice) * 100) : 0),
+          stock: product.sizes?.[0]?.stock || product.Stock || 0,
           primaryImage: normalizeImage(
-            product.images?.find(img => img.isPrimary)?.imageData
+            (product.images || product.Images || []).find(img => img.isPrimary)?.imageData ||
+            product.PrimaryImage ||
+            product.primaryImage
           ) || null,
         };
 

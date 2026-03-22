@@ -236,7 +236,7 @@ const Admin = () => {
           {activePage === "Dashboard" && (
             <>
               <Dashboard isMobile={isMobile} onNavigate={(page) => setActivePage(page)}/>
-              <RecentOrders isMobile={isMobile} />
+              {/* <RecentOrders isMobile={isMobile} /> */}
             </>
           )}
 
