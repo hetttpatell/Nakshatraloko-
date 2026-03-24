@@ -1066,7 +1066,7 @@ const ProductDetails = () => {
                 onClick={() => navigate("/product/67")}
                 className="w-full sm:w-auto bg-yellow-400 text-black px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base tracking-wide hover:bg-yellow-300 transition-all duration-300 shadow-md hover:shadow-lg"
               >
-                👉 Claim Yours Now
+               Claim Yours Now
               </button>
             </div>
 
