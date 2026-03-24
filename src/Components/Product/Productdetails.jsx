@@ -663,6 +663,53 @@ const ProductDetails = () => {
             <span className="text-color-primary">{product.name}</span>
           </nav>
 
+                    {/* Premium 5 Mukhi Rudraksha Promo Banner - Theme Matched */}
+          <div className="bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#020617] border border-yellow-500/30 rounded-2xl p-4 sm:p-6 md:p-8 mb-6 md:mb-8 shadow-[0_0_25px_rgba(234,179,8,0.15)] hover:shadow-[0_0_40px_rgba(234,179,8,0.3)] transition-all duration-500 relative overflow-hidden backdrop-blur-sm mt-12">
+            {/* Glow Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 to-transparent opacity-30"></div>
+
+            <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 text-center sm:text-left">
+              {/* Icon */}
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-yellow-400 text-black rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shrink-0">
+                <span className="text-xl sm:text-2xl">🕉️</span>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1">
+                <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-serif tracking-wide text-white mb-1 sm:mb-2">
+                  Divine Offer – Limited Time
+                </h3>
+
+                <p className="text-sm sm:text-base md:text-lg text-gray-300 leading-tight">
+                  Authentic 5 Mukhi Rudraksha for{" "}
+                  <span className="block sm:inline text-2xl sm:text-3xl md:text-4xl font-bold text-yellow-400">
+                    ₹99
+                  </span>
+                  <span className="block text-xs sm:text-sm md:text-base text-gray-400 mt-1">
+                    Only delivery charges • No hidden cost
+                  </span>
+                </p>
+
+                <p className="text-[10px] sm:text-xs text-yellow-400 mt-1 tracking-wide">
+                  ✨ Energized • Certified • Limited Stock
+                </p>
+              </div>
+
+              {/* CTA */}
+              <button
+                onClick={() => navigate("/product/67")}
+                className="w-full sm:w-auto bg-yellow-400 text-black px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base tracking-wide hover:bg-yellow-300 transition-all duration-300 shadow-md hover:shadow-lg"
+              >
+               Claim Yours Now
+              </button>
+            </div>
+
+            {/* Bottom Badge */}
+            <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-4 text-[10px] sm:text-xs text-yellow-400 font-medium animate-pulse bg-black/40 px-2 sm:px-3 py-1 rounded-full shadow">
+              ⚡ Limited Stock
+            </div>
+          </div>
+
           <div className="flex flex-col lg:flex-row gap-16">
             {/* Image Section */}
             <div className="flex flex-col lg:flex-row gap-8 lg:w-1/2">
@@ -1029,52 +1076,7 @@ const ProductDetails = () => {
             </div>
           </div>
 
-          {/* Premium 5 Mukhi Rudraksha Promo Banner - Theme Matched */}
-          <div className="bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#020617] border border-yellow-500/30 rounded-2xl p-4 sm:p-6 md:p-8 mb-6 md:mb-8 shadow-[0_0_25px_rgba(234,179,8,0.15)] hover:shadow-[0_0_40px_rgba(234,179,8,0.3)] transition-all duration-500 relative overflow-hidden backdrop-blur-sm mt-12">
-            {/* Glow Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 to-transparent opacity-30"></div>
 
-            <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 text-center sm:text-left">
-              {/* Icon */}
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-yellow-400 text-black rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shrink-0">
-                <span className="text-xl sm:text-2xl">🕉️</span>
-              </div>
-
-              {/* Content */}
-              <div className="flex-1">
-                <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-serif tracking-wide text-white mb-1 sm:mb-2">
-                  Divine Offer – Limited Time
-                </h3>
-
-                <p className="text-sm sm:text-base md:text-lg text-gray-300 leading-tight">
-                  Authentic 5 Mukhi Rudraksha for{" "}
-                  <span className="block sm:inline text-2xl sm:text-3xl md:text-4xl font-bold text-yellow-400">
-                    ₹99
-                  </span>
-                  <span className="block text-xs sm:text-sm md:text-base text-gray-400 mt-1">
-                    Only delivery charges • No hidden cost
-                  </span>
-                </p>
-
-                <p className="text-[10px] sm:text-xs text-yellow-400 mt-1 tracking-wide">
-                  ✨ Energized • Certified • Limited Stock
-                </p>
-              </div>
-
-              {/* CTA */}
-              <button
-                onClick={() => navigate("/product/67")}
-                className="w-full sm:w-auto bg-yellow-400 text-black px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base tracking-wide hover:bg-yellow-300 transition-all duration-300 shadow-md hover:shadow-lg"
-              >
-               Claim Yours Now
-              </button>
-            </div>
-
-            {/* Bottom Badge */}
-            <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-4 text-[10px] sm:text-xs text-yellow-400 font-medium animate-pulse bg-black/40 px-2 sm:px-3 py-1 rounded-full shadow">
-              ⚡ Limited Stock
-            </div>
-          </div>
 
           {/* Tab Navigation */}
           <div className="border-b border-color-border mb-8 mt-12">
