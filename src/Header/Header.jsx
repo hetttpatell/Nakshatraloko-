@@ -303,6 +303,8 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [allProducts, setAllProducts] = useState([]); // Cache for all products
+  const [hasFetchedProducts, setHasFetchedProducts] = useState(false);
 
   const navigate = useNavigate();
   const menuRef = useRef(null);
@@ -564,52 +566,59 @@ export default function Header() {
     setHoverUnderlineStyle(prev => ({ ...prev, opacity: 0 }));
   };
 
-  // Search functionality
-  const handleSearch = async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
+  // Fetch products only when user starts typing
+  const fetchAllProducts = async () => {
+    if (hasFetchedProducts) return;
+    
     setIsSearching(true);
     try {
-      // Call your search API endpoint
-      const response = await axios.post(`${BACKEND_URL}search`, {
-        query: query,
-      });
-
-      if (response.data.success) {
-        setSearchResults(response.data.results);
-      } else {
-        setSearchResults([]);
+      const response = await axios.post(`${BACKEND_URL}getAllProducts`);
+      
+      let products = [];
+      if (Array.isArray(response.data)) {
+        products = response.data;
+      } else if (Array.isArray(response.data?.data)) {
+        products = response.data.data;
+      } else if (Array.isArray(response.data?.products)) {
+        products = response.data.products;
       }
+
+      setAllProducts(products);
+      setHasFetchedProducts(true);
     } catch (error) {
-      // console.error("Search error:", error);
-      setSearchResults([]);
+      // console.error("Error fetching products for search:", error);
     } finally {
       setIsSearching(false);
     }
   };
 
-  // Debounced search
+  // Debounced search logic
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchQuery) {
-        handleSearch(searchQuery);
+    const timer = setTimeout(() => {
+      if (searchQuery.trim().length > 0) {
+        fetchAllProducts().then(() => {
+          const filtered = allProducts
+            .filter(p => (p.Name || p.name || "").toLowerCase().includes(searchQuery.toLowerCase()))
+            .slice(0, 8); // Limit to 8 results
+          setSearchResults(filtered);
+        });
       } else {
         setSearchResults([]);
       }
-    }, 500); // 500ms delay
+    }, 300);
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
+    return () => clearTimeout(timer);
+  }, [searchQuery, allProducts]);
 
   // Handle search result selection
   const handleSearchResultClick = (result) => {
-    navigate(result.url);
-    setSearchOpen(false);
-    setSearchQuery("");
-    setSearchResults([]);
+    const productId = result.ID || result.id;
+    if (productId) {
+      navigate(`/product/${productId}`);
+      setSearchOpen(false);
+      setSearchQuery("");
+      setSearchResults([]);
+    }
   };
 
   // Handle search submission
@@ -704,30 +713,24 @@ export default function Header() {
 
           {/* Right side icons */}
           <div className="flex items-center gap-2">
-            {/* Search icon - only show on pages where search is enabled */}
-            {/* {shouldShowSearch && (
-              <button
-                onClick={() => {
-                  setSearchOpen(!searchOpen);
-                  if (!searchOpen) {
-                    // Focus on search input when opening
-                    setTimeout(() => {
-                      const searchInput = document.querySelector('input[type="text"]');
-                      if (searchInput) searchInput.focus();
-                    }, 100);
-                  } else {
-                    setSearchQuery("");
-                    setSearchResults([]);
-                  }
-                }}
-                className={`p-3 rounded-xl transition-all duration-300 ease-out ${searchOpen
-                  ? "bg-gradient-to-r from-[var(--color-primary-light)] to-[var(--color-primary-light)]/80 text-[var(--color-primary)] shadow-lg"
-                  : "text-[var(--color-text)] hover:bg-gradient-to-r hover:from-[var(--color-primary-light)]/30 hover:to-[var(--color-primary-light)]/20 hover:text-[var(--color-primary)] hover:shadow-md"
-                  }`}
-              >
-                <Search className="h-5 w-5" />
-              </button>
-            )} */}
+            {/* Premium Search toggle button */}
+            <button
+              onClick={() => {
+                setSearchOpen(!searchOpen);
+                if (!searchOpen) {
+                  setTimeout(() => {
+                    const searchInput = document.getElementById('header-search-input');
+                    if (searchInput) searchInput.focus();
+                  }, 100);
+                }
+              }}
+              className={`p-3 rounded-xl transition-all duration-300 ease-out flex items-center justify-center group/search ${searchOpen
+                ? "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white shadow-lg scale-105"
+                : "text-[var(--color-text)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] hover:shadow-md"
+                }`}
+            >
+              <Search className={`h-5 w-5 transition-transform duration-300 ${searchOpen ? 'scale-110' : 'group-hover/search:scale-110'}`} />
+            </button>
 
             {/* User menu icons with enhanced live count display */}
             <div className="flex items-center gap-2">
@@ -789,6 +792,99 @@ export default function Header() {
             </button>
           </div>
         </nav>
+
+        {/* ---------- PREMIUM SEARCH OVERLAY ---------- */}
+        <div 
+          className={`absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-b border-[var(--color-border)] shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden ${
+            searchOpen ? "max-h-[600px] opacity-100 py-6" : "max-h-0 opacity-0 py-0"
+          }`}
+          ref={searchRef}
+        >
+          <div className="container mx-auto px-4">
+            <div className="relative max-w-3xl mx-auto">
+              {/* Search Input Field */}
+              <div className="relative group">
+                <input
+                  id="header-search-input"
+                  type="text"
+                  placeholder="Search for gemstones, rings, necklaces..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-14 pr-12 py-4 bg-[var(--color-primary-light)]/50 border-2 border-transparent focus:border-[var(--color-primary)]/30 rounded-2xl text-lg text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none transition-all duration-300 shadow-inner"
+                />
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-[var(--color-primary)]" />
+                
+                {isSearching && (
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2">
+                    <div className="animate-spin h-5 w-5 border-2 border-[var(--color-primary)] border-t-transparent rounded-full" />
+                  </div>
+                )}
+                
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-5 top-1/2 -translate-y-1/2 p-1 hover:bg-white/50 rounded-full transition-colors"
+                  >
+                    <X className="h-4 w-4 text-[var(--color-text-muted)]" />
+                  </button>
+                )}
+              </div>
+
+              {/* SEARCH RESULTS DROPDOWN */}
+              <div className={`mt-4 transition-all duration-500 ${searchQuery ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"}`}>
+                {searchResults.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {searchResults.map((result, idx) => {
+                      const imgUrl = result.Image || result.image || result.img || "/s1.jpeg";
+                      const finalImgUrl = imgUrl.startsWith("http") || imgUrl.startsWith("/") ? imgUrl : `/${imgUrl}`;
+                      
+                      return (
+                        <div
+                          key={result.ID || result.id || idx}
+                          onClick={() => handleSearchResultClick(result)}
+                          className="flex items-center gap-4 p-3 bg-white hover:bg-[var(--color-primary-light)]/50 border border-[var(--color-border)] hover:border-[var(--color-primary)]/30 rounded-2xl cursor-pointer transition-all duration-300 group/item hover:shadow-lg"
+                        >
+                          <div className="h-16 w-16 rounded-xl overflow-hidden flex-shrink-0 border border-[var(--color-border)] group-hover/item:border-[var(--color-primary)]/30 transition-colors">
+                            <img
+                              src={finalImgUrl}
+                              alt={result.Name || "Product"}
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover/item:scale-110"
+                              onError={(e) => { e.target.src = "/s1.jpeg"; }}
+                            />
+                          </div>
+                          <div className="flex-grow min-w-0">
+                            <h4 className="text-[var(--color-text)] font-semibold truncate group-hover/item:text-[var(--color-primary)] transition-colors">
+                              {result.Name || result.name}
+                            </h4>
+                            <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
+                              <Sparkles className="h-3 w-3" />
+                              {result.Category || "Nakshatraloka Collection"}
+                            </p>
+                            <p className="text-[var(--color-primary)] font-bold text-sm mt-1">
+                              ₹ {parseFloat(result.Price || 0).toLocaleString("en-IN")}
+                            </p>
+                          </div>
+                          <ChevronDown className="h-5 w-5 text-[var(--color-border)] rotate-[270deg] group-hover/item:text-[var(--color-primary)] transition-all" />
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : searchQuery && !isSearching ? (
+                  <div className="text-center py-10 bg-[var(--color-primary-light)]/30 rounded-3xl border-2 border-dashed border-[var(--color-border)]">
+                    <Search className="h-12 w-12 text-[var(--color-border)] mx-auto mb-3" />
+                    <p className="text-[var(--color-text-muted)] font-medium">No products found matching "{searchQuery}"</p>
+                    <button 
+                      onClick={() => setSearchQuery("")}
+                      className="mt-2 text-[var(--color-primary)] hover:underline text-sm"
+                    >
+                      Try a different keyword
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Enhanced Mobile Menu */}
         <div
