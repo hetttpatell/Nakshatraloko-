@@ -9,6 +9,28 @@ import axios from "axios";
 import { useProtectedAction } from "../CustomHooks/useProductAction"
 import { useAuthModal } from "../Context/AuthContext";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const IMG_URL = import.meta.env.VITE_IMG_URL;
+
+const normalizeImage = (url) => {
+  if (!url) return "/s1.jpeg";
+  let imagePath = url.trim();
+
+  // If already a full URL
+  if (imagePath.startsWith("http")) return imagePath;
+
+  // Handle leading slashes to avoid double slashes
+  if (imagePath.startsWith("/")) {
+    return `${IMG_URL}/uploads${imagePath}`;
+  }
+
+  // If it already has uploads/, just prepend IMG_URL
+  if (imagePath.startsWith("uploads/")) {
+    return `${IMG_URL}/${imagePath}`;
+  }
+
+  // Default case: add /uploads/
+  return `${IMG_URL}/uploads/${imagePath}`;
+};
 
 // ---------- MENU DATA ---------- 
 const initialMenuItems = [
@@ -569,11 +591,11 @@ export default function Header() {
   // Fetch products only when user starts typing
   const fetchAllProducts = async () => {
     if (hasFetchedProducts) return;
-    
+
     setIsSearching(true);
     try {
       const response = await axios.post(`${BACKEND_URL}getAllProducts`);
-      
+
       let products = [];
       if (Array.isArray(response.data)) {
         products = response.data;
@@ -650,11 +672,12 @@ export default function Header() {
         {/* Enhanced gradient accent */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-primary)]/80 via-[var(--color-primary)] to-[var(--color-primary-dark)]"></div>
 
-        <nav className="container mx-auto px-4 flex items-center justify-between">
+        <nav className="container mx-auto px-4 flex items-center justify-between gap-6 lg:gap-10">
           {/* Enhanced Logo */}
           <NavLink
             to="/"
-            className="flex-shrink-0 cursor-pointer z-50 flex items-center transition-all duration-500 ease-out group"
+            className="flex-shrink-0 cursor-pointer z-50 flex items-center transition-all duration-500 ease-out group mr-4 lg:mr-10"
+
             onClick={closeMenu}
           >
             <div className="relative flex items-center">
@@ -712,7 +735,7 @@ export default function Header() {
           </div>
 
           {/* Right side icons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 lg:gap-5 ml-4 lg:ml-8">
             {/* Premium Search toggle button */}
             <button
               onClick={() => {
@@ -752,7 +775,7 @@ export default function Header() {
                       ? fetchWishlist
                       : undefined
                   }
-                requireAuth={{protectedCartAction,protectedWishlistAction}}
+                  requireAuth={{ protectedCartAction, protectedWishlistAction }}
                 />
               ))}
 
@@ -794,10 +817,9 @@ export default function Header() {
         </nav>
 
         {/* ---------- PREMIUM SEARCH OVERLAY ---------- */}
-        <div 
-          className={`absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-b border-[var(--color-border)] shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden ${
-            searchOpen ? "max-h-[600px] opacity-100 py-6" : "max-h-0 opacity-0 py-0"
-          }`}
+        <div
+          className={`absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-b border-[var(--color-border)] shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-y-auto overflow-x-hidden ${searchOpen ? "max-h-[80vh] opacity-100 py-4 md:py-8" : "max-h-0 opacity-0 py-0 px-0"
+            }`}
           ref={searchRef}
         >
           <div className="container mx-auto px-4">
@@ -813,15 +835,15 @@ export default function Header() {
                   className="w-full pl-14 pr-12 py-4 bg-[var(--color-primary-light)]/50 border-2 border-transparent focus:border-[var(--color-primary)]/30 rounded-2xl text-lg text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none transition-all duration-300 shadow-inner"
                 />
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-[var(--color-primary)]" />
-                
+
                 {isSearching && (
                   <div className="absolute right-5 top-1/2 -translate-y-1/2">
                     <div className="animate-spin h-5 w-5 border-2 border-[var(--color-primary)] border-t-transparent rounded-full" />
                   </div>
                 )}
-                
+
                 {searchQuery && (
-                  <button 
+                  <button
                     onClick={() => setSearchQuery("")}
                     className="absolute right-5 top-1/2 -translate-y-1/2 p-1 hover:bg-white/50 rounded-full transition-colors"
                   >
@@ -835,16 +857,17 @@ export default function Header() {
                 {searchResults.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {searchResults.map((result, idx) => {
-                      const imgUrl = result.Image || result.image || result.img || "/s1.jpeg";
-                      const finalImgUrl = imgUrl.startsWith("http") || imgUrl.startsWith("/") ? imgUrl : `/${imgUrl}`;
-                      
+                      // Prioritize PrimaryImage as seen in Recommendation.jsx
+                      const rawImage = result.PrimaryImage || result.Image || result.image || result.img || (result.images && result.images[0]?.imageData);
+                      const finalImgUrl = normalizeImage(rawImage);
+
                       return (
                         <div
                           key={result.ID || result.id || idx}
                           onClick={() => handleSearchResultClick(result)}
-                          className="flex items-center gap-4 p-3 bg-white hover:bg-[var(--color-primary-light)]/50 border border-[var(--color-border)] hover:border-[var(--color-primary)]/30 rounded-2xl cursor-pointer transition-all duration-300 group/item hover:shadow-lg"
+                          className="flex items-center gap-3 md:gap-4 p-2 md:p-3 bg-white hover:bg-[var(--color-primary-light)]/50 border border-[var(--color-border)] hover:border-[var(--color-primary)]/30 rounded-2xl cursor-pointer transition-all duration-300 group/item hover:shadow-lg"
                         >
-                          <div className="h-16 w-16 rounded-xl overflow-hidden flex-shrink-0 border border-[var(--color-border)] group-hover/item:border-[var(--color-primary)]/30 transition-colors">
+                          <div className="h-14 w-14 md:h-16 md:w-16 rounded-xl overflow-hidden flex-shrink-0 border border-[var(--color-border)] group-hover/item:border-[var(--color-primary)]/30 transition-colors">
                             <img
                               src={finalImgUrl}
                               alt={result.Name || "Product"}
@@ -873,7 +896,7 @@ export default function Header() {
                   <div className="text-center py-10 bg-[var(--color-primary-light)]/30 rounded-3xl border-2 border-dashed border-[var(--color-border)]">
                     <Search className="h-12 w-12 text-[var(--color-border)] mx-auto mb-3" />
                     <p className="text-[var(--color-text-muted)] font-medium">No products found matching "{searchQuery}"</p>
-                    <button 
+                    <button
                       onClick={() => setSearchQuery("")}
                       className="mt-2 text-[var(--color-primary)] hover:underline text-sm"
                     >
