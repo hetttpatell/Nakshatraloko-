@@ -672,11 +672,11 @@ export default function Header() {
         {/* Enhanced gradient accent */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-primary)]/80 via-[var(--color-primary)] to-[var(--color-primary-dark)]"></div>
 
-        <nav className="container mx-auto px-4 flex items-center justify-between gap-6 lg:gap-10">
+        <nav className="container mx-auto px-4 flex items-center gap-6 lg:gap-10">
           {/* Enhanced Logo */}
           <NavLink
             to="/"
-            className="flex-shrink-0 cursor-pointer z-50 flex items-center transition-all duration-500 ease-out group mr-4 lg:mr-10"
+            className="flex items-center flex-shrink-0 mr-6 lg:mr-10 cursor-pointer z-50 transition-all duration-500 ease-out group"
 
             onClick={closeMenu}
           >
@@ -704,7 +704,7 @@ export default function Header() {
 
           {/* Enhanced Desktop Menu */}
           <div
-            className="hidden lg:flex relative"
+            className="hidden lg:flex flex-1 justify-center relative"
             ref={navRef}
             onMouseLeave={handleMenuLeave}
           >
@@ -756,7 +756,7 @@ export default function Header() {
             </button>
 
             {/* User menu icons with enhanced live count display */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 lg:gap-5 ml-auto flex-shrink-0 max-w-full">
               {userMenuItems.map((item) => (
                 <UserMenuIcon
                   key={item.to}
@@ -823,13 +823,13 @@ export default function Header() {
           ref={searchRef}
         >
           <div className="container mx-auto px-4">
-            <div className="relative max-w-3xl mx-auto">
+            <div className="relative w-full max-w-2xl mx-auto">
               {/* Search Input Field */}
               <div className="relative group">
                 <input
                   id="header-search-input"
                   type="text"
-                  placeholder="Search for gemstones, rings, necklaces..."
+                  placeholder="Search for Rudraksha & More..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-14 pr-12 py-4 bg-[var(--color-primary-light)]/50 border-2 border-transparent focus:border-[var(--color-primary)]/30 rounded-2xl text-lg text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none transition-all duration-300 shadow-inner"
