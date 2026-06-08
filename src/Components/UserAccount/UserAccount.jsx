@@ -22,7 +22,6 @@ import {
   Truck,
 } from "lucide-react";
 import axios from "axios";
-import { FaMobile } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -40,7 +39,7 @@ export default function UserAccount() {
     membership: "premium",
   });
 
-  const [activeTab, setActiveTab] = useState("orders"); // Default to orders tab for demo
+  const [activeTab, setActiveTab] = useState("profile");
   const [editMode, setEditMode] = useState(false);
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -344,6 +343,13 @@ export default function UserAccount() {
     }).format(price);
   };
 
+  const userInitials = user.name
+    ?.split(" ")
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase())
+    .slice(0, 2)
+    .join("");
+
   const getStatusIcon = (status) => {
     switch (status) {
       case "pending":
@@ -385,36 +391,39 @@ export default function UserAccount() {
           transition={{ duration: 0.5 }}
         >
           <h1 className="text-3xl md:text-4xl font-playfair font-bold text-[var(--color-text)] mb-2">
-            Your Cosmic Profile
+            Professional Account Profile
           </h1>
           <p className="text-[var(--color-text-light)] max-w-2xl mx-auto">
-            Manage your account and astrological preferences
+            Manage your personal details, contact information, and order history.
           </p>
         </motion.div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Navigation */}
           <motion.div
-            className="lg:w-1/4 bg-white rounded-xl shadow-[var(--shadow-sm)] p-6 h-fit"
+            className="lg:w-1/4 bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-6 h-fit"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <div className="flex flex-col items-center mb-8">
-              <div className="w-24 h-24 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center mb-4">
-                <User size={40} className="text-[var(--color-primary)]" />
+              <div className="w-24 h-24 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center mb-4 text-3xl font-semibold">
+                {userInitials || "NA"}
               </div>
               <h2 className="font-bold text-lg text-[var(--color-text)]">
                 {user.name}
               </h2>
+              <p className="text-sm text-[var(--color-text-light)] mt-1 text-center break-all">
+                {user.email}
+              </p>
               <div className="inline-flex items-center gap-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 rounded-full mt-2">
                 <Shield size={12} />
                 <span className="text-xs font-medium">
-                  {user.membership} Member
+                  {user.membership} Account
                 </span>
               </div>
               <div className="mt-4 text-sm text-[var(--color-text-light)]">
-                <p>Member since Oct 2022</p>
+                <p>Account overview</p>
                 <p className="mt-1">{orders.length} orders placed</p>
               </div>
             </div>
@@ -470,7 +479,7 @@ export default function UserAccount() {
 
           {/* Main Content */}
           <motion.div
-            className="lg:w-3/4 bg-white rounded-xl shadow-[var(--shadow-sm)] p-6 md:p-8"
+            className="lg:w-3/4 bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-6 md:p-8"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -508,7 +517,32 @@ export default function UserAccount() {
 
             {activeTab === "profile" && (
               <form onSubmit={handleSubmit}>
-                {/* ... (profile form remains exactly the same) ... */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="rounded-lg border border-[var(--color-border)] p-4 bg-[var(--color-background)]">
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-light)]">
+                      Email
+                    </p>
+                    <p className="font-medium text-[var(--color-text)] mt-1 break-all">
+                      {user.email}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[var(--color-border)] p-4 bg-[var(--color-background)]">
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-light)]">
+                      Phone
+                    </p>
+                    <p className="font-medium text-[var(--color-text)] mt-1">
+                      {user.phone || "Not provided"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[var(--color-border)] p-4 bg-[var(--color-background)]">
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-light)]">
+                      Membership
+                    </p>
+                    <p className="font-medium text-[var(--color-text)] mt-1 capitalize">
+                      {user.membership}
+                    </p>
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Full Name */}
                   <div>
