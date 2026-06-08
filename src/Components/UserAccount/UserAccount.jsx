@@ -299,9 +299,24 @@ export default function UserAccount() {
   const userInitials = (user.name || "")
     .split(" ")
     .filter(Boolean)
-    .map((part) => part[0]?.toUpperCase())
+    .map((part) => part.charAt(0).toUpperCase())
     .slice(0, 2)
     .join("");
+
+  const inputClass = `w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg transition-colors focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent ${
+    editMode
+      ? "bg-white text-[var(--color-text)]"
+      : "bg-[var(--color-background)] text-[var(--color-text)]"
+  }`;
+
+  const selectClass = `w-full p-3 border border-[var(--color-border)] rounded-lg transition-colors focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent ${
+    editMode
+      ? "bg-white text-[var(--color-text)]"
+      : "bg-[var(--color-background)] text-[var(--color-text)]"
+  }`;
+
+  const labelClass =
+    "block text-xs font-semibold uppercase tracking-wide text-[var(--color-text-light)] mb-2";
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -339,10 +354,10 @@ export default function UserAccount() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-playfair font-bold text-[var(--color-text)] mb-2">
-            Professional Account Profile
+            Account Profile
           </h1>
           <p className="text-[var(--color-text-light)] max-w-2xl mx-auto">
-            Manage your personal details, contact information, and order history.
+            Keep your details accurate and up to date for a professional account experience.
           </p>
         </div>
 
@@ -373,10 +388,10 @@ export default function UserAccount() {
 
             <nav className="space-y-2">
               {[
-                { id: "profile", label: "Profile", icon: User },
+              { id: "profile", label: "Account Details", icon: User },
                 {
                   id: "orders",
-                  label: "Order History",
+                label: "Purchase History",
                   icon: Package,
                   badge: orders.length,
                 },
@@ -425,16 +440,29 @@ export default function UserAccount() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-playfair font-bold text-[var(--color-text)]">
                 {activeTab === "profile" && "Personal Information"}
-                {activeTab === "orders" && `Order History (${orders.length})`}
+                {activeTab === "orders" && `Purchase History (${orders.length})`}
               </h2>
-              {activeTab === "profile" && (
-                <button
-                  onClick={() => setEditMode(!editMode)}
-                  className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-primary-dark)] transition-colors"
-                >
-                  {editMode ? "Cancel" : "Edit Profile"}
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {activeTab === "profile" && (
+                  <span
+                    className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                      editMode
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {editMode ? "Edit Mode" : "View Mode"}
+                  </span>
+                )}
+                {activeTab === "profile" && (
+                  <button
+                    onClick={() => setEditMode(!editMode)}
+                    className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-primary-dark)] transition-colors"
+                  >
+                    {editMode ? "Cancel" : "Edit Profile"}
+                  </button>
+                )}
+              </div>
               {/* {activeTab === "orders" && (
                 <div className="flex gap-2">
                   <button
@@ -481,10 +509,15 @@ export default function UserAccount() {
                     </p>
                   </div>
                 </div>
+                <div className="mb-6 pb-3 border-b border-[var(--color-border)]">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text)]">
+                    Basic Details
+                  </h3>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Full Name */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Full Name
                     </label>
                     <div className="relative">
@@ -498,14 +531,14 @@ export default function UserAccount() {
                         value={user.name}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Email */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Email Address
                     </label>
                     <div className="relative">
@@ -519,14 +552,14 @@ export default function UserAccount() {
                         value={user.email}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Phone */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Phone Number
                     </label>
                     <div className="relative">
@@ -540,14 +573,14 @@ export default function UserAccount() {
                         value={user.phone}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Birth Date */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Birth Date
                     </label>
                     <div className="relative">
@@ -561,14 +594,14 @@ export default function UserAccount() {
                         value={user.birthDate}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Birth Time */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Birth Time
                     </label>
                     <div className="relative">
@@ -582,14 +615,14 @@ export default function UserAccount() {
                         value={user.birthTime}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Birth Place */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Birth Place
                     </label>
                     <div className="relative">
@@ -603,14 +636,14 @@ export default function UserAccount() {
                         value={user.birthPlace}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Gender */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Gender
                     </label>
                     <select
@@ -618,7 +651,7 @@ export default function UserAccount() {
                       value={user.gender}
                       onChange={handleInputChange}
                       disabled={!editMode}
-                      className="w-full p-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                      className={selectClass}
                     >
                       <option value="">Select Gender</option>
                       <option value="male">Male</option>
@@ -628,7 +661,7 @@ export default function UserAccount() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Full Name (Real Name)
                     </label>
                     <div className="relative">
@@ -642,14 +675,14 @@ export default function UserAccount() {
                         value={user.fullNameAtBirth}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Address */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Address
                     </label>
                     <div className="relative">
@@ -664,7 +697,7 @@ export default function UserAccount() {
                         onChange={handleInputChange}
                         disabled={!editMode}
                         placeholder="Enter Your Address"
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
