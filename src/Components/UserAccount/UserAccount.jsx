@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   User,
   Mail,
@@ -22,7 +21,6 @@ import {
   Truck,
 } from "lucide-react";
 import axios from "axios";
-import { FaMobile } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -40,7 +38,7 @@ export default function UserAccount() {
     membership: "premium",
   });
 
-  const [activeTab, setActiveTab] = useState("orders"); // Default to orders tab for demo
+  const [activeTab, setActiveTab] = useState("profile");
   const [editMode, setEditMode] = useState(false);
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -171,7 +169,7 @@ export default function UserAccount() {
             membership: userData.role || prev.membership,
           }));
         }
-      } catch (err) {
+      } catch {
         // console.error("Failed to fetch user:", err);
         // Use dummy data if API fails
       }
@@ -267,55 +265,9 @@ export default function UserAccount() {
       } else {
         // alert(res.data.message || "Failed to update profile");
       }
-    } catch (err) {
+    } catch {
       // console.error("Failed to update user:", err);
       // alert(err.response?.data?.message || "Something went wrong");
-    }
-  };
-
-  const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
-
-    try {
-      const token = localStorage.getItem("authToken");
-      const res = await axios.post(
-        `${BACKEND_URL}user/cancel-order`,
-        { orderId },
-        { headers: { Authorization: `${token}` } },
-      );
-
-      if (res.data.success) {
-        // Update local orders state
-        setOrders(
-          orders.map((order) =>
-            order._id === orderId
-              ? {
-                  ...order,
-                  status: "cancelled",
-                  updatedAt: new Date().toISOString(),
-                }
-              : order,
-          ),
-        );
-        // alert("Order cancelled successfully!");
-      } else {
-        // alert(res.data.message || "Failed to cancel order");
-      }
-    } catch (err) {
-      // console.error("Failed to cancel order:", err);
-      // Simulate cancellation for demo
-      setOrders(
-        orders.map((order) =>
-          order._id === orderId
-            ? {
-                ...order,
-                status: "cancelled",
-                updatedAt: new Date().toISOString(),
-              }
-            : order,
-        ),
-      );
-      // alert("Order cancelled successfully! (Demo mode)");
     }
   };
 
@@ -343,6 +295,28 @@ export default function UserAccount() {
       maximumFractionDigits: 2,
     }).format(price);
   };
+
+  const userInitials = (user.name || "")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join("");
+
+  const inputClass = `w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg transition-colors focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent ${
+    editMode
+      ? "bg-white text-[var(--color-text)]"
+      : "bg-[var(--color-background)] text-[var(--color-text)]"
+  }`;
+
+  const selectClass = `w-full p-3 border border-[var(--color-border)] rounded-lg transition-colors focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent ${
+    editMode
+      ? "bg-white text-[var(--color-text)]"
+      : "bg-[var(--color-background)] text-[var(--color-text)]"
+  }`;
+
+  const labelClass =
+    "block text-xs font-semibold uppercase tracking-wide text-[var(--color-text-light)] mb-2";
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -378,53 +352,46 @@ export default function UserAccount() {
     <div className="min-h-screen bg-[var(--color-background)] py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-playfair font-bold text-[var(--color-text)] mb-2">
-            Your Cosmic Profile
+            Account Profile
           </h1>
           <p className="text-[var(--color-text-light)] max-w-2xl mx-auto">
-            Manage your account and astrological preferences
+            Keep your details accurate and up to date for a professional account experience.
           </p>
-        </motion.div>
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Navigation */}
-          <motion.div
-            className="lg:w-1/4 bg-white rounded-xl shadow-[var(--shadow-sm)] p-6 h-fit"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
+          <div className="lg:w-1/4 bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-6 h-fit">
             <div className="flex flex-col items-center mb-8">
-              <div className="w-24 h-24 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center mb-4">
-                <User size={40} className="text-[var(--color-primary)]" />
+              <div className="w-24 h-24 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center mb-4 text-3xl font-semibold">
+                {userInitials || "?"}
               </div>
               <h2 className="font-bold text-lg text-[var(--color-text)]">
                 {user.name}
               </h2>
+              <p className="text-sm text-[var(--color-text-light)] mt-1 text-center break-words">
+                {user.email}
+              </p>
               <div className="inline-flex items-center gap-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 rounded-full mt-2">
                 <Shield size={12} />
                 <span className="text-xs font-medium">
-                  {user.membership} Member
+                  {user.membership} Account
                 </span>
               </div>
               <div className="mt-4 text-sm text-[var(--color-text-light)]">
-                <p>Member since Oct 2022</p>
+                <p>Account overview</p>
                 <p className="mt-1">{orders.length} orders placed</p>
               </div>
             </div>
 
             <nav className="space-y-2">
               {[
-                { id: "profile", label: "Profile", icon: User },
+              { id: "profile", label: "Account Details", icon: User },
                 {
                   id: "orders",
-                  label: "Order History",
+                label: "Purchase History",
                   icon: Package,
                   badge: orders.length,
                 },
@@ -466,28 +433,36 @@ export default function UserAccount() {
                 </button>
               )}
             </nav>
-          </motion.div>
+          </div>
 
           {/* Main Content */}
-          <motion.div
-            className="lg:w-3/4 bg-white rounded-xl shadow-[var(--shadow-sm)] p-6 md:p-8"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+          <div className="lg:w-3/4 bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-6 md:p-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-playfair font-bold text-[var(--color-text)]">
                 {activeTab === "profile" && "Personal Information"}
-                {activeTab === "orders" && `Order History (${orders.length})`}
+                {activeTab === "orders" && `Purchase History (${orders.length})`}
               </h2>
-              {activeTab === "profile" && (
-                <button
-                  onClick={() => setEditMode(!editMode)}
-                  className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-primary-dark)] transition-colors"
-                >
-                  {editMode ? "Cancel" : "Edit Profile"}
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {activeTab === "profile" && (
+                  <span
+                    className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                      editMode
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {editMode ? "Edit Mode" : "View Mode"}
+                  </span>
+                )}
+                {activeTab === "profile" && (
+                  <button
+                    onClick={() => setEditMode(!editMode)}
+                    className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-primary-dark)] transition-colors"
+                  >
+                    {editMode ? "Cancel" : "Edit Profile"}
+                  </button>
+                )}
+              </div>
               {/* {activeTab === "orders" && (
                 <div className="flex gap-2">
                   <button
@@ -508,11 +483,41 @@ export default function UserAccount() {
 
             {activeTab === "profile" && (
               <form onSubmit={handleSubmit}>
-                {/* ... (profile form remains exactly the same) ... */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="rounded-lg border border-[var(--color-border)] p-4 bg-[var(--color-background)]">
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-light)]">
+                      Email
+                    </p>
+                    <p className="font-medium text-[var(--color-text)] mt-1 break-words">
+                      {user.email}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[var(--color-border)] p-4 bg-[var(--color-background)]">
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-light)]">
+                      Phone
+                    </p>
+                    <p className="font-medium text-[var(--color-text)] mt-1">
+                      {user.phone || "Not provided"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[var(--color-border)] p-4 bg-[var(--color-background)]">
+                    <p className="text-xs uppercase tracking-wide text-[var(--color-text-light)]">
+                      Membership
+                    </p>
+                    <p className="font-medium text-[var(--color-text)] mt-1 capitalize">
+                      {user.membership}
+                    </p>
+                  </div>
+                </div>
+                <div className="mb-6 pb-3 border-b border-[var(--color-border)]">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text)]">
+                    Basic Details
+                  </h3>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Full Name */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Full Name
                     </label>
                     <div className="relative">
@@ -526,14 +531,14 @@ export default function UserAccount() {
                         value={user.name}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Email */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Email Address
                     </label>
                     <div className="relative">
@@ -547,14 +552,14 @@ export default function UserAccount() {
                         value={user.email}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Phone */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Phone Number
                     </label>
                     <div className="relative">
@@ -568,14 +573,14 @@ export default function UserAccount() {
                         value={user.phone}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Birth Date */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Birth Date
                     </label>
                     <div className="relative">
@@ -589,14 +594,14 @@ export default function UserAccount() {
                         value={user.birthDate}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Birth Time */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Birth Time
                     </label>
                     <div className="relative">
@@ -610,14 +615,14 @@ export default function UserAccount() {
                         value={user.birthTime}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Birth Place */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Birth Place
                     </label>
                     <div className="relative">
@@ -631,14 +636,14 @@ export default function UserAccount() {
                         value={user.birthPlace}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Gender */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Gender
                     </label>
                     <select
@@ -646,7 +651,7 @@ export default function UserAccount() {
                       value={user.gender}
                       onChange={handleInputChange}
                       disabled={!editMode}
-                      className="w-full p-3 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                      className={selectClass}
                     >
                       <option value="">Select Gender</option>
                       <option value="male">Male</option>
@@ -656,7 +661,7 @@ export default function UserAccount() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Full Name (Real Name)
                     </label>
                     <div className="relative">
@@ -670,14 +675,14 @@ export default function UserAccount() {
                         value={user.fullNameAtBirth}
                         onChange={handleInputChange}
                         disabled={!editMode}
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
 
                   {/* Address */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    <label className={labelClass}>
                       Address
                     </label>
                     <div className="relative">
@@ -692,7 +697,7 @@ export default function UserAccount() {
                         onChange={handleInputChange}
                         disabled={!editMode}
                         placeholder="Enter Your Address"
-                        className="w-full p-3 pl-10 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent disabled:bg-[var(--color-background)]"
+                        className={inputClass}
                       />
                     </div>
                   </div>
@@ -899,7 +904,7 @@ export default function UserAccount() {
                 )}
               </div>
             )}
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>
