@@ -296,7 +296,7 @@ export default function UserAccount() {
     }).format(price);
   };
 
-  const userInitials = user.name
+  const userInitials = (user.name || "")
     ?.split(" ")
     .filter(Boolean)
     .map((part) => part[0]?.toUpperCase())
@@ -356,7 +356,7 @@ export default function UserAccount() {
               <h2 className="font-bold text-lg text-[var(--color-text)]">
                 {user.name}
               </h2>
-              <p className="text-sm text-[var(--color-text-light)] mt-1 text-center break-all">
+              <p className="text-sm text-[var(--color-text-light)] mt-1 text-center break-words">
                 {user.email}
               </p>
               <div className="inline-flex items-center gap-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 rounded-full mt-2">
@@ -460,7 +460,7 @@ export default function UserAccount() {
                     <p className="text-xs uppercase tracking-wide text-[var(--color-text-light)]">
                       Email
                     </p>
-                    <p className="font-medium text-[var(--color-text)] mt-1 break-all">
+                    <p className="font-medium text-[var(--color-text)] mt-1 break-words">
                       {user.email}
                     </p>
                   </div>
