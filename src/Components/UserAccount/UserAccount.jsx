@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   User,
   Mail,
@@ -170,7 +169,7 @@ export default function UserAccount() {
             membership: userData.role || prev.membership,
           }));
         }
-      } catch (err) {
+      } catch {
         // console.error("Failed to fetch user:", err);
         // Use dummy data if API fails
       }
@@ -266,55 +265,9 @@ export default function UserAccount() {
       } else {
         // alert(res.data.message || "Failed to update profile");
       }
-    } catch (err) {
+    } catch {
       // console.error("Failed to update user:", err);
       // alert(err.response?.data?.message || "Something went wrong");
-    }
-  };
-
-  const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
-
-    try {
-      const token = localStorage.getItem("authToken");
-      const res = await axios.post(
-        `${BACKEND_URL}user/cancel-order`,
-        { orderId },
-        { headers: { Authorization: `${token}` } },
-      );
-
-      if (res.data.success) {
-        // Update local orders state
-        setOrders(
-          orders.map((order) =>
-            order._id === orderId
-              ? {
-                  ...order,
-                  status: "cancelled",
-                  updatedAt: new Date().toISOString(),
-                }
-              : order,
-          ),
-        );
-        // alert("Order cancelled successfully!");
-      } else {
-        // alert(res.data.message || "Failed to cancel order");
-      }
-    } catch (err) {
-      // console.error("Failed to cancel order:", err);
-      // Simulate cancellation for demo
-      setOrders(
-        orders.map((order) =>
-          order._id === orderId
-            ? {
-                ...order,
-                status: "cancelled",
-                updatedAt: new Date().toISOString(),
-              }
-            : order,
-        ),
-      );
-      // alert("Order cancelled successfully! (Demo mode)");
     }
   };
 
@@ -384,28 +337,18 @@ export default function UserAccount() {
     <div className="min-h-screen bg-[var(--color-background)] py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-playfair font-bold text-[var(--color-text)] mb-2">
             Professional Account Profile
           </h1>
           <p className="text-[var(--color-text-light)] max-w-2xl mx-auto">
             Manage your personal details, contact information, and order history.
           </p>
-        </motion.div>
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Navigation */}
-          <motion.div
-            className="lg:w-1/4 bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-6 h-fit"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
+          <div className="lg:w-1/4 bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-6 h-fit">
             <div className="flex flex-col items-center mb-8">
               <div className="w-24 h-24 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center mb-4 text-3xl font-semibold">
                 {userInitials || "NA"}
@@ -475,15 +418,10 @@ export default function UserAccount() {
                 </button>
               )}
             </nav>
-          </motion.div>
+          </div>
 
           {/* Main Content */}
-          <motion.div
-            className="lg:w-3/4 bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-6 md:p-8"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+          <div className="lg:w-3/4 bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-6 md:p-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-playfair font-bold text-[var(--color-text)]">
                 {activeTab === "profile" && "Personal Information"}
@@ -933,7 +871,7 @@ export default function UserAccount() {
                 )}
               </div>
             )}
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>
