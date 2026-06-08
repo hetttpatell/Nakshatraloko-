@@ -297,7 +297,7 @@ export default function UserAccount() {
   };
 
   const userInitials = (user.name || "")
-    ?.split(" ")
+    .split(" ")
     .filter(Boolean)
     .map((part) => part[0]?.toUpperCase())
     .slice(0, 2)
@@ -351,7 +351,7 @@ export default function UserAccount() {
           <div className="lg:w-1/4 bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-6 h-fit">
             <div className="flex flex-col items-center mb-8">
               <div className="w-24 h-24 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center mb-4 text-3xl font-semibold">
-                {userInitials || "NA"}
+                {userInitials || "?"}
               </div>
               <h2 className="font-bold text-lg text-[var(--color-text)]">
                 {user.name}
